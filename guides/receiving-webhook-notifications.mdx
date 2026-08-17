@@ -1,0 +1,290 @@
+---
+title: "Receiving webhook notifications"
+description: "Configure a webhook connection and destination, verify the request signature, and handle retries when Ravion delivers platform events to your endpoint."
+"og:image": "https://www.ravion.com/og/docs/guides/receiving-webhook-notifications.png"
+"twitter:image": "https://www.ravion.com/og/docs/guides/receiving-webhook-notifications.png"
+---
+
+Ravion can POST platform events — a pipeline run failing, a step timing out, an approval request —
+to an HTTPS endpoint you control. This guide covers configuring a webhook end to end: creating the
+credential and address, verifying that a request genuinely came from Ravion, handling the delivery
+payload, and what to expect from retries.
+
+## The object model
+
+Three resources work together:
+
+- A **connection** holds the credential a destination delivers through. For a webhook, that's an
+  HMAC signing secret Ravion generates for you and returns exactly once, at creation.
+- A **destination** is one delivery address — a webhook URL, a Slack channel, a Slack user, or an
+  email — tagged with a `kind` and, for every kind except email, a `connectionId` pointing at the
+  connection it authenticates through.
+- A **rule** decides which events reach which destinations: its `eventIds` pick catalog ids (or
+  family globs like `pipeline.run.*`), `conditions` narrow further, and `audiences` list the
+  destinations — or computed recipients — it delivers matching events to.
+
+## Set up in order
+
+A `WEBHOOK` destination is rejected if it doesn't reference a connection, so create the connection
+first. Both writes are enforced server-side, not just documented convention:
+
+<Steps>
+  <Step title="Create the connection">
+    ```bash
+    curl -X POST https://api.ravion.com/notification-connections \
+      -H "Authorization: Bearer $RAVION_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "data": {
+          "provider": "WEBHOOK",
+          "config": { "provider": "WEBHOOK", "label": "Order events sink" }
+        }
+      }'
+    ```
+
+    The response's `data.secret` is the signing secret — save it now. Every later read of this
+    connection, including `GET`, omits it; only `create` and `rotate-secret` ever return it.
+
+    ```json
+    {
+      "data": {
+        "id": "nconn_2p8Kx3VhQmYtRzL9WbNcFj1sHkT",
+        "provider": "WEBHOOK",
+        "status": "ACTIVE",
+        "config": { "provider": "WEBHOOK", "label": "Order events sink" },
+        "secret": "whsec_7f3a1c9e8b2d4f6a0c1e3b5d7f9a1c3e"
+      }
+    }
+    ```
+  </Step>
+  <Step title="Create the destination">
+    Reference the connection's `id` as `connectionId`:
+
+    ```bash
+    curl -X POST https://api.ravion.com/notification-destinations \
+      -H "Authorization: Bearer $RAVION_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "data": {
+          "kind": "WEBHOOK",
+          "label": "Order events sink",
+          "enabled": true,
+          "config": { "kind": "WEBHOOK", "url": "https://example.com/hooks/ravion" },
+          "connectionId": "nconn_2p8Kx3VhQmYtRzL9WbNcFj1sHkT"
+        }
+      }'
+    ```
+
+    Two write-time checks fire here, both as `422`s rather than a silent fallback:
+
+    - Omit `connectionId` on a `WEBHOOK` destination and the request is rejected with
+      `CONNECTION_REQUIRED` — a webhook delivers through a credential and must reference one.
+    - Reference a connection whose `provider` isn't `WEBHOOK` and the request is rejected with
+      `CONNECTION_PROVIDER_MISMATCH`.
+
+    An `EMAIL` destination is the mirror case: it carries no credential, so passing a
+    `connectionId` is rejected with `CONNECTION_NOT_ALLOWED`.
+  </Step>
+  <Step title="Create the rule">
+    Point a rule's `audiences` at the destination's `id`:
+
+    ```bash
+    curl -X POST https://api.ravion.com/notification-rules \
+      -H "Authorization: Bearer $RAVION_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "data": {
+          "name": "Failed deploys to order events sink",
+          "enabled": true,
+          "eventIds": ["pipeline.run.failed"],
+          "conditions": [],
+          "audiences": [
+            { "kind": "destination", "destination_id": "ndest_2p8Kx7ZaQmYtRzL9WbNcFj1sHkX" }
+          ],
+          "delivery": { "mode": "oneshot" },
+          "content": { "mention": false, "verbosity": "DETAILED", "include_chart": false }
+        }
+      }'
+    ```
+  </Step>
+</Steps>
+
+## Endpoint requirements
+
+The destination `url` must resolve to a public address:
+
+- **HTTPS only.** An `http://` URL, or any scheme other than `https`, is rejected at creation.
+- **No localhost or loopback.** `localhost`, `127.0.0.1`, and `::1` are rejected outright.
+- **No private or link-local address, checked after DNS resolution.** The hostname is resolved and
+  every returned IP is checked; if any of them is a private, loopback, or link-local address, the
+  URL is rejected. This catches a hostname that merely *points at* an internal address, not just a
+  literal one.
+
+The same check runs again immediately before every delivery attempt, including retries — not only
+once at creation — so a hostname that later repoints at a private address starts failing delivery
+even though it validated fine when you created the destination.
+
+<Warning>
+  This is why a webhook destination needs a real, publicly resolvable hostname to test against —
+  `http://localhost:3000` will not work. If you're testing from a machine without one, running
+  `cloudflared tunnel --url http://localhost:3000` gives you a public HTTPS hostname that forwards to
+  your local sink and passes this check.
+</Warning>
+
+Ravion also does not follow redirects: a `3xx` response is treated as the final response (and, since
+it isn't a `2xx`, as a failed delivery attempt), so your endpoint must serve the webhook directly at
+the exact URL configured on the destination. Respond within 10 seconds — a slower response is
+treated as a transport failure and retried.
+
+## Verifying the signature
+
+Every delivery carries these headers:
+
+| Header                       | Value                                                    |
+| ----------------------------- | --------------------------------------------------------- |
+| `X-Ravion-Signature-256`      | `sha256=<hex-encoded HMAC-SHA256 digest>`                  |
+| `X-Ravion-Event-Id`           | Id of the event this delivery carries.                    |
+| `X-Ravion-Event-Catalog-Id`   | Catalog id of the event, e.g. `pipeline.run.failed`.       |
+| `X-Ravion-Delivery-Attempt`   | 1-based attempt number for this delivery.                  |
+
+The signature is an HMAC-SHA256 digest, hex-encoded, keyed with the connection's signing secret —
+the same `secret` value returned once by create or `rotate-secret` — computed over **the exact raw
+bytes of the request body**, before any JSON parsing on either side. Recompute the digest over the
+bytes you received and compare it to the part of `X-Ravion-Signature-256` after `sha256=`, using a
+constant-time comparison:
+
+```js
+const crypto = require("node:crypto")
+
+function isValidSignature(rawBody, signatureHeader, secret) {
+  const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex")
+  const received = signatureHeader.replace(/^sha256=/, "")
+  return (
+    expected.length === received.length &&
+    crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(received))
+  )
+}
+```
+
+`rawBody` must be the unparsed request bytes — reserializing a parsed JSON object before hashing can
+change whitespace or key order and produce a digest that never matches.
+
+<Warning>
+  **There is no timestamp header and no nonce.** The signature proves the body was produced with
+  your connection's secret and hasn't been altered in transit — it says nothing about freshness or
+  about whether you've seen this exact request before. Every attempt of the same delivery carries the
+  identical payload bytes, so all of its retries carry the identical signature too; only
+  `X-Ravion-Delivery-Attempt` (unsigned) tells them apart. Build any freshness or replay handling on
+  `X-Ravion-Event-Id`, not on a timestamp Ravion doesn't send.
+</Warning>
+
+Rotating a connection's secret (`rotate-secret`) invalidates the previous secret immediately —
+every destination delivering through that connection signs with the new one on its very next
+attempt, so update your verification code before you rotate, not after.
+
+## The delivery payload
+
+The request body is the event's own payload, exactly as recorded on the platform event — there is no
+wrapping envelope, and no `data` key the way REST responses use. A `pipeline.run.failed` delivery
+looks like this:
+
+```json
+{
+  "event": "pipeline.run.failed",
+  "id": "prun_2p8Kx1AbQmYtRzL9WbNcFj1sHk9",
+  "organization_id": "org_2p8Kw9YnQmYtRzL9WbNcFj1sHk1",
+  "organization_name": "Acme Inc",
+  "project_id": "proj_2p8Kw9ZpQmYtRzL9WbNcFj1sHk2",
+  "project_name": "checkout-service",
+  "environment_id": "env_2p8Kw9A1QmYtRzL9WbNcFj1sHk3",
+  "environment_name": "production",
+  "pipeline_id": "pipe_2p8Kw9B2QmYtRzL9WbNcFj1sHk4",
+  "pipeline_name": "deploy",
+  "trigger_source": "webhook:github",
+  "webhook_event": "push",
+  "triggered_by": "mem_2p8Kw8C3QmYtRzL9WbNcFj1sHk5",
+  "started_at": "2026-08-16T14:02:11.483Z",
+  "completed_at": "2026-08-16T14:04:47.912Z",
+  "duration_ms": 156429,
+  "failing_step_execution_id": "stepex_2p8Kx0D4QmYtRzL9WbNcFj1sHk6",
+  "failing_step_id": "apply-infra",
+  "failing_step_name": "Apply infrastructure",
+  "failing_step_type": "terraform-apply"
+}
+```
+
+Fields are `snake_case`, and every event carries `event` (the catalog id — redundant with, and
+always equal to, the `X-Ravion-Event-Catalog-Id` header) plus the organization/project/environment
+context every event shares. The rest of the fields are specific to the catalog id — a `pipeline.run.*`
+event carries pipeline and run fields, a `step.execution.*` event carries step fields, and so on.
+Optional fields (like `failing_step_name` on a run that failed without one identifiable step) are
+omitted rather than sent as `null`.
+
+## Retry semantics
+
+A delivery gets up to **3 attempts**, waiting 500ms before the second and 1s before the third
+(doubling from a 500ms base, capped at 5s — a cap that never binds at only 3 attempts). Each attempt
+is recorded as its own dispatch row with `attemptNumber` 1, 2, 3, so the full history of one delivery
+is every row that shares its `eventId` and `destinationId`.
+
+Whether a failure is retried depends on why it failed:
+
+- **Retried:** a transport-level failure (DNS, connection refused, TLS handshake, the 10-second
+  timeout), or an HTTP response of `429` or `5xx`.
+- **Not retried, fails immediately:** any other non-`2xx` status — including a `3xx` redirect, which
+  Ravion doesn't follow — and a destination URL that fails the endpoint-requirements check above.
+
+Because the payload bytes are identical on every attempt, treat delivery as **at-least-once** and
+make your handler idempotent: key deduplication on `X-Ravion-Event-Id` (optionally paired with the
+destination, if the same endpoint is scriptable across scenarios), not on the request signature,
+which is identical across attempt 1, 2, and 3 of the same delivery.
+
+## Inspecting delivery history
+
+`GET /notification-dispatches` lists dispatch attempts for your organization, newest first, with
+cursor pagination and explicit array filters:
+
+```bash
+curl -G https://api.ravion.com/notification-dispatches \
+  -H "Authorization: Bearer $RAVION_TOKEN" \
+  --data-urlencode "destinationId=ndest_2p8Kx7ZaQmYtRzL9WbNcFj1sHkX" \
+  --data-urlencode "status=FAILED"
+```
+
+```json
+{
+  "data": [
+    {
+      "id": "ndisp_2p8KxACdQmYtRzL9WbNcFj1sHkA",
+      "destinationId": "ndest_2p8Kx7ZaQmYtRzL9WbNcFj1sHkX",
+      "eventId": "seevt_2p8Kx0EeQmYtRzL9WbNcFj1sHkB",
+      "catalogId": "pipeline.run.failed",
+      "subjectType": "pipeline_run",
+      "subjectId": "prun_2p8Kx1AbQmYtRzL9WbNcFj1sHk9",
+      "ruleIds": ["nrule_2p8Kx6FfQmYtRzL9WbNcFj1sHkC"],
+      "attemptNumber": 3,
+      "status": "FAILED",
+      "requestedAt": "2026-08-16T14:04:49.201Z",
+      "completedAt": "2026-08-16T14:04:59.301Z",
+      "errorMessage": "Destination 'ndest_2p8Kx7ZaQmYtRzL9WbNcFj1sHkX' responded with HTTP 503 instead of a 2xx success."
+    }
+  ],
+  "meta": { "nextCursor": null }
+}
+```
+
+Filter on `destinationId`, `ruleId`, `catalogId`, `status`, `subjectType`/`subjectId`, or a
+`createdAtAfter`/`createdAtBefore` window; every filter takes an explicit list, and a request with
+none of them returns every dispatch in the organization. A retried delivery's attempts share
+`eventId` and `destinationId` and differ only in `attemptNumber`, `status`, and timing — sort a
+delivery's own history by `attemptNumber` to read it in order. `result` (present only on a
+`SUCCEEDED` attempt) carries the responding status code and round-trip time; `errorMessage` is
+present only on a `FAILED` attempt.
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="API overview" icon="code" href="/api-reference/overview">
+    Authentication, pagination, and error format shared by every Ravion API endpoint.
+  </Card>
+</CardGroup>
