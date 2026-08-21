@@ -16,7 +16,7 @@ Template expressions let you insert dynamic values into pipeline config. Wrap a 
     image_ref: << steps.build_web_app.output.image_digest >>
 ```
 
-Expressions are simple dot paths — there are no operators, functions, or conditionals. Each expression resolves to a value from one of the [context namespaces](#context-namespaces) below.
+Expressions are dot paths into one of the [context namespaces](#context-namespaces) below, optionally combined with boolean and comparison operators such as `&&`, `||`, `!`, `==`, and `>`. Keep them simple — an expression selects or compares values, it doesn't transform them.
 
 ## Syntax
 
@@ -136,7 +136,7 @@ Fields that identify structure — like step `id`, `name`, and `type` — are no
 
 ## Conditional steps with `if`
 
-The `if` field accepts a boolean literal or a full block expression that resolves to a boolean:
+The `if` field accepts a boolean literal or a full block expression that resolves to a boolean, including comparisons:
 
 ```yaml
 - id: deploy_web_app
@@ -145,6 +145,10 @@ The `if` field accepts a boolean literal or a full block expression that resolve
   if: << pipeline.input.should_deploy >>
   input:
     image_ref: << steps.build_web_app.output.image_digest >>
+
+- id: approve_deletions
+  type: approval
+  if: << steps.plan.output.change_summary.destroy_count > 0 >>
 ```
 
 ## Type rules
