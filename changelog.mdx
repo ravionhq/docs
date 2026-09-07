@@ -40,15 +40,12 @@ rss: true
 ### Features
 
 - **Annual prepaid billing:** Organizations can switch between monthly invoicing and a prepaid annual billing cycle.
-- **Declared module outputs:** Module authors can declare stack outputs and receive feedback on invalid value references before apply.
 
 ### Improvements
 
 - Module definition settings now offer category creation when an organization has no categories.
-- Unavailable add-ons no longer appear as options for purchase while existing subscribers retain their entitlements.
 - Deployment diffs now wrap long lines by default for easier reading.
 - ECS deployments now show when they are waiting behind their stack pipeline apply and identify the blocking work.
-- Value-reference dependencies now appear as a distinct edge type on the module canvas, with stale and renamed producer warnings.
 
 ### Fixes
 
@@ -56,7 +53,7 @@ rss: true
 - Cancelled EC2 deployments now target the current retry and remain within the original execution deadline.
 - GitLab webhook triggers now register project webhooks when configuration is applied.
 - Module references now resolve GitHub repositories that redirect to a new location.
-- SSO provider enforcement now remains disabled when SSO is disabled.
+- You can now change the permitted identity providers for your organization; this setting was incorrectly locked before.
 
 ## Modules
 
