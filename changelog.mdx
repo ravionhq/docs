@@ -27,6 +27,70 @@ rss: true
 {/* ravion-changelog:august-24-2026 */}
 
 {/* ravion-changelog:august-31-2026 */}
+{/* ravion-changelog:september-7-2026 */}
+<Update
+  label="September 7, 2026"
+  rss={{
+    title: "Annual billing, clearer diffs, reliable deployments, new AWS KMS keys, and richer CLI controls",
+  }}
+>
+
+## Platform
+
+### Features
+
+- **Annual prepaid billing:** Organizations can switch between monthly invoicing and a prepaid annual billing cycle.
+- **Declared module outputs:** Module authors can declare stack outputs and receive feedback on invalid value references before apply.
+
+### Improvements
+
+- Module definition settings now offer category creation when an organization has no categories.
+- Unavailable add-ons no longer appear as options for purchase while existing subscribers retain their entitlements.
+- Deployment diffs now wrap long lines by default for easier reading.
+- ECS deployments now show when they are waiting behind their stack pipeline apply and identify the blocking work.
+- Value-reference dependencies now appear as a distinct edge type on the module canvas, with stale and renamed producer warnings.
+
+### Fixes
+
+- The project creation wizard now stays open while moving between steps.
+- Cancelled EC2 deployments now target the current retry and remain within the original execution deadline.
+- GitLab webhook triggers now register project webhooks when configuration is applied.
+- Module references now resolve GitHub repositories that redirect to a new location.
+- SSO provider enforcement now remains disabled when SSO is disabled.
+
+## Modules
+
+### New modules
+
+- **[AWS KMS Key](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-kms)** 0.1.0: Provision regional symmetric AWS KMS encryption keys with optional key-user access.
+
+### [EC2 Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ec2-service) [1.4.1](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%401.4.1) → [1.4.2](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%401.4.2)
+
+- Default new services to one instance so they scale out only when Maximum instances is increased.
+
+### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [1.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.1.1) → [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.2.0)
+
+- Enable SOCI lazy loading automatically for Fargate builds while keeping it disabled for EC2 capacity.
+
+### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.1.0) → [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.2.0)
+
+- Enable SOCI lazy loading automatically for Fargate builds while keeping it disabled for EC2 capacity.
+
+### [ECS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-worker) [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%401.1.0) → [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%401.2.0)
+
+- Enable SOCI lazy loading automatically for Fargate builds while keeping it disabled for EC2 capacity.
+
+## CLI [1.3.2](https://github.com/ravionhq/cli/releases/tag/v1.3.2) → [1.4.0](https://github.com/ravionhq/cli/releases/tag/v1.4.0)
+
+### Features
+
+- **[AWS account references](https://www.ravion.com/docs/cli/reference/values):** AWS values commands accept a 12-digit AWS account number through `--aws-account-id`.
+- **[Feature flag listing](https://www.ravion.com/docs/cli/reference/feature-flag):** `ravion feature-flag list` evaluates flags for an organization and optional resource scope.
+- **[Billing cycle management](https://www.ravion.com/docs/cli/reference/billing):** `ravion billing cycle set` switches between monthly invoicing and a prepaid annual year, with `--yes` for non-interactive use.
+- **[Deployment waiting phase](https://www.ravion.com/docs/cli/reference/deploy):** Deploy commands report when a deployment is queued behind its stack pipeline apply and identify the blocking step.
+
+</Update>
+
 <Update
   label="August 31, 2026"
   rss={{
