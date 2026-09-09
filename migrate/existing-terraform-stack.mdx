@@ -1,0 +1,208 @@
+---
+title: "Run your existing Terraform with Ravion"
+sidebarTitle: "Run existing Terraform"
+description: "Point an rvn-stack module at the Terraform or OpenTofu repo you already have, keep your existing state, and get plan-on-PR and plan → approve → apply on merge with no import step."
+"og:image": "https://www.ravion.com/og/docs/migrate/existing-terraform-stack.png"
+"twitter:image": "https://www.ravion.com/og/docs/migrate/existing-terraform-stack.png"
+---
+
+Use this guide when you already manage infrastructure with Terraform or OpenTofu and want Ravion to run it. You keep your repository, your `.tf` files, and your state — Ravion becomes the place where plans and applies run, get reviewed, and get approved.
+
+Nothing is imported or recreated. An [`rvn-stack` module](/module-definitions/catalog/rvn-stack) points at your repo and your existing backend. The first plan reads your current state; if your infrastructure has no drift, it shows **no changes**.
+
+<Note>
+  Have resources that aren't in any Terraform state yet? Set up the stack with this guide first, then follow [Import into a Terraform Stack](/migrate/import-into-terraform-stack) to adopt them.
+</Note>
+
+## What you get
+
+Every `rvn-stack` module runs your organization's [change pipeline](/modules/stack#stacks-change-through-pipelines) — `terraform:plan` → `approval` → `terraform:apply` — on temporary EC2 runners in your AWS account. Your code, variables, and credentials never enter the Ravion control plane.
+
+| Event                                                 | What runs                                                                                   |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Pull request opened, updated, or reopened             | A change run that plans the PR branch and stops at the approval gate                        |
+| Push to the primary branch (for example, a PR merge)  | A change run that plans the primary branch and stops at the approval gate; approve to apply |
+| Manual trigger (`ravion stack trigger-pipeline`)      | A change run on the primary branch — use it for the first plan and for drift checks         |
+
+Review plans in the Ravion dashboard or with `ravion pipeline run get-plan`. Only runs you approve apply.
+
+<Warning>
+  Ravion doesn't post plan output back to the pull request yet, and merging a PR doesn't apply anything on its own. Merging pushes to the primary branch, which starts a new run that waits for your approval. Pull request runs use the same change pipeline, so **don't approve a PR run** unless you intend to apply that branch.
+</Warning>
+
+## Before you start
+
+<AccordionGroup>
+  <Accordion title="Keep your existing state backend">
+    Your state stays where it is. When you create the module, set `use_ravion_state_backend` to `false` so Ravion uses the `backend` block already in your configuration (S3 + DynamoDB, Terraform Cloud, and so on). This input is immutable after creation, so get it right the first time.
+
+    Leave `use_ravion_state_backend` at its default (`true`) only for a new configuration that declares an empty `terraform { cloud {} }` block — Ravion then hosts state for you. Turning it on for an existing configuration would start from empty state and plan to create everything.
+
+  </Accordion>
+
+  <Accordion title="Let the runner authenticate with its own role">
+    Plan and apply run on an EC2 instance in the AWS account you choose for the module, with an IAM role Ravion creates for the run. Plan steps get a read-only policy set (plus S3, DynamoDB, and Secrets Manager access for backends and data sources); apply steps get `AdministratorAccess`.
+
+    Make sure your provider and backend blocks work with the default credential chain — remove hardcoded `profile`, `access_key`, or `shared_credentials_files` settings. If your provider uses `assume_role` into another account, that role's trust policy must allow the runner account. If your state bucket is encrypted with a customer-managed KMS key, the plan role needs `kms:Decrypt` on that key.
+
+  </Accordion>
+
+  <Accordion title="Pick OpenTofu (recommended) or Terraform">
+    `rvn-stack` runs OpenTofu or Terraform. Only open-source Terraform releases (below 1.6.0) are available, and Terraform refuses to read state written by a newer Terraform version — so if your state was written by Terraform 1.6 or later, choose **OpenTofu**. OpenTofu reads state written by Terraform; see the [OpenTofu migration guide](https://opentofu.org/docs/intro/migration/) for the version pairing that matches your current Terraform release.
+
+    Once OpenTofu writes state, keep using OpenTofu for that stack.
+
+  </Accordion>
+
+  <Accordion title="Move local-only inputs into module inputs">
+    Anything you pass on the command line today needs a home in the module:
+
+    - `-var-file` flags → `terraform_variable_files` (paths relative to `base_path`)
+    - `-var` flags → `tf_variables`
+    - Environment variables, including `TF_VAR_*` and provider tokens → `env_variables`, with `from_secrets_manager` or `from_parameter_store` for secret values
+
+  </Accordion>
+</AccordionGroup>
+
+## Use an agent
+
+The steps are the [manual walkthrough](#manual-walkthrough) below — copy this prompt into your coding agent in the repository containing your Terraform code:
+
+<Prompt description="Connect this repo's Terraform to Ravion and run the first plan." icon="sparkles" actions={["copy", "cursor"]}>
+  Fetch https://www.ravion.com/docs/migrate/existing-terraform-stack.md and follow its manual walkthrough to run the Terraform or OpenTofu configuration in this repository through a Ravion `rvn-stack` module. Guardrails:
+
+- Keep my existing state backend: set `use_ravion_state_backend: false` and do not add a `cloud {}` block.
+- Inspect my provider and backend blocks and tell me about anything that depends on a local AWS profile or credentials file.
+- Map every `-var-file`, `-var`, and environment variable I currently pass to the matching module input.
+- Show me the first plan before anything is applied. Stop before approval. Never approve a pipeline run unless I explicitly tell you to.
+
+</Prompt>
+
+## Manual walkthrough
+
+<Steps>
+  <Step title="Add an rvn-stack module to your project config">
+    In your project's `ravion.yaml`, add one module instance per Terraform root module (one per environment is typical). Point `repo` and `base_path` at the directory that holds your `.tf` files:
+
+    ```yaml ravion.yaml highlight={9-10,12-14,17}
+    project:
+      givenId: infra
+      name: Infra
+    environments:
+      - givenId: production
+        name: Production
+        moduleInstances:
+          - givenId: core
+            name: Core infrastructure
+            type: rvn-stack
+            version: 1.2.4
+            input:
+              aws_account_id: my-prod-account
+              aws_region: us-east-1
+              repo: my-org/terraform-infra
+              primary_branch: main
+              base_path: environments/production
+              terraform_variable_files:
+                - production.tfvars
+              tool: opentofu
+              opentofu_version: "1.9.0"
+              use_ravion_state_backend: false
+    ```
+
+    `watch_paths` defaults to `<base_path>/**`, so changes outside the root module directory don't trigger runs. Add shared module directories if your root module references them:
+
+    ```yaml
+              watch_paths:
+                - environments/production/**
+                - modules/**
+    ```
+
+    See the [`rvn-stack` inputs reference](/module-definitions/catalog/rvn-stack#inputs-reference) for every field. If you don't have a project yet, `ravion project config apply` creates it — see [Project config file](/config-as-code/project-config-file).
+
+  </Step>
+
+  <Step title="Apply the config and run the first plan">
+    Creating a stack module starts a change run automatically:
+
+    ```bash
+    ravion project config apply infra --file ravion.yaml
+    ```
+
+    The apply prints a `PIPELINE_RUN_ID` for the run it started. Wait for it to reach the approval gate and read the plan:
+
+    ```bash
+    ravion pipeline run wait <run-id> --until PENDING_APPROVAL --watch
+    ravion pipeline run get-plan <run-id>
+    ```
+
+    You can also create the module from the dashboard, or with `ravion module create --initial-stack-run PLAN`.
+
+  </Step>
+
+  <Step title="Confirm the plan matches what you expect">
+    With no drift, the plan reports **no changes** and the run finishes without an approval gate. Every resource in your state now appears under the stack's resources in the dashboard.
+
+    If the plan shows changes, stop and read them before approving anything:
+
+    | Plan shows                 | Likely cause                                                                                                 |
+    | -------------------------- | ------------------------------------------------------------------------------------------------------------ |
+    | Every resource as CREATE   | Ravion isn't reading your state — check `use_ravion_state_backend: false` and your `backend` block            |
+    | A handful of UPDATEs       | Real drift, or a variable or tfvars file you pass locally but haven't mapped to a module input yet            |
+    | Init or provider errors    | Provider or backend credentials that rely on a local profile, or a cross-account role that doesn't trust the runner |
+
+    Fix the input or configuration, push, and the next run replans.
+
+  </Step>
+
+  <Step title="Open a pull request">
+    Push a branch that changes something under `watch_paths` and open a PR. A change run starts for the branch; its description links back to the PR:
+
+    ```bash
+    ravion pipeline run list --limit 5
+    ravion pipeline run get-plan <run-id>
+    ```
+
+    Review the plan in Ravion. Leave the run at its approval gate — approving it applies the PR branch, not the primary branch.
+
+  </Step>
+
+  <Step title="Merge and approve">
+    Merging pushes to `main`, which starts a run on the primary branch. When it reaches the approval gate, review and approve in the dashboard or with the CLI:
+
+    ```bash
+    ravion pipeline run wait <run-id> --until PENDING_APPROVAL --watch
+    ravion pipeline run get-plan <run-id>
+    ravion pipeline run approve <run-id>
+    ```
+
+    The apply uses exactly the plan file you reviewed.
+
+  </Step>
+</Steps>
+
+## Ad-hoc plans and drift checks
+
+Trigger a run on the primary branch at any time. A run with no changes finishes on its own; one with changes stops at the approval gate, so this doubles as a drift check:
+
+```bash
+ravion module list --json                 # stackId of the module
+ravion stack trigger-pipeline <stack-id> --pipeline-type change \
+  --description "Drift check"
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Import into a Terraform Stack" href="/migrate/import-into-terraform-stack">
+    Adopt resources that exist in AWS but not in your state, using import blocks.
+  </Card>
+  <Card title="Terraform Stack module" href="/module-definitions/catalog/rvn-stack">
+    Full `rvn-stack` input reference: triggers, tfvars, environment variables, state backend options.
+  </Card>
+  <Card title="Module stack" href="/modules/stack">
+    How change runs, approvals, and custom pipelines work.
+  </Card>
+  <Card title="Stuck state lock" href="/troubleshooting/stuck-terraform-state-lock">
+    Recover when a run is interrupted mid-apply.
+  </Card>
+</CardGroup>
