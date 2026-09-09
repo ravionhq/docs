@@ -1,0 +1,46 @@
+---
+title: "Configuring sandbox pools"
+sidebarTitle: "Sandbox pools"
+description: "Configure the pool of hosts an execution environment keeps for sandbox pipeline steps: instance types, idle shutdown, unused-host termination, and the reserve policy."
+"og:image": "https://www.ravion.com/og/docs/guides/sandbox-pools.png"
+"twitter:image": "https://www.ravion.com/og/docs/guides/sandbox-pools.png"
+---
+
+A sandbox pipeline step runs your commands inside an isolated microVM on a host that belongs to an execution environment's sandbox pool. This guide covers configuring that pool, sizing a sandbox step, and reading the live state of the hosts it launches.
+
+## Instance type cards
+
+An execution environment's sandbox pool is a set of instance type cards. Each card names one EC2 instance type and the EBS volume every host of that type launches with: disk size in GiB, provisioned IOPS, and provisioned throughput in MB/s.
+
+The pool exists once it has at least one instance type card. Removing the last card removes the pool: its Auto Scaling group, launch templates, and running hosts are torn down. There is no separate enable switch, and no minimum or maximum host count to set — the pool grows and shrinks from demand, and a system-wide ceiling on host count protects the account without needing a value from you.
+
+Add a card for every instance type you want sandbox steps to run on. A step is placed on the cheapest card whose CPU and memory fit the step's request, so listing more than one size lets small and large steps share a pool efficiently.
+
+## Idle shutdown timer
+
+Each execution environment has one idle shutdown timer, in minutes. A host parks itself once it has run zero sandboxes for that long, and starting a new sandbox on a host cancels its timer immediately. A parked host stops billing compute; its volume keeps billing until the host is terminated.
+
+## Unused hosts terminate window
+
+The unused-hosts terminate window, in hours, is how long a parked host is kept before it is terminated. A pool keeps enough of its most recently parked hosts to satisfy the reserve policy below, regardless of the window, so the window only removes hosts above that reserve.
+
+## Reserve policy
+
+The reserve policy decides how many parked hosts the pool keeps ready rather than terminating, based on recent usage over a window of days:
+
+- **Peak** keeps the highest number of hosts that were busy at once during the window.
+- **Rolling average** keeps the mean of each day's peak during the window.
+- **Fixed** keeps a number you set, independent of usage.
+- **None** keeps no reserve — every parked host is eligible for termination once the unused-hosts window passes.
+
+The environment page shows the reserve as both a host count and its monthly cost, computed from the reserved hosts' disk size, IOPS, and throughput.
+
+## Sizing a sandbox step
+
+A sandbox step declares `cpu` and `memory`, the same as any other resource request, and an optional `disk` in GiB — the space reserved for that step on the host it runs on. `disk` defaults to 20 GiB when a step does not set it. Set a larger value for a step whose working set needs more room than the default; there is no need to change it for a typical build or test step.
+
+## Live hosts
+
+The execution environment page lists its sandbox pool's live hosts: state, instance type, availability zone, slots in use, uptime, and when each was last used. Each host has a **View in AWS** action that opens it in the EC2 console.
+
+A pipeline version's page lists the hosts that version needs to run: the instance types and counts its sandbox steps require, computed from how many of them can run at once.

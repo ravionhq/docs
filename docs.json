@@ -119,7 +119,8 @@
             "pages": [
               "guides/custom-domains",
               "guides/managing-secrets",
-              "guides/receiving-webhook-notifications"
+              "guides/receiving-webhook-notifications",
+              "guides/sandbox-pools"
             ]
           },
           {
