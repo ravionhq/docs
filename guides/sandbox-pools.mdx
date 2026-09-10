@@ -10,7 +10,7 @@ A sandbox pipeline step runs your commands inside an isolated microVM on a host 
 
 ## Instance type cards
 
-An execution environment's sandbox pool is a set of instance type cards. Each card names one EC2 instance type and the EBS volume every host of that type launches with: disk size in GiB, provisioned IOPS, and provisioned throughput in MB/s.
+An execution environment's sandbox pool is a set of instance type cards. Each card names one EC2 instance type and the EBS volume every host of that type launches with: disk size in GiB, provisioned IOPS, and provisioned throughput in MB/s. The disk defaults to 60 GiB and can go down to 30. After 10 GiB for the system and a free-space floor, a third of the volume caches snapshot chunks and the rest holds the running sandboxes' working space, so a 60 GiB host holds four sandboxes of the default size beside a 16 GiB cache.
 
 The pool exists once it has at least one instance type card. Removing the last card removes the pool: its Auto Scaling group, launch templates, and running hosts are torn down. There is no separate enable switch, and no minimum or maximum host count to set — the pool grows and shrinks from demand, and a system-wide ceiling on host count protects the account without needing a value from you.
 
@@ -37,7 +37,7 @@ The environment page shows the reserve as both a host count and its monthly cost
 
 ## Sizing a sandbox step
 
-A sandbox step declares `cpu` and `memory`, the same as any other resource request, and an optional `disk` in GiB — the space reserved for that step on the host it runs on. `disk` defaults to 20 GiB when a step does not set it. Set a larger value for a step whose working set needs more room than the default; there is no need to change it for a typical build or test step.
+A sandbox step declares `cpu` and `memory`, the same as any other resource request, and an optional `disk` in GiB — the space reserved for that step on the host it runs on. `disk` defaults to 8 GiB when a step does not set it, which covers a typical build's restored layers and new writes. Set a larger value for a step whose working set needs more room than the default; there is no need to change it for a typical build or test step.
 
 ## Live hosts
 
