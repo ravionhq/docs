@@ -524,10 +524,13 @@ Note: CEL validation ensures min &lt;= max when both are specified.
   Message shown when the dropdown has no available options
 </ResponseField>
 
-<ResponseField name="min" type="integer">
-  Minimum allowed value
+<ResponseField name="min" type="integer | null">
+  Minimum allowed value, or a full template reference to another number input
+  in the same input list: &lt;&lt; module.input.deployment_minimum_healthy_percent &gt;&gt;.
+  Referenced inputs use their effective values, including resolved defaults.
+  Hidden inputs do not participate. Values are validated, never clamped.
 
-  _(format:int32)_
+  _(format:int32; templateable)_
 </ResponseField>
 
 <ResponseField name="max" type="integer">
