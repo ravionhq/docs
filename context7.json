@@ -1,7 +1,7 @@
 {
   "$schema": "https://context7.com/schema/context7.json",
   "projectTitle": "Ravion",
-  "description": "Ravion is the agent-native cloud infrastructure platform to deploy, operate and monitor your AWS services. Use your existing Terraform or provision from our standard library.",
+  "description": "Get a Vercel-like experience in your own AWS account. You and your agents get one place to manage and monitor Terraform resources, builds, and deploys.",
   "excludeFolders": [
     "node_modules",
     "./scripts",
