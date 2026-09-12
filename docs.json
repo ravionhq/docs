@@ -119,7 +119,8 @@
             "group": "Guides",
             "pages": [
               "guides/custom-domains",
-              "guides/managing-secrets"
+              "guides/managing-secrets",
+              "guides/terraform-policy-checks"
             ]
           },
           {
