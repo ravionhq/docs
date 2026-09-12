@@ -52,6 +52,7 @@
             "group": "Config as code",
             "pages": [
               "config-as-code/project-config-file",
+              "config-as-code/configuration-changes",
               "config-as-code/pipeline-config-file",
               "config-as-code/ci-integration"
             ]
