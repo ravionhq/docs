@@ -38,6 +38,16 @@ name: Deploy << pipeline.input.app_name >> to << pipeline.variant.id >>
 module_instance: << pipeline.variant.id >>.web-app
 ```
 
+### Literal `<<`
+
+To write `<<` as plain text, escape it with a backslash. An escaped block is kept as text and is never evaluated:
+
+```yaml
+description: \<< not a template >>   # resolves to the string "<< not a template >>"
+```
+
+A backslash that should itself stay literal is doubled: `\\<< pipeline.input.x >>` is a live template preceded by one backslash. A value whose only `<<` blocks are escaped is not a template and keeps its declared type.
+
 ## Context namespaces
 
 | Namespace             | Available in              | Description                                                    |
@@ -48,6 +58,8 @@ module_instance: << pipeline.variant.id >>.web-app
 | `steps.{id}.output.*` | steps, rollback           | Outputs of a previous step                                     |
 | `steps.{id}.input.*`  | steps, rollback           | Inputs of a previous step                                      |
 | `step.input.*`        | current step only         | The current step's own input values                            |
+| `environments.{env}.modules.{module}.output.*` | steps, rollback, variants | Last-applied stack outputs of a [module](#module-outputs) in this project |
+| `projects.{project}.environments.{env}.modules.{module}.output.*` | steps, rollback, variants | Last-applied stack outputs of a module in another project |
 | `trigger.payload.*`   | `triggers[].run` only     | Trigger payload fields                                         |
 
 ### pipeline.input
@@ -95,6 +107,21 @@ References the outputs and inputs of other steps. The step ID must exist in the 
 Available outputs depend on the step type. For example, [`build` steps](/pipelines/config-reference#buildstep) output `build_ref`, `image_uri`, `image_digest`, and `status`, while [`deploy` steps](/pipelines/config-reference#deploystep) output `deployment_id`, `status`, and `success`. CI steps additionally output `exit_code`, `success`, and `duration_ms`.
 
 [`custom` steps](/pipelines/step-types#publishing-outputs) can also publish their own outputs: declare names in the step's `outputs` list and have commands append `name=value` lines to the file at `$RAVION_OUTPUT`. Each declared name is then readable as `<< steps.{id}.output.{name} >>`.
+
+### Module outputs
+
+References the stack outputs of a module instance, as of its last successful apply. Use `givenId` values for the project, environment, and module segments. The environment is required — a bare `modules.{module}.output.*` address is rejected in pipeline config because a pipeline is not tied to a single environment:
+
+```yaml
+- id: run_migrations
+  type: custom
+  input:
+    environment_variables:
+      DATABASE_HOST: << environments.prod.modules.db.output.host >>
+      BUCKET: << projects.platform.environments.prod.modules.assets.output.bucket_name >>
+```
+
+All module-output references are resolved once, before the first step starts. If a referenced module has never been applied, or the output key does not exist, the run fails during planning. Outputs a module declares as `sensitive` cannot be referenced; use a handle such as an ARN or secret name instead. These references do not order the pipeline after the module and do not appear as dependencies on the canvas — for module-to-module references, see [reference module outputs](/config-as-code/project-config-file#reference-module-outputs).
 
 ### trigger.payload
 

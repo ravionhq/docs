@@ -62,6 +62,49 @@ environments:
 
 </Accordion>
 
+## Reference module outputs
+
+Any module input can take its value from another module's stack output with the `<< … >>` template syntax. Write the template as the input's value; there is no separate field or wrapper.
+
+```yaml
+moduleInstances:
+  - givenId: vpc
+    type: rvn-aws-network
+    version: 0.1.0
+    input:
+      # ...
+
+  - givenId: db
+    type: rvn-rds-postgres
+    version: 0.2.0
+    input:
+      vpc_id: << modules.vpc.output.vpc_id >>
+      subnet_ids: << modules.vpc.output.private_subnet_ids >>
+```
+
+Address the producer relative to the consumer:
+
+| Address                                                          | Producer                                                   |
+| ---------------------------------------------------------------- | ---------------------------------------------------------- |
+| `modules.<module>.output.<key>`                                  | A module in the same environment                           |
+| `environments.<environment>.modules.<module>.output.<key>`       | A module in another environment of the same project        |
+| `projects.<project>.environments.<environment>.modules.<module>.output.<key>` | A module in another project of your organization |
+
+Use the `givenId` of each project, environment, and module. Templates can also combine outputs with literals, for example `<< "postgres://" + modules.db.output.host + ":5432" >>`.
+
+How references behave:
+
+- The template text is what is stored and what `ravion project config pull` exports, so the file round-trips unchanged and stays the source of truth.
+- The value is resolved when the consumer's stack runs. `ravion project config apply` orders stack runs so producers run before the modules that reference them, and rejects reference cycles.
+- If the producer has not been applied yet, the reference is accepted but stays pending; the input is validated against the resolved value once the producer's outputs exist. Apply the producer before running the consumer's stack.
+- Applying a change to a producer does not automatically re-run its consumers. The consumer is marked stale and its next run picks up the new output.
+- A reference binds to the module instance it first resolved to. If you rename a producer's `givenId` and reuse the old one for a different module, the reference keeps pointing at the original instance and a `PRODUCER_RENAMED` warning is recorded so you can update the template.
+- You cannot delete a module or environment while another module still references its outputs; remove the reference first.
+- Sensitive outputs are not exposed through references. Reference a handle such as an ARN or secret name instead of the secret value.
+- To write a literal `<<` in a value, escape it as `\<<`. The escaped block is stored and passed through as plain text and never evaluated; `\\<<` is a live template preceded by a literal backslash.
+
+In the Ravion app, an input holding a template shows the template text as an editable text field with a note describing which module output it resolves from.
+
 ## Pull and apply
 
 Store the config file in your repository and manage it with the CLI.
