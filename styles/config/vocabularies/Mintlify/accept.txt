@@ -163,3 +163,5 @@ vpc_cidr
 zone_creation_enabled
 zone_id
 record_value
+Failover
+failover
