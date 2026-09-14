@@ -41,7 +41,7 @@ flowchart TD
 
 | Topology                                             | Users hit                                                    | Latency records live on                        | Choose when                                                                                                                       |
 | ---------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| **DNS only**                                         | The regional ALB directly                                    | The public hostname, such as `api.example.com` | You want the simplest setup, or you're serving an API or WebSocket traffic that doesn't benefit from a CDN                        |
+| **DNS only**                                         | The regional ALB directly (A alias or CNAME)                                  | The public hostname, such as `api.example.com` | You want the simplest setup, or you're serving an API or WebSocket traffic that doesn't benefit from a CDN                        |
 | **CloudFront in front**                              | One CloudFront distribution at `app.example.com`             | An origin hostname, such as `origin.example.com` | You want edge TLS termination, caching, WAF, HTTP/3, or a single place to manage redirects and headers across regions             |
 | **External DNS + CloudFront**                        | One CloudFront distribution                                  | An origin hostname in Route 53                 | Your public zone lives in another DNS provider. Route 53 only needs to own the origin hostname; the public record stays a CNAME   |
 
@@ -184,7 +184,7 @@ ravion project config apply <project-id> --file ravion.yaml --autoapprove
 
 ## Step 2: Collect each region's load balancer details
 
-Route 53 alias records need two values per region: the load balancer's **DNS name** and its **canonical hosted zone ID**. Both are stack outputs of the module that owns the ALB.
+Route 53 alias records need two values per region: the load balancer's **DNS name** and its **canonical hosted zone ID**. Both are stack outputs of the module that owns the ALB. (CNAME records, covered below, only need the DNS name.)
 
 | Load balancer owner                                              | DNS name output          | Hosted zone ID output    |
 | ---------------------------------------------------------------- | ------------------------ | ------------------------ |
@@ -259,6 +259,40 @@ Set **`alias_evaluate_target_health: true`** on every record. With it, Route 53 
 </Warning>
 
 If you also serve IPv6, repeat the same records with `type: AAAA` — Route 53 treats A and AAAA record sets independently, so each needs its own latency records.
+
+### CNAME variant
+
+Latency routing also works with plain `CNAME` records. Use `target_type: standard` and put the load balancer hostname in `record_value`; no hosted zone ID is needed, and the target doesn't have to be an AWS resource at all (a Cloudflare tunnel or another provider's endpoint works the same way).
+
+```yaml ravion.yaml highlight={4-5,8-10}
+records:
+  - type: CNAME
+    name: api.example.com
+    target_type: standard
+    record_value: api-production-use2-123456.us-east-2.elb.amazonaws.com
+    ttl: 60
+    health_check_id: abcdef12-3456-7890-abcd-ef1234567890 # Route 53 health check for the us-east-2 endpoint
+    routing_policy: latency
+    set_identifier: us-east-2
+    latency_routing_policy_region: us-east-2
+
+  - type: CNAME
+    name: api.example.com
+    target_type: standard
+    record_value: api-production-euw1-654321.eu-west-1.elb.amazonaws.com
+    ttl: 60
+    health_check_id: 12345678-90ab-cdef-1234-567890abcdef
+    routing_policy: latency
+    set_identifier: eu-west-1
+    latency_routing_policy_region: eu-west-1
+```
+
+Two differences from the alias form:
+
+- **Failover needs a health check.** `alias_evaluate_target_health` only exists for alias records, so a CNAME latency record stays in rotation while its region is down unless you attach a Route 53 health check through `health_check_id`. Create one per region against the regional hostname (for example an HTTPS check on `/healthz` with the `Host` header set to `api.example.com`).
+- **No zone apex.** DNS forbids a CNAME at the root of a zone, so `example.com` itself must use alias records; `api.example.com` or `www.example.com` are fine.
+
+Keep `ttl` low (60 seconds) so resolvers pick up a failover quickly; alias records get this for free from the ALB's own TTL.
 
 <Note>
   Latency routing picks the region with the lowest latency **from the DNS resolver making the
