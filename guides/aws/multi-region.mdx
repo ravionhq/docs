@@ -58,7 +58,7 @@ The two Route 53 patterns are the same records — only the name changes. In the
 
 Add one copy of your network, cluster, web service, and regional certificate per region. Give every instance a region-suffixed `givenId` so references stay unambiguous, and set `aws_region` on the modules that take it. The example below uses the [project config file](/config-as-code/project-config-file); the dashboard equivalent is adding the same module instances in each region.
 
-```yaml ravion.yaml highlight={7,16,24,44,53,61}
+```yaml ravion.yaml highlight={9,20,63,74}
 modules:
   # ---------- us-east-2 ----------
   - givenId: vpc-use2
@@ -214,7 +214,7 @@ Add an `rvn-route53` module (or extend an existing one) with **one A alias recor
 - `set_identifier` — any unique label per record; the region name is the obvious choice
 - `latency_routing_policy_region` — the AWS region Route 53 should measure latency to, which should be the region the load balancer is actually in
 
-```yaml ravion.yaml highlight={13-15,23-25}
+```yaml ravion.yaml highlight={17-19,27-29}
 - givenId: dns
   name: DNS
   type: rvn-route53
@@ -264,7 +264,7 @@ If you also serve IPv6, repeat the same records with `type: AAAA` — Route 53 t
 
 Latency routing also works with plain `CNAME` records. Use `target_type: standard` and put the load balancer hostname in `record_value`; no hosted zone ID is needed, and the target doesn't have to be an AWS resource at all (a Cloudflare tunnel or another provider's endpoint works the same way).
 
-```yaml ravion.yaml highlight={4-5,8-10}
+```yaml ravion.yaml highlight={4-7,14-17}
 records:
   - type: CNAME
     name: api.example.com
