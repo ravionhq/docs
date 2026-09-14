@@ -52,10 +52,12 @@ flowchart LR
 
 By default, every stack runs through Ravion-managed **system pipelines**:
 
-| Pipeline | ID                                |
-| -------- | --------------------------------- |
-| Change   | `pipe_system_tf_change_pipeline`  |
-| Destroy  | `pipe_system_tf_destroy_pipeline` |
+| Pipeline | Name                        | Given ID              |
+| -------- | --------------------------- | --------------------- |
+| Change   | Terraform Change Pipeline   | `tf-change-pipeline`  |
+| Destroy  | Terraform Destroy Pipeline  | `tf-destroy-pipeline` |
+
+Both appear in `ravion pipeline list`, where you can read the `pipe_` ID you need to pull their config.
 
 System pipelines are global and read-only — Ravion manages them, and you can't edit them. They give every organization a working plan → approval → apply workflow with zero setup.
 
@@ -67,7 +69,7 @@ To customize the workflow — add policy checks, notifications, or different app
 
     ```bash
     # Pull the system pipeline config as a starting point
-    ravion pipeline config pull pipe_system_tf_change_pipeline --file change-pipeline.yaml
+    ravion pipeline config pull <system-pipeline-id> --file change-pipeline.yaml
 
     # Create your own pipeline and apply the edited config
     ravion pipeline create --given-id tf-change --name "Terraform change" --project-id <project-id>
@@ -96,6 +98,8 @@ To customize the workflow — add policy checks, notifications, or different app
 </Steps>
 
 A module definition can also pin explicit pipeline IDs through its `stack.pipelines` config, which takes precedence over the default values — but only if the definition exposes that config. See the [module definition schema](/module-definitions/definition-schema).
+
+For a worked example — inserting a policy check between plan and apply and rolling it out per environment — see [Add policy checks to Terraform pipelines](/guides/terraform-policy-checks).
 
 ### Initial run when creating a module
 
