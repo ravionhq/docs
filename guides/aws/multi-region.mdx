@@ -31,7 +31,7 @@ flowchart TD
 
 | Topology                      | Users hit                                        | Latency records live on                          | Choose when                                                                                            |
 | ----------------------------- | ------------------------------------------------ | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| **Load balancer only**        | The regional ALB directly (A alias or CNAME)     | The public hostname, such as `api.example.com`   | You want the simplest setup, or serve API or WebSocket traffic that doesn't benefit from a CDN         |
+| **Load balancer only**        | The regional ALB directly                        | The public hostname, such as `api.example.com`   | You want the simplest setup, or serve API or WebSocket traffic that doesn't benefit from a CDN         |
 | **CloudFront in front**       | One CloudFront distribution                      | An origin hostname, such as `origin.example.com` | You want edge TLS, caching, WAF, HTTP/3, or one place to manage redirects and headers across regions   |
 | **External DNS + CloudFront** | One CloudFront distribution                      | An origin hostname in Route 53                   | Your public zone lives with another DNS provider; Route 53 only needs to own the origin hostname       |
 
@@ -252,34 +252,12 @@ Set **`alias_evaluate_target_health: true`** on every record. Route 53 then read
   `health_check_id`.
 </Warning>
 
-### CNAME variant
-
-Latency routing also works with plain `CNAME` records: use `target_type: standard`, put the hostname in `record_value`, and skip the zone ID. The target doesn't have to be an AWS resource.
-
-```yaml ravion.yaml highlight={4-10,14-20}
-records:
-  - type: CNAME
-    name: api.example.com
-    target_type: standard
-    record_value: api-production-use2-123456.us-east-2.elb.amazonaws.com
-    ttl: 60
-    health_check_id: abcdef12-3456-7890-abcd-ef1234567890 # Route 53 health check for the us-east-2 endpoint
-    routing_policy: latency
-    set_identifier: us-east-2
-    latency_routing_policy_region: us-east-2
-
-  - type: CNAME
-    name: api.example.com
-    target_type: standard
-    record_value: api-production-euw1-654321.eu-west-1.elb.amazonaws.com
-    ttl: 60
-    health_check_id: 12345678-90ab-cdef-1234-567890abcdef
-    routing_policy: latency
-    set_identifier: eu-west-1
-    latency_routing_policy_region: eu-west-1
-```
-
-Two differences from the alias form: CNAMEs can't use `alias_evaluate_target_health`, so attach a Route 53 health check per region through `health_check_id` or a dead region stays in rotation; and DNS forbids a CNAME at the zone apex, so `example.com` itself must use alias records. Keep `ttl` low so resolvers pick up a failover quickly.
+<Note>
+  If a regional target isn't an AWS load balancer (a Cloudflare tunnel, another provider's
+  endpoint), use a `CNAME` record instead: `target_type: standard`, the hostname in
+  `record_value`, a low `ttl`, and a Route 53 health check in `health_check_id` — CNAMEs can't use
+  `alias_evaluate_target_health`.
+</Note>
 
 Skip to [Step 5](#step-5-verify-routing) if you're using the load-balancer-only topology.
 
@@ -394,7 +372,7 @@ Latency routing spreads **stateless compute**. Everything else needs its own pla
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | Apply fails with `set_identifier` or "record already exists" | Two latency records share a name without unique `set_identifier`s, or a simple record has the same name       | Give every record a distinct `set_identifier` and remove any simple record for that name         |
 | Everyone is routed to one region                             | `latency_routing_policy_region` is the same on every record, or the other region's ALB has no healthy targets | Set each record's region to where its ALB runs; check target health in the cluster's metrics     |
-| A dead region still receives traffic                         | `alias_evaluate_target_health` is `false`, or a CNAME record has no `health_check_id`                          | Enable it on every alias record; attach a health check to every CNAME record                     |
+| A dead region still receives traffic                         | `alias_evaluate_target_health` is `false`                                                                                      | Set it to `true` on every latency record                                                         |
 | CloudFront returns 502 for one region only                   | That region's ALB certificate doesn't cover the forwarded Host                                                | Use a wildcard certificate or add both names to the regional certificate                          |
 | CloudFront returns 421 or 404 for one region only            | That region's service is missing `api.example.com` in `host_header_values`                                    | Add the same host rules to every region's service                                                |
 | Recreated a cluster and DNS broke                            | ALB DNS name and hosted zone ID changed but the alias still has the old values                                | Copy the new `public_alb_dns_name` and `public_alb_zone_id` outputs into the record              |
