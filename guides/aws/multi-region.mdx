@@ -2,8 +2,8 @@
 title: "Deploy a service to multiple AWS regions"
 sidebarTitle: "Multi-region"
 description: "Run the same service in several AWS regions and send each user to the closest healthy one with Route 53 latency records, optionally behind a single CloudFront distribution."
-"og:image": "https://www.ravion.com/og/docs/guides/multi-region.png"
-"twitter:image": "https://www.ravion.com/og/docs/guides/multi-region.png"
+"og:image": "https://www.ravion.com/og/docs/guides/aws/multi-region.png"
+"twitter:image": "https://www.ravion.com/og/docs/guides/aws/multi-region.png"
 ---
 
 A multi-region setup in Ravion is a **copy of your regional stack per region**, plus one **global DNS layer** that decides which copy a user reaches. Nothing is region-aware inside a module: every module instance has an `aws_region` input, so you run one set of instances per region and tie them together with a [Route 53](/module-definitions/catalog/rvn-route53) module using **latency routing**.
