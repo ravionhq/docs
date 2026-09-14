@@ -165,3 +165,11 @@ zone_id
 record_value
 Failover
 failover
+build_source
+image_registry
+image_repository
+image_digest
+repository_arn
+ecr_use2
+ecr_euw1
+instance_size

@@ -58,7 +58,7 @@ The two Route 53 patterns are the same records — only the name changes. In the
 
 Add one copy of your network, cluster, web service, and regional certificate per region. Give every instance a region-suffixed `givenId` so references stay unambiguous, and set `aws_region` on the modules that take it. The example below uses the [project config file](/config-as-code/project-config-file); the dashboard equivalent is adding the same module instances in each region.
 
-```yaml ravion.yaml highlight={9,20,63,74}
+```yaml ravion.yaml highlight={9,20,62,73}
 modules:
   # ---------- us-east-2 ----------
   - givenId: vpc-use2
@@ -108,9 +108,8 @@ modules:
       public_web_service_enabled: true
       host_header_values:
         - api.example.com
-      build_type: dockerfile
-      source_repo: my-org/my-api
-      dockerfile: Dockerfile
+      build_source: image_registry
+      image_repository: 123456789012.dkr.ecr.us-east-2.amazonaws.com/my-api
       container_port: 8080
       health_check_path: /healthz
 
@@ -162,9 +161,8 @@ modules:
       public_web_service_enabled: true
       host_header_values:
         - api.example.com
-      build_type: dockerfile
-      source_repo: my-org/my-api
-      dockerfile: Dockerfile
+      build_source: image_registry
+      image_repository: 123456789012.dkr.ecr.eu-west-1.amazonaws.com/my-api
       container_port: 8080
       health_check_path: /healthz
 ```
@@ -174,29 +172,45 @@ A few rules that are easy to miss:
 - **Certificates are regional.** ACM certificates for an ALB must be issued in the ALB's region, so each region needs its own `rvn-acm-certificate` instance. The same certificate module *can* validate against a single Route 53 hosted zone from every region — only the `aws_region` differs. A wildcard (`*.example.com`) keeps one certificate valid for both the public hostname and any origin hostname you add later.
 - **Use non-overlapping VPC CIDRs** (`10.10.0.0/16`, `10.20.0.0/16`, …). Nothing requires it today, but you'll want it the moment you peer regions or add a Transit Gateway.
 - **Every region gets the same `host_header_values`.** Whichever region a request lands in, the ALB listener rule must match the hostname users typed — or, with CloudFront, the hostname CloudFront forwards.
-- **Build once, deploy everywhere.** Don't give each region its own build. Use one [pipeline](/concepts/pipelines) with a single `build` step against one of the instances, then a `deploy` step per region that all take the same `build_ref`, so every region runs the identical image:
+- **Build once, deploy everywhere.** Don't let each region build its own image. Give every regional `rvn-ecs-web` instance `build_source: image_registry` pointing at an ECR repository in its own region (create one `my-api` repo per region), then use a single [pipeline](/concepts/pipelines) whose `build:image` step pushes the same image to every regional repository and whose `deploy` steps release that one build to each instance:
 
-  ```yaml pipeline.yaml highlight={12,17}
+  ```yaml pipeline.yaml highlight={13-19,28,33}
+  inputs:
+    - id: commit
+      type: string
   steps:
     - id: build_api
-      type: build
-      module_instance: << pipeline.variant.id >>.api-use2
-      input:
-        branch: << pipeline.input.branch >>
+      type: build:image
+      source:
+        type: git
+        repo: https://github.com/my-org/my-api
+        ref: << pipeline.input.commit >>
+      builder:
+        type: dockerfile
+      destinations:
+        - id: ecr_use2
+          type: ecr
+          repository_arn: arn:aws:ecr:us-east-2:123456789012:repository/my-api
+        - id: ecr_euw1
+          type: ecr
+          repository_arn: arn:aws:ecr:eu-west-1:123456789012:repository/my-api
+      infrastructure:
+        type: ec2
+        instance_size: medium
     - parallel:
         - id: deploy_use2
           type: deploy
           module_instance: << pipeline.variant.id >>.api-use2
           input:
-            image_ref: << steps.build_api.output.build_ref >>
+            image_ref: << steps.build_api.output.image_digest >>
         - id: deploy_euw1
           type: deploy
           module_instance: << pipeline.variant.id >>.api-euw1
           input:
-            image_ref: << steps.build_api.output.build_ref >>
+            image_ref: << steps.build_api.output.image_digest >>
   ```
 
-  Make the deploys sequential instead of `parallel` if you want a canary region to finish first. The image lives in the build instance's ECR repository; ECS in the other region pulls it cross-region, which works but adds a little pull latency and data-transfer cost. Turn on ECR cross-region replication if that matters to you.
+  The image is built once and pushed to both registries, so the digest is identical in each region and every service pulls from its local ECR. Make the deploys sequential instead of `parallel` if you want a canary region to finish first.
 
 Apply the config:
 
