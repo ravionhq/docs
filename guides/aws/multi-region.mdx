@@ -41,11 +41,11 @@ flowchart TD
 
 | Topology                                             | Users hit                                                    | Latency records live on                        | Choose when                                                                                                                       |
 | ---------------------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| **DNS only**                                         | The regional ALB directly (A alias or CNAME)                                  | The public hostname, such as `api.example.com` | You want the simplest setup, or you're serving an API or WebSocket traffic that doesn't benefit from a CDN                        |
+| **Load balancer only**                               | The regional ALB directly (A alias or CNAME)                                  | The public hostname, such as `api.example.com` | You want the simplest setup, or you're serving an API or WebSocket traffic that doesn't benefit from a CDN                        |
 | **CloudFront in front**                              | One CloudFront distribution at `app.example.com`             | An origin hostname, such as `origin.example.com` | You want edge TLS termination, caching, WAF, HTTP/3, or a single place to manage redirects and headers across regions             |
 | **External DNS + CloudFront**                        | One CloudFront distribution                                  | An origin hostname in Route 53                 | Your public zone lives in another DNS provider. Route 53 only needs to own the origin hostname; the public record stays a CNAME   |
 
-The two Route 53 patterns are the same records — only the name changes. In the DNS-only topology the public hostname *is* the latency-routed record. In the CloudFront topology the public hostname is a normal alias to CloudFront, and the latency-routed record sits behind it as CloudFront's **custom origin domain**.
+The two Route 53 patterns are the same records — only the name changes. In the load-balancer-only topology the public hostname *is* the latency-routed record. In the CloudFront topology the public hostname is a normal alias to CloudFront, and the latency-routed record sits behind it as CloudFront's **custom origin domain**.
 
 <Note>
   Route 53 latency routing needs a hostname that Route 53 owns. If your public domain is managed
@@ -301,7 +301,7 @@ Keep `ttl` low (60 seconds) so resolvers pick up a failover quickly; alias recor
   target's, which is 60 seconds for ALBs, so failover typically takes a minute or two.
 </Note>
 
-Apply the change and skip to [Step 5](#step-5-verify-routing) if you're using the DNS-only topology.
+Apply the change and skip to [Step 5](#step-5-verify-routing) if you're using the load-balancer-only topology.
 
 ## Step 4 (optional): Put CloudFront in front
 
@@ -374,7 +374,7 @@ To serve all regions through one CloudFront distribution, keep the latency recor
 
 Why this works: each CloudFront edge location resolves `origin.example.com` on its own. Route 53 sees the query coming from that edge and answers with the region closest to *it*. A viewer in Frankfurt is served by the Frankfurt edge, which connects to `eu-west-1`; a viewer in Chicago is served by a US edge, which connects to `us-east-2`. Regional failover still comes from `alias_evaluate_target_health` on the origin records, because CloudFront re-resolves the origin as the record's TTL expires.
 
-Compared with DNS-only, you also get TLS termination at the edge, connection reuse to the origin, HTTP/2 and HTTP/3, optional WAF, and [redirect rules](/module-definitions/catalog/rvn-cloudfront) managed in one place instead of per region.
+Compared with load balancer only, you also get TLS termination at the edge, connection reuse to the origin, HTTP/2 and HTTP/3, optional WAF, and [redirect rules](/module-definitions/catalog/rvn-cloudfront) managed in one place instead of per region.
 
 ## Step 5: Verify routing
 
