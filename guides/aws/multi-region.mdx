@@ -174,7 +174,29 @@ A few rules that are easy to miss:
 - **Certificates are regional.** ACM certificates for an ALB must be issued in the ALB's region, so each region needs its own `rvn-acm-certificate` instance. The same certificate module *can* validate against a single Route 53 hosted zone from every region — only the `aws_region` differs. A wildcard (`*.example.com`) keeps one certificate valid for both the public hostname and any origin hostname you add later.
 - **Use non-overlapping VPC CIDRs** (`10.10.0.0/16`, `10.20.0.0/16`, …). Nothing requires it today, but you'll want it the moment you peer regions or add a Transit Gateway.
 - **Every region gets the same `host_header_values`.** Whichever region a request lands in, the ALB listener rule must match the hostname users typed — or, with CloudFront, the hostname CloudFront forwards.
-- **Deploys are per region.** Each `rvn-ecs-web` instance has its own build and deploy pipeline. Pushing to the repo triggers all of them, but they roll out independently; there is no cross-region coordination.
+- **Build once, deploy everywhere.** Don't give each region its own build. Use one [pipeline](/concepts/pipelines) with a single `build` step against one of the instances, then a `deploy` step per region that all take the same `build_ref`, so every region runs the identical image:
+
+  ```yaml pipeline.yaml highlight={12,17}
+  steps:
+    - id: build_api
+      type: build
+      module_instance: << pipeline.variant.id >>.api-use2
+      input:
+        branch: << pipeline.input.branch >>
+    - parallel:
+        - id: deploy_use2
+          type: deploy
+          module_instance: << pipeline.variant.id >>.api-use2
+          input:
+            image_ref: << steps.build_api.output.build_ref >>
+        - id: deploy_euw1
+          type: deploy
+          module_instance: << pipeline.variant.id >>.api-euw1
+          input:
+            image_ref: << steps.build_api.output.build_ref >>
+  ```
+
+  Make the deploys sequential instead of `parallel` if you want a canary region to finish first. The image lives in the build instance's ECR repository; ECS in the other region pulls it cross-region, which works but adds a little pull latency and data-transfer cost. Turn on ECR cross-region replication if that matters to you.
 
 Apply the config:
 
@@ -436,7 +458,7 @@ Latency routing spreads **stateless compute**. Everything else needs its own pla
 - **Databases and caches are regional.** An `rvn-rds`, `rvn-aurora`, or `rvn-elasticache` instance lives in one region. Either accept cross-region latency from the other regions to a single primary, or use a replicated data store (Aurora Global Database, DynamoDB global tables) and point each region's service at its local endpoint through environment variables.
 - **Secrets are regional.** Secrets Manager secrets referenced with `valueFrom` must exist in the region of the service that reads them. Create them per region, or replicate them from a primary region. See [Managing secrets](/guides/managing-secrets).
 - **Sessions and uploads.** Anything stored on the instance or in a single-region S3 bucket won't follow a user who gets routed to a different region. Use signed cookies or tokens for sessions and S3 Cross-Region Replication, or a single bucket behind CloudFront, for objects.
-- **Rollouts are not coordinated.** Each region deploys on its own. Use each service's [deploy strategy](/modules/deploy) to keep a bad build from reaching users, and expect a short window where regions run different versions.
+- **Rollouts are only as coordinated as your pipeline.** The build-once pipeline above keeps versions aligned, but there is no atomic multi-region switch: while the deploy steps run, regions briefly serve different versions. Use each service's [deploy strategy](/modules/deploy) to keep a bad build from reaching users, and order the deploy steps if one region should act as a canary.
 
 ## Troubleshooting
 
