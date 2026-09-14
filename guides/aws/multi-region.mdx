@@ -318,7 +318,7 @@ To serve all regions through one CloudFront distribution, keep the latency recor
     regional ALB certificates, so add one more `rvn-acm-certificate` instance alongside the
     CloudFront module:
 
-    ```yaml ravion.yaml highlight={7,20-21,23}
+    ```yaml ravion.yaml highlight={7,19-20,24-25}
     - givenId: api-cert-use1
       name: API certificate us-east-1 (CloudFront)
       type: rvn-acm-certificate
