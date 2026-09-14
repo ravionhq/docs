@@ -246,7 +246,17 @@ Add an `rvn-route53` module (or extend an existing one) with **one A alias recor
         latency_routing_policy_region: eu-west-1
 ```
 
-Set **`alias_evaluate_target_health: true`** on every record. With it, Route 53 checks the ALB's target health before answering: if every target behind the `eu-west-1` ALB is unhealthy, Route 53 stops returning that record and European users fail over to `us-east-2` automatically. Without it, a dead region keeps receiving traffic. This works with no extra Route 53 health check, because Route 53 reads ALB target health directly.
+Set **`alias_evaluate_target_health: true`** on every record. With it, Route 53 checks the ALB's target health before answering: if the `eu-west-1` ALB reports unhealthy, Route 53 stops returning that record and European users fail over to `us-east-2` automatically. Without it, a dead region keeps receiving traffic. This works with no extra Route 53 health check, because Route 53 reads ALB target health directly.
+
+<Warning>
+  Route 53 evaluates an ALB alias **per target group**: the alias is healthy only when every
+  target group attached to the load balancer has at least one healthy target. On a shared cluster
+  ALB, one unrelated service with zero healthy tasks (or an empty target group) marks the whole
+  region unhealthy and drains its traffic. If several services share the ALB, either keep them all
+  healthy, give the multi-region service its own load balancer, or replace
+  `alias_evaluate_target_health` with a Route 53 health check against your service's
+  `/healthz` path and set its ID in `health_check_id`.
+</Warning>
 
 If you also serve IPv6, repeat the same records with `type: AAAA` — Route 53 treats A and AAAA record sets independently, so each needs its own latency records.
 
@@ -270,10 +280,23 @@ To serve all regions through one CloudFront distribution, keep the latency recor
   </Step>
   <Step title="Add a CloudFront module with a custom origin">
     Use `origin_source: custom` and point `origin_domain_name` at the latency-routed hostname.
-    The distribution needs a certificate in `us-east-1` for its alias; request one with a fourth
-    `rvn-acm-certificate` instance.
+    The distribution needs its own certificate in `us-east-1` for its alias, separate from the
+    regional ALB certificates, so add one more `rvn-acm-certificate` instance alongside the
+    CloudFront module:
 
-    ```yaml ravion.yaml highlight={7-8,10}
+    ```yaml ravion.yaml highlight={7,20-21,23}
+    - givenId: api-cert-use1
+      name: API certificate us-east-1 (CloudFront)
+      type: rvn-acm-certificate
+      version: 1.0.1
+      input:
+        aws_account_id: my-aws-account
+        aws_region: us-east-1 # CloudFront certificates must be in us-east-1
+        domain_name: "*.example.com"
+        route53_validation_records_creation_enabled: true
+        route53_zone_id: Z1234567890ABC
+        certificate_validation_wait_enabled: true
+
     - givenId: cdn
       name: CDN
       type: rvn-cloudfront
@@ -286,7 +309,7 @@ To serve all regions through one CloudFront distribution, keep the latency recor
         distribution_aliases:
           - api.example.com
         certificate:
-          moduleGivenIdRef: api-cert-use1 # rvn-acm-certificate in us-east-1
+          moduleGivenIdRef: api-cert-use1
     ```
 
     CloudFront's default origin request policy forwards the **viewer's Host header**
