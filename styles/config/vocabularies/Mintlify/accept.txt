@@ -173,3 +173,4 @@ repository_arn
 ecr_use2
 ecr_euw1
 instance_size
+ecr_repository_arn
