@@ -119,6 +119,7 @@
             "group": "Guides",
             "pages": [
               "guides/custom-domains",
+              "guides/aws/multi-region",
               "guides/managing-secrets"
             ]
           },
