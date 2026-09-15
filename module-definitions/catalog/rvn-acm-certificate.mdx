@@ -20,9 +20,10 @@ flowchart BT
   rvn_cloudfront["rvn-cloudfront"] -.-> rvn_acm_certificate
   rvn_ecs_cluster["rvn-ecs-cluster"] -.-> rvn_acm_certificate
   rvn_ecs_nlb["rvn-ecs-nlb"] -.-> rvn_acm_certificate
+  rvn_eks_addons["rvn-eks-addons"] -.-> rvn_acm_certificate
 
   class rvn_acm_certificate current
-  class rvn_aws_alb,rvn_aws_static,rvn_cloudfront,rvn_ecs_cluster,rvn_ecs_nlb consumer
+  class rvn_aws_alb,rvn_aws_static,rvn_cloudfront,rvn_ecs_cluster,rvn_ecs_nlb,rvn_eks_addons consumer
 
   classDef current fill:#C4B5FD,stroke:#8B5CF6,color:#3B0764
   classDef dependency fill:#FAF8FF,stroke:#DDD6FE,color:#6D28D9
@@ -34,6 +35,7 @@ flowchart BT
   click rvn_cloudfront "/module-definitions/catalog/rvn-cloudfront" "Open rvn-cloudfront docs"
   click rvn_ecs_cluster "/module-definitions/catalog/rvn-ecs-cluster" "Open rvn-ecs-cluster docs"
   click rvn_ecs_nlb "/module-definitions/catalog/rvn-ecs-nlb" "Open rvn-ecs-nlb docs"
+  click rvn_eks_addons "/module-definitions/catalog/rvn-eks-addons" "Open rvn-eks-addons docs"
 ```
 
 _Every dependency input can be specified manually to reference existing external infrastructure rather than a Ravion module._
