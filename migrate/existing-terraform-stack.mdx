@@ -1,7 +1,7 @@
 ---
 title: "Run your existing Terraform with Ravion"
 sidebarTitle: "Run existing Terraform"
-description: "Point an rvn-stack module at the Terraform or OpenTofu repo you already have, keep your existing state, and get plan-on-PR and plan → approve → apply on merge with no import step."
+description: "Point an rvn-stack module at the Terraform or OpenTofu repo you already have, keep your existing state, and choose whether applies happen from pull requests or from the primary branch. No import step."
 "og:image": "https://www.ravion.com/og/docs/migrate/existing-terraform-stack.png"
 "twitter:image": "https://www.ravion.com/og/docs/migrate/existing-terraform-stack.png"
 ---
@@ -18,17 +18,49 @@ Nothing is imported or recreated. An [`rvn-stack` module](/module-definitions/ca
 
 Every `rvn-stack` module runs your organization's [change pipeline](/modules/stack#stacks-change-through-pipelines) — `terraform:plan` → `approval` → `terraform:apply` — on temporary EC2 runners in your AWS account. Your code, variables, and credentials never enter the Ravion control plane.
 
-| Event                                                 | What runs                                                                                   |
-| ----------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Pull request opened, updated, or reopened             | A change run that plans the PR branch and stops at the approval gate                        |
-| Push to the primary branch (for example, a PR merge)  | A change run that plans the primary branch and stops at the approval gate; approve to apply |
-| Manual trigger (`ravion stack trigger-pipeline`)      | A change run on the primary branch — use it for the first plan and for drift checks         |
+Two independent inputs decide what each git event runs. Each accepts `none`, `plan`, or `plan_and_apply`:
 
-Review plans in the Ravion dashboard or with `ravion pipeline run get-plan`. Only runs you approve apply.
+| Input                 | Fires on                                                                       | Default          |
+| --------------------- | ------------------------------------------------------------------------------ | ---------------- |
+| `pull_request_runs`   | A pull request against the primary branch is opened, updated, or reopened      | `plan`           |
+| `primary_branch_runs` | A push to the primary branch — **including the push created by merging a PR** | `plan_and_apply` |
 
-<Warning>
-  Ravion doesn't post plan output back to the pull request yet, and merging a PR doesn't apply anything on its own. Merging pushes to the primary branch, which starts a new run that waits for your approval. Pull request runs use the same change pipeline, so **don't approve a PR run** unless you intend to apply that branch.
-</Warning>
+- `plan` runs `terraform:plan` and finishes. Nothing is applied. For pull requests, the plan summary is posted to the PR as a comment and a `ravion/plan` commit check.
+- `plan_and_apply` runs the full pipeline and stops at the approval gate. Only runs you approve apply, and the apply uses exactly the plan file you reviewed.
+- `none` doesn't start a run for that event.
+
+Manual runs (`ravion stack trigger-pipeline`, or **Plan** / **Apply** / **Destroy** in the dashboard) always target the primary branch and aren't affected by these inputs.
+
+### Pick your git workflow
+
+<Tabs>
+  <Tab title="Plan on the PR, apply from the primary branch">
+    The default. Pull requests are **plan only**; nothing applies until the change is merged. Merging pushes to the primary branch, which runs a fresh plan against the merged commit and current state, then waits for approval.
+
+    ```yaml
+    pull_request_runs: plan
+    primary_branch_runs: plan_and_apply
+    ```
+
+    To skip the post-merge approval click, set `primary_branch_autoapprove_enabled: true`. Plans that destroy or replace resources still stop for approval.
+
+  </Tab>
+  <Tab title="Plan and apply from the PR, then merge">
+    The pull request run is the apply: plan → approve → apply on the PR branch, and you merge once the apply succeeds. Disable primary branch runs so the merge doesn't apply a second time:
+
+    ```yaml
+    pull_request_runs: plan_and_apply
+    primary_branch_runs: none
+    ```
+
+    Prefer `primary_branch_runs: plan` if you want a free post-merge drift check confirming the merged commit is a no-op.
+
+  </Tab>
+</Tabs>
+
+<Note>
+  `pull_request_runs`, `primary_branch_runs`, and PR comments/checks require `rvn-stack` **1.3.0** or later. Earlier versions run plan → approve → apply on every push and every pull request, and don't post to the PR.
+</Note>
 
 ## Before you start
 
@@ -72,6 +104,7 @@ The steps are the [manual walkthrough](#manual-walkthrough) below — copy this 
   Fetch https://www.ravion.com/docs/migrate/existing-terraform-stack.md and follow its manual walkthrough to run the Terraform or OpenTofu configuration in this repository through a Ravion `rvn-stack` module. Guardrails:
 
 - Keep my existing state backend: set `use_ravion_state_backend: false` and do not add a `cloud {}` block.
+- Use `rvn-stack` 1.3.0 or later with `pull_request_runs: plan` and `primary_branch_runs: plan_and_apply` unless I say I apply from pull requests.
 - Inspect my provider and backend blocks and tell me about anything that depends on a local AWS profile or credentials file.
 - Map every `-var-file`, `-var`, and environment variable I currently pass to the matching module input.
 - Show me the first plan before anything is applied. Stop before approval. Never approve a pipeline run unless I explicitly tell you to.
@@ -82,9 +115,9 @@ The steps are the [manual walkthrough](#manual-walkthrough) below — copy this 
 
 <Steps>
   <Step title="Add an rvn-stack module to your project config">
-    In your project's `ravion.yaml`, add one module instance per Terraform root module (one per environment is typical). Point `repo` and `base_path` at the directory that holds your `.tf` files:
+    In your project's `ravion.yaml`, add one module instance per Terraform root module (one per environment is typical). Point `repo` and `base_path` at the directory that holds your `.tf` files. The highlighted lines are the ones that matter for an existing stack — keep your state backend, and choose where applies happen:
 
-    ```yaml ravion.yaml highlight={15,17-19,22}
+    ```yaml ravion.yaml highlight={22-24}
     project:
       givenId: infra
       name: Infra
@@ -95,7 +128,7 @@ The steps are the [manual walkthrough](#manual-walkthrough) below — copy this 
           - givenId: core
             name: Core infrastructure
             type: rvn-stack
-            version: 1.2.4
+            version: 1.3.0
             input:
               aws_account_id: my-prod-account
               aws_region: us-east-1
@@ -107,6 +140,8 @@ The steps are the [manual walkthrough](#manual-walkthrough) below — copy this 
               tool: opentofu
               opentofu_version: "1.9.0"
               use_ravion_state_backend: false
+              pull_request_runs: plan
+              primary_branch_runs: plan_and_apply
     ```
 
     `watch_paths` defaults to `<base_path>/**`, so changes outside the root module directory don't trigger runs. Add shared module directories if your root module references them:
@@ -155,19 +190,21 @@ The steps are the [manual walkthrough](#manual-walkthrough) below — copy this 
   </Step>
 
   <Step title="Open a pull request">
-    Push a branch that changes something under `watch_paths` and open a PR. A change run starts for the branch; its description links back to the PR:
+    Push a branch that changes something under `watch_paths` and open a PR against `main`. With `pull_request_runs: plan`, Ravion plans the branch and posts the summary — resource counts, a destructive-change warning if needed, and a link to the run — as a PR comment and a `ravion/plan` commit check. Nothing applies.
+
+    Read the full plan from the linked run, or from the CLI:
 
     ```bash
     ravion pipeline run list --limit 5
     ravion pipeline run get-plan <run-id>
     ```
 
-    Review the plan in Ravion. Leave the run at its approval gate — approving it applies the PR branch, not the primary branch.
+    With `pull_request_runs: plan_and_apply`, the same run also stops at an approval gate; approving it applies **the PR branch**. Only do this if you chose the apply-from-PR workflow.
 
   </Step>
 
-  <Step title="Merge and approve">
-    Merging pushes to `main`, which starts a run on the primary branch. When it reaches the approval gate, review and approve in the dashboard or with the CLI:
+  <Step title="Merge, then approve the primary branch run">
+    Merging pushes to `main`. With `primary_branch_runs: plan_and_apply`, Ravion runs a fresh plan against the merged commit and your current state — it doesn't reuse the PR plan, so it can't be stale. When the run reaches the approval gate, review and approve in the dashboard or with the CLI:
 
     ```bash
     ravion pipeline run wait <run-id> --until PENDING_APPROVAL --watch
@@ -175,14 +212,16 @@ The steps are the [manual walkthrough](#manual-walkthrough) below — copy this 
     ravion pipeline run approve <run-id>
     ```
 
-    The apply uses exactly the plan file you reviewed.
+    The apply uses exactly the plan file you reviewed. Set `primary_branch_autoapprove_enabled: true` to skip this step for non-destructive plans.
+
+    If you apply from PRs instead (`primary_branch_runs: none`), merging starts nothing — the branch was already applied.
 
   </Step>
 </Steps>
 
 ## Ad-hoc plans and drift checks
 
-Trigger a run on the primary branch at any time. A run with no changes finishes on its own; one with changes stops at the approval gate, so this doubles as a drift check:
+Trigger a run on the primary branch at any time, regardless of `primary_branch_runs`. A run with no changes finishes on its own; one with changes stops at the approval gate, so this doubles as a drift check:
 
 ```bash
 ravion module list --json                 # stackId of the module
