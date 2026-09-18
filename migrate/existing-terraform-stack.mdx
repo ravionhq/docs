@@ -84,7 +84,7 @@ The steps are the [manual walkthrough](#manual-walkthrough) below — copy this 
   <Step title="Add an rvn-stack module to your project config">
     In your project's `ravion.yaml`, add one module instance per Terraform root module (one per environment is typical). Point `repo` and `base_path` at the directory that holds your `.tf` files:
 
-    ```yaml ravion.yaml highlight={9-10,12-14,17}
+    ```yaml ravion.yaml highlight={15,17-19,22}
     project:
       givenId: infra
       name: Infra
