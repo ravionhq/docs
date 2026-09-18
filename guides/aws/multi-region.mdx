@@ -177,7 +177,7 @@ steps:
         repository_arn: arn:aws:ecr:eu-west-1:123456789012:repository/api-production-euw1 # ecr_repository_arn from api-euw1
     infrastructure:
       type: ec2
-      instance_size: medium
+      instance_size: t3.medium
   - parallel:
       - id: deploy_use2
         type: deploy

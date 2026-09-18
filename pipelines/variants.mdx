@@ -68,7 +68,7 @@ steps:
     infrastructure:
       execution_environment_id: << pipeline.input.execution_environment_id >>
       type: ec2
-      instance_size: large
+      instance_size: t3.large
     input:
       commands:
         - npm test

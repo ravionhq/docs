@@ -90,7 +90,7 @@ Module builds pin the cache source for you and expose no input for changing it. 
       repository_arn: arn:aws:ecr:us-east-1:123456789012:repository/my-app
   infrastructure:
     type: ec2
-    instance_size: medium
+    instance_size: t3.medium
 ```
 
 Both `tag` and `digest` are optional, accept template tokens, and resolve against the step's first ECR destination — so the tag or digest you name has to exist in that repo. `digest` wins if you set both. Omit `cache_from` entirely and the step falls back to the most recent image in that repo. See [`CacheFromConfig`](/pipelines/config-reference#cachefromconfig) for the full field list.

@@ -93,7 +93,7 @@ Builds a Docker image from a git source and pushes it to one or more ECR destina
         - << pipeline.input.commit >>
   infrastructure:
     type: ec2
-    instance_size: medium
+    instance_size: t3.medium
 ```
 
 See [BuildImageCiStep schema](/pipelines/config-reference#buildimagecistep).
@@ -119,7 +119,7 @@ Builds static assets from a git source and uploads them to one or more S3 destin
       region: us-east-1
   infrastructure:
     type: ec2
-    instance_size: small
+    instance_size: t3.small
 ```
 
 See [BuildStaticCiStep schema](/pipelines/config-reference#buildstaticcistep).
@@ -141,7 +141,7 @@ Runs arbitrary shell commands on provisioned compute — tests, linters, migrati
     - npm test
   infrastructure:
     type: ec2
-    instance_size: medium
+    instance_size: t3.medium
 ```
 
 See [CustomCommandCiStep schema](/pipelines/config-reference#customcommandcistep).
@@ -166,7 +166,7 @@ A `custom` step can publish string values for later steps to consume. Declare th
     - app_version
   infrastructure:
     type: ec2
-    instance_size: medium
+    instance_size: t3.medium
 ```
 
 Later steps read the value with a [template expression](/pipelines/templating):
@@ -192,7 +192,7 @@ Generates a Terraform or OpenTofu plan and uploads the plan file to S3 for a lat
   version: 1.7.0
   infrastructure:
     type: ec2
-    instance_size: small
+    instance_size: t3.small
 ```
 
 See [TerraformPlanCiStep schema](/pipelines/config-reference#terraformplancistep).
@@ -210,7 +210,7 @@ Applies a plan file produced by a preceding `terraform:plan` step. Reference the
   plan_file_uri: << steps.tf_plan.output.plan_file_uri >>
   infrastructure:
     type: ec2
-    instance_size: small
+    instance_size: t3.small
 ```
 
 See [TerraformApplyCiStep schema](/pipelines/config-reference#terraformapplycistep).
