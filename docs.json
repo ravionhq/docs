@@ -60,6 +60,7 @@
             "group": "Migrate",
             "pages": [
               "migrate/from-flightcontrol",
+              "migrate/existing-terraform-stack",
               "migrate/import-into-standard-module",
               "migrate/import-into-terraform-stack"
             ]
