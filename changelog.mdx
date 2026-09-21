@@ -34,7 +34,7 @@ rss: true
 <Update
   label="September 21, 2026"
   rss={{
-    title: "New EKS modules, more payment methods, clearer billing usage, and more resilient deployments",
+    title: "Team trials, plan change previews, clearer billing usage, and module updates",
   }}
 >
 
@@ -44,18 +44,16 @@ rss: true
 
 - **Plan change previews:** Preview whether switching plans starts a free trial before making the change.
 - **Team trials:** Organizations upgrading from Free can start a 14-day Team trial, and company-domain signups default to that trial.
-- **Payment methods:** Billing supports cards, Link, PayPal, Cash App, bank debits, and wallets.
 - **GitHub access details:** Git connections show organization member counts and repository users, including pending invitations.
 
 ### Improvements
 
 - Project cards now show each environment's module total and infrastructure-run counts.
-- Billing usage periods now follow the contract anniversary and show progress through the current period.
 - The module canvas now remembers zoom separately for each environment.
-- EKS deployments now run different releases in parallel while keeping each release ordered.
 
 ### Fixes
 
+- Billing usage periods now follow the contract anniversary and show progress through the current period.
 - Invoice totals now use dollar units and invoice lists show finalized invoices without draft entries.
 - Billing usage pages now handle days that span two billing periods without duplicate entries.
 - Advanced Terraform variables now override fields inside generated nested objects.
@@ -66,13 +64,6 @@ rss: true
 - Email verification no longer crashes when Chrome translation is enabled.
 
 ## Modules
-
-### New modules
-
-- **[EKS Add-ons](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-addons)** 0.9.3: Configure add-ons for an existing EKS cluster, including networking, observability, and Ravion management.
-- **[EKS Cluster](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-cluster)** 0.3.0: Provision a production-ready Amazon EKS cluster with managed capacity and core add-ons.
-- **[EKS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-web)** 1.2.0: Provision an HTTP service on EKS behind a shared load balancer without writing Kubernetes manifests or Helm charts.
-- **[EKS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-worker)** 0.4.2: Provision a private, long-lived worker on EKS without writing Kubernetes manifests or Helm charts.
 
 ### [Aurora Database](https://www.ravion.com/docs/module-definitions/catalog/rvn-aurora) [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%401.2.0) → [1.2.1](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%401.2.1)
 
