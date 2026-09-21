@@ -86,7 +86,7 @@ Keep steps in the same pipeline when they share a dependency:
 - An approval that several deploys wait on.
 - Services that must roll out together, in a fixed order, because of a schema or API contract.
 
-Use `parallel` for steps that can overlap *inside* one of these workflows — build two images before a shared deploy stage, or fan a single build out to several deploys. Reach for `group` only occasionally: it labels a nested sequence in the UI and gives it a shared concurrency limit, so it's useful to hold a multi-step branch inside a `parallel` block. A pipeline whose top level is nothing but parallel groups is almost always several pipelines. See [Blocks](/pipelines/step-types#blocks) for the semantics.
+Use `parallel` for steps that can overlap *inside* one of these workflows — build two images before a shared deploy stage, or fan a single build out to several deploys. Reach for `group` only occasionally: it labels a nested sequence in the UI and can carry a concurrency key for the block as a whole, so it's useful to hold a multi-step branch inside a `parallel` block. A pipeline whose top level is nothing but parallel groups is almost always several pipelines. See [Blocks](/pipelines/step-types#blocks) for the semantics.
 
 ### You might want to use Ravion pipelines for the following reasons:
 

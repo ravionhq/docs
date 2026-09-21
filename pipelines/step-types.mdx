@@ -290,7 +290,7 @@ See [ParallelStep schema](/pipelines/config-reference#parallelstep).
 
 ### group
 
-Runs its `steps` sequentially, exactly as they would run at the top level, and shows them under one label in the UI. A `group` adds no scheduling behavior of its own — only a `concurrency` limit shared by the executions inside it. Its main job is to put a multi-step sequence inside a `parallel` block, whose children are otherwise single steps:
+Runs its `steps` sequentially, exactly as they would run at the top level, and shows them under one label in the UI. A `group` adds no scheduling behavior to its children; its optional `concurrency` config controls how competing executions of the whole group block are admitted across runs (by `key` and `scope`), not how the steps inside one run are throttled. Its main job is to put a multi-step sequence inside a `parallel` block, whose children are otherwise single steps:
 
 ```yaml
 - parallel:
@@ -320,7 +320,7 @@ Runs its `steps` sequentially, exactly as they would run at the top level, and s
         image_ref: << steps.build_worker.output.image_digest >>
 ```
 
-Don't wrap a top-level sequence in a `group` just to name it — a pipeline with one `group` containing all its steps is the same pipeline with extra nesting. Groups are the rarest block; if you aren't nesting a sequence inside `parallel` or sharing a concurrency limit, leave it out.
+Don't wrap a top-level sequence in a `group` just to name it — a pipeline with one `group` containing all its steps is the same pipeline with extra nesting. Groups are the rarest block; if you aren't nesting a sequence inside `parallel` or gating the block with a concurrency key, leave it out.
 
 See [GroupStep schema](/pipelines/config-reference#groupstep).
 
