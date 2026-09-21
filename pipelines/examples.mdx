@@ -8,7 +8,7 @@ description: "Validated Ravion pipeline configuration examples: sequential build
 
 Copy these complete pipeline configs as starting points. Each example is a full config file you can apply with `ravion pipeline config apply <pipeline-id> --file <file>` — see [Pipeline config file](/config-as-code/pipeline-config-file).
 
-A pipeline describes a workflow, not an environment — name it after what it does, like **Build & Deploy**, and reuse it across environments with [variants](/pipelines/variants). Every example references module instances as `<< pipeline.variant.id >>.module-given-id`, so with variant IDs that match your environment given IDs, the same steps deploy to whichever environment a run targets. Adjust module given IDs, repos, and AWS references to match your project. For every field and step type, see the [configuration reference](/pipelines/config-reference) and [step types](/pipelines/step-types).
+A pipeline describes a workflow, not an environment — name it after what it does, like **Build & Deploy**, and reuse it across environments with [variants](/pipelines/variants). Every example references module instances as `<< pipeline.variant.id >>.module-given-id`, so with variant IDs that match your environment given IDs, the same steps deploy to whichever environment a run targets. Adjust module given IDs, repos, and AWS references to match your project. Each example is one workflow whose steps depend on each other; services with nothing in common get their own pipeline rather than a parallel group here — see [One workflow per pipeline](/concepts/pipelines#one-workflow-per-pipeline). For every field and step type, see the [configuration reference](/pipelines/config-reference) and [step types](/pipelines/step-types).
 
 ## Build and deploy
 
@@ -48,7 +48,9 @@ steps:
 
 ## Parallel builds, then parallel deploys
 
-Build two modules concurrently, and once both builds succeed, deploy both concurrently. Each `parallel` block completes before the next step starts, so no deploy begins until both builds finish. The build block sets `fail_strategy: finish-all`, so if one build fails the other still runs to completion before the block fails — the default `cancel-all` would cancel it instead.
+Build two modules concurrently, and once both builds succeed, deploy both concurrently. Each `parallel` block completes before the next step starts, so no deploy begins until both builds finish. The build block sets `fail_strategy: cancel-all`, so if one build fails the other is cancelled immediately — the default `finish-all` would let it run to completion before the block fails.
+
+This shape is for services that ship together: the deploy stage waits for *both* builds to succeed, so a broken worker build never lets a new web-app go out alone. If the two services can ship independently, they should be two pipelines — see [When not to use blocks](/pipelines/step-types#when-not-to-use-blocks).
 
 ```yaml pipeline.yaml
 inputs:
@@ -72,7 +74,7 @@ steps:
         module_instance: << pipeline.variant.id >>.worker
         input:
           branch: << pipeline.input.branch >>
-    fail_strategy: finish-all
+    fail_strategy: cancel-all
   - parallel:
       - id: deploy_web_app
         name: Deploy web-app
