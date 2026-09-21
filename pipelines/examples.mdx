@@ -48,7 +48,7 @@ steps:
 
 ## Parallel builds, then parallel deploys
 
-Build two modules concurrently, and once both builds succeed, deploy both concurrently. Each `parallel` block completes before the next step starts, so no deploy begins until both builds finish. The build block sets `fail_strategy: cancel-all`, so if one build fails the other is cancelled immediately — the default `finish-all` would let it run to completion before the block fails.
+Build two modules concurrently, and once both builds succeed, deploy both concurrently. Each `parallel` block completes before the next step starts, so no deploy begins until both builds finish. The build block sets `fail_strategy: finish-all` (the default, written out here for clarity), so if one build fails the other still runs to completion before the block fails — set `cancel-all` to cancel it immediately instead.
 
 This shape is for services that ship together: the deploy stage waits for *both* builds to succeed, so a broken worker build never lets a new web-app go out alone. If the two services can ship independently, they should be two pipelines — see [When not to use blocks](/pipelines/step-types#when-not-to-use-blocks).
 
@@ -74,7 +74,7 @@ steps:
         module_instance: << pipeline.variant.id >>.worker
         input:
           branch: << pipeline.input.branch >>
-    fail_strategy: cancel-all
+    fail_strategy: finish-all
   - parallel:
       - id: deploy_web_app
         name: Deploy web-app
