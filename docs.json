@@ -81,6 +81,7 @@
                   "module-definitions/catalog/rvn-acm-certificate",
                   "module-definitions/catalog/rvn-aurora",
                   "module-definitions/catalog/rvn-aws-alb",
+                  "module-definitions/catalog/rvn-aws-compliance",
                   "module-definitions/catalog/rvn-aws-iam-policy",
                   "module-definitions/catalog/rvn-aws-iam-role",
                   "module-definitions/catalog/rvn-aws-kms",
