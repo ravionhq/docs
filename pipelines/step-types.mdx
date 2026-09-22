@@ -6,13 +6,15 @@ description: "Catalog of Ravion pipeline step types, including module actions, C
 "twitter:image": "https://www.ravion.com/og/docs/pipelines/step-types.png"
 ---
 
-A step is the smallest unit of work in a pipeline. Every action step shares a common shape — `id`, optional `name`, `timeout`, and `if` condition — and adds fields specific to its `type`. Wrap steps in `parallel` or `group` blocks to control how they run. See [Pipelines overview](/concepts/pipelines).
+A step is the smallest unit of work in a pipeline. Every action step shares a common shape — `id`, optional `name`, `timeout`, and `if` condition — and adds fields specific to its `type`. Wrap steps in `parallel` or `group` [blocks](#blocks) to control how they run. See [Pipelines overview](/concepts/pipelines).
 
 Steps fall into three categories:
 
 - **Module steps** act on a module instance through its build or deploy manager: `build`, `deploy`, `rollback`.
 - **CI steps** run on provisioned compute that you configure with an `infrastructure` block: `build:image`, `build:static`, `custom`, `terraform:plan`, `terraform:apply`.
 - **Control-flow steps** shape the run itself: `approval`, `sleep`, `trigger:pipeline`.
+
+Blocks are not steps: `parallel` and `group` have no `id` or `type`, and they hold steps rather than doing work.
 
 For every field, default, and nested type, see the [pipeline configuration schema](/pipelines/config-reference).
 
@@ -257,3 +259,127 @@ Starts another pipeline run and passes `inputs` to it. Optionally pin a `pipelin
 ```
 
 See [TriggerPipelineStep schema](/pipelines/config-reference#triggerpipelinestep).
+
+## Blocks
+
+Steps in a list run sequentially in order. Two block types change that: `parallel` runs its children at the same time, and `group` labels a nested sequence. Most pipelines need neither — a flat list of steps is the default shape, and many pipelines need only `parallel`.
+
+### parallel
+
+Runs every child concurrently. The block finishes when all children finish, so a step after the block waits for all of them. Children are action steps or `group` blocks; a `parallel` block can't directly contain another `parallel` block. `fail_strategy` controls what happens to the other children when one fails: `finish-all` (default) lets the block finish its remaining work, `finish-running` lets in-flight children finish their current step, and `cancel-all` cancels them immediately.
+
+```yaml
+- parallel:
+    - id: build_web_app
+      type: build
+      module_instance: << pipeline.variant.id >>.web-app
+    - id: build_worker
+      type: build
+      module_instance: << pipeline.variant.id >>.worker
+  fail_strategy: cancel-all
+- id: deploy_web_app  # waits for both builds
+  type: deploy
+  module_instance: << pipeline.variant.id >>.web-app
+  input:
+    image_ref: << steps.build_web_app.output.image_digest >>
+```
+
+Use `parallel` when the children are independent of each other *but* something later in the pipeline depends on all of them. If nothing downstream depends on them together, they don't belong in the same pipeline — see [When not to use blocks](#when-not-to-use-blocks).
+
+See [ParallelStep schema](/pipelines/config-reference#parallelstep).
+
+### group
+
+Runs its `steps` sequentially, exactly as they would run at the top level, and shows them under one label in the UI. A `group` adds no scheduling behavior to its children; its optional `concurrency` config controls how competing executions of the whole group block are admitted across runs (by `key` and `scope`), not how the steps inside one run are throttled. Its main job is to put a multi-step sequence inside a `parallel` block, whose children are otherwise single steps:
+
+```yaml
+- parallel:
+    - group: Web app
+      steps:
+        - id: build_web_app
+          type: build
+          module_instance: << pipeline.variant.id >>.web-app
+        - id: smoke_test_web_app
+          type: custom
+          # ...
+    - id: build_worker
+      type: build
+      module_instance: << pipeline.variant.id >>.worker
+- id: approve_release
+  type: approval
+- parallel:
+    - id: deploy_web_app
+      type: deploy
+      module_instance: << pipeline.variant.id >>.web-app
+      input:
+        image_ref: << steps.build_web_app.output.image_digest >>
+    - id: deploy_worker
+      type: deploy
+      module_instance: << pipeline.variant.id >>.worker
+      input:
+        image_ref: << steps.build_worker.output.image_digest >>
+```
+
+Don't wrap a top-level sequence in a `group` just to name it — a pipeline with one `group` containing all its steps is the same pipeline with extra nesting. Groups are the rarest block; if you aren't nesting a sequence inside `parallel` or gating the block with a concurrency key, leave it out.
+
+See [GroupStep schema](/pipelines/config-reference#groupstep).
+
+### When not to use blocks
+
+A pipeline models one workflow: a set of steps that depend on each other through outputs, gates, or ordering. Blocks arrange the steps inside that workflow; they aren't a way to run several unrelated workflows from one config.
+
+The pattern to avoid is a top-level `parallel` whose children are `group` blocks that each build and deploy a different service, with no step that depends on more than one of them:
+
+```yaml
+# Anti-pattern — two independent workflows in one pipeline
+steps:
+  - parallel:
+      - group: API
+        steps:
+          - id: build_api
+            type: build
+            module_instance: << pipeline.variant.id >>.api
+          - id: deploy_api
+            type: deploy
+            module_instance: << pipeline.variant.id >>.api
+            input:
+              image_ref: << steps.build_api.output.image_digest >>
+      - group: Docs site
+        steps:
+          - id: build_docs
+            type: build
+            module_instance: << pipeline.variant.id >>.docs
+          - id: deploy_docs
+            type: deploy
+            module_instance: << pipeline.variant.id >>.docs
+            input:
+              image_ref: << steps.build_docs.output.image_digest >>
+```
+
+Each group is a complete, self-contained build → deploy. Merging them buys nothing and costs independence: one failure fails the run, a trigger for one service runs the other, and re-running one means re-running both. Make each group its own pipeline with its own trigger:
+
+```yaml api-pipeline.yaml
+steps:
+  - id: build_api
+    type: build
+    module_instance: << pipeline.variant.id >>.api
+  - id: deploy_api
+    type: deploy
+    module_instance: << pipeline.variant.id >>.api
+    input:
+      image_ref: << steps.build_api.output.image_digest >>
+```
+
+```yaml docs-pipeline.yaml
+steps:
+  - id: build_docs
+    type: build
+    module_instance: << pipeline.variant.id >>.docs
+  - id: deploy_docs
+    type: deploy
+    module_instance: << pipeline.variant.id >>.docs
+    input:
+      image_ref: << steps.build_docs.output.image_digest >>
+```
+
+The test for keeping services in one pipeline: is there a step that needs *both* of them? A shared image build, a shared approval, an integration test that runs against both, or a required rollout order all qualify. "They belong to the same product" does not — that's what a project is for. See [One workflow per pipeline](/concepts/pipelines#one-workflow-per-pipeline).
