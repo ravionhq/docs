@@ -9,6 +9,8 @@
     "sync:cli-reference": "node scripts/sync-cli-reference.mjs",
     "sync:og-images": "node scripts/sync-og-images.mjs",
     "check:og-images": "node scripts/sync-og-images.mjs --check",
+    "check:docs-seo": "node scripts/check-docs-seo-invariants.mjs",
+    "test": "node --test scripts/*.test.mjs",
     "validate": "mint validate",
     "update": "mint update"
   },

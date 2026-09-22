@@ -6,7 +6,7 @@ description: "Bring existing infrastructure under Ravion management by importing
 "twitter:image": "https://www.ravion.com/og/docs/migrate/import-into-standard-module.png"
 ---
 
-Use this guide to bring infrastructure that already exists — a production S3 bucket, an RDS database, a VPC, or any other resource a Terraform provider can import — under the management of a Ravion [module](/modules/overview) without destroying or recreating anything. It works for [standard library modules](/module-definitions/catalog) and custom module definitions alike.
+Use this guide to bring infrastructure that already exists — a production S3 bucket, an RDS database, a VPC, or any other resource a Terraform provider can import — under the management of a Ravion [module](/concepts/modules) without destroying or recreating anything. It works for [standard library modules](/module-definitions/catalog) and custom module definitions alike.
 
 <Note>
   This page covers modules where the definition owns the Terraform source. If you're importing resources into your own Terraform code running through an `rvn-stack` module, see [Import into a Terraform Stack](/migrate/import-into-terraform-stack) — it has a simpler path using import blocks.
@@ -108,8 +108,8 @@ The example below imports an existing AWS RDS PostgreSQL instance into an `rvn-r
     # Find the run attached to the stack
     ravion pipeline run list --attached-entity-id <stack-id> --json
 
-    # Poll until the status is PENDING_APPROVAL
-    ravion pipeline run get <run-id> --json
+    # Stream the run until it reaches the approval gate
+    ravion pipeline run wait <run-id> --until PENDING_APPROVAL --watch
 
     ravion pipeline run get-plan <run-id>
     ```

@@ -1,0 +1,110 @@
+---
+title: "ravion certificate"
+sidebarTitle: "certificate"
+description: "Manage ACM certificates for your Ravion environments from the CLI: create, list, inspect, and delete certificates used by your custom domains."
+"og:image": "https://www.ravion.com/og/docs/cli/reference/certificate.png"
+"twitter:image": "https://www.ravion.com/og/docs/cli/reference/certificate.png"
+---
+
+{/* This page is generated from the Ravion CLI source. Do not edit by hand. */}
+
+## `ravion certificate`
+
+Manage certificates
+
+**Aliases:** `certificates`
+
+### `ravion certificate acm`
+
+Manage ACM certificates
+
+**Aliases:** `acms`
+
+#### `ravion certificate acm create`
+
+Create ACM certificate
+
+```bash
+ravion certificate acm create [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--data <string>` | yes | Request data as JSON |
+| `--json` |  | emit response as JSON |
+
+#### `ravion certificate acm delete`
+
+Delete ACM certificate
+
+```bash
+ravion certificate acm delete <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `-y, --yes` |  | skip confirmation prompt |
+
+#### `ravion certificate acm get`
+
+Get ACM certificate by id
+
+```bash
+ravion certificate acm get <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+#### `ravion certificate acm list-attached`
+
+List attached ACM certificates
+
+```bash
+ravion certificate acm list-attached [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--module-instance-id <string>` | yes | moduleInstanceId |
+| `--json` |  | emit response as JSON |
+| `-v, --verbose` |  | show full output |
+
+#### `ravion certificate acm retry-validation`
+
+Retry ACM certificate validation
+
+```bash
+ravion certificate acm retry-validation <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+#### `ravion certificate acm update`
+
+Update ACM certificate
+
+```bash
+ravion certificate acm update <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--data <string>` | yes | Request data as JSON |
+| `--json` |  | emit response as JSON |
+

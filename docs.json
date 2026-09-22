@@ -68,7 +68,7 @@
           {
             "group": "Modules",
             "pages": [
-              "modules/overview",
+              "concepts/modules",
               "modules/stack",
               "modules/build",
               "modules/deploy",
@@ -82,8 +82,10 @@
                   "module-definitions/catalog/rvn-acm-certificate",
                   "module-definitions/catalog/rvn-aurora",
                   "module-definitions/catalog/rvn-aws-alb",
+                  "module-definitions/catalog/rvn-aws-compliance",
                   "module-definitions/catalog/rvn-aws-iam-policy",
                   "module-definitions/catalog/rvn-aws-iam-role",
+                  "module-definitions/catalog/rvn-aws-kms",
                   "module-definitions/catalog/rvn-aws-network",
                   "module-definitions/catalog/rvn-aws-static",
                   "module-definitions/catalog/rvn-cloudfront",
@@ -93,6 +95,10 @@
                   "module-definitions/catalog/rvn-ecs-web",
                   "module-definitions/catalog/rvn-ecs-worker",
                   "module-definitions/catalog/rvn-efs",
+                  "module-definitions/catalog/rvn-eks-addons",
+                  "module-definitions/catalog/rvn-eks-cluster",
+                  "module-definitions/catalog/rvn-eks-web",
+                  "module-definitions/catalog/rvn-eks-worker",
                   "module-definitions/catalog/rvn-elasticache",
                   "module-definitions/catalog/rvn-lambda",
                   "module-definitions/catalog/rvn-rds",
@@ -107,7 +113,7 @@
           {
             "group": "Pipelines",
             "pages": [
-              "pipelines/overview",
+              "concepts/pipelines",
               "pipelines/examples",
               "pipelines/config-reference",
               "pipelines/step-types",
@@ -119,6 +125,7 @@
             "group": "Guides",
             "pages": [
               "guides/custom-domains",
+              "guides/aws/multi-region",
               "guides/managing-secrets"
             ]
           },
@@ -126,6 +133,12 @@
             "group": "Troubleshooting",
             "pages": [
               "troubleshooting/stuck-terraform-state-lock"
+            ]
+          },
+          {
+            "group": "Agent setup",
+            "pages": [
+              "agent-skill"
             ]
           },
           {
@@ -138,6 +151,7 @@
                 "pages": [
                   "module-definitions/definition-schema/module",
                   "module-definitions/definition-schema/inputs",
+                  "module-definitions/definition-schema/input-types",
                   "module-definitions/definition-schema/stack",
                   "module-definitions/definition-schema/build",
                   "module-definitions/definition-schema/deploy",
@@ -208,12 +222,16 @@
             "pages": [
               "cli/reference/api-key",
               "cli/reference/aws",
+              "cli/reference/billing",
               "cli/reference/bug",
+              "cli/reference/certificate",
               "cli/reference/code-source",
               "cli/reference/default-value",
               "cli/reference/deploy",
               "cli/reference/describe",
+              "cli/reference/domain",
               "cli/reference/environment",
+              "cli/reference/feature-flag",
               "cli/reference/feedback",
               "cli/reference/git",
               "cli/reference/infrastructure-event",
@@ -283,6 +301,51 @@
       }
     ]
   },
+  "redirects": [
+    {
+      "source": "/quickstart",
+      "destination": "/start-here",
+      "permanent": true
+    },
+    {
+      "source": "/modules/overview",
+      "destination": "/concepts/modules",
+      "permanent": true
+    },
+    {
+      "source": "/pipelines/overview",
+      "destination": "/concepts/pipelines",
+      "permanent": true
+    },
+    {
+      "source": "/use-cases/agent-self-service",
+      "destination": "/mcp/overview"
+    },
+    {
+      "source": "/use-cases/build-code",
+      "destination": "/modules/build"
+    },
+    {
+      "source": "/use-cases/deploy-code",
+      "destination": "/modules/deploy"
+    },
+    {
+      "source": "/use-cases/developer-self-service",
+      "destination": "/how-ravion-works"
+    },
+    {
+      "source": "/use-cases/metrics-and-logs",
+      "destination": "/modules/metrics"
+    },
+    {
+      "source": "/use-cases/preview-environments",
+      "destination": "/concepts/projects-and-environments"
+    },
+    {
+      "source": "/use-cases/provision-infrastructure",
+      "destination": "/concepts/infrastructure-as-code"
+    }
+  ],
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg",
@@ -301,13 +364,16 @@
       {
         "type": "discord",
         "label": "Discord",
-        "href": "https://discord.gg/pfP3ysX5m"
+        "href": "https://discord.com/invite/pfP3ysX5m"
       }
     ]
   },
   "integrations": {
     "fathom": {
       "siteId": "GMFTPQUB"
+    },
+    "ga4": {
+      "measurementId": "G-9F3ZH30W5Y"
     },
     "posthog": {
       "apiKey": "phc_knvqBBWDUykLHBQFmz9spqtcuvWnkupHeVcxqFF2K977",

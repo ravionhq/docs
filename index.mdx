@@ -1,31 +1,33 @@
 ---
-title: "Ravion docs: cloud infrastructure and DevOps"
+title: "The easiest way to use AWS for agents and humans"
 sidebarTitle: "Overview"
-description: "Ravion enhances and unifies IaC, deployments, CI/CD, and observability into a single interface for context and control."
+description: "Get a Vercel-like experience in your own AWS account. Manage and monitor Terraform resources, builds, and deploys in one place."
 "og:image": "https://www.ravion.com/og/docs/index.png"
 "twitter:image": "https://www.ravion.com/og/docs/index.png"
 ---
 
 import { AskAssistant } from "/snippets/ask-assistant.mdx";
 
-Ravion lets developers and AI agents provision infrastructure, deploy code, and monitor services in your own cloud account — with deployments, metrics, logs, and alarms attached to the same building blocks, everything in one place.
+Ravion is the easiest way to use AWS for agents and humans. Get a Vercel-like experience in your own AWS account, with one place to manage and monitor Terraform resources, builds, and deploys. Use your existing Terraform or start with our standard library of modules, then customize as your needs grow.
 
-### For small teams
+First-party production-ready modules and pipelines support AWS today, and other clouds are planned. Ravion connects your existing infrastructure, deployments, failures, logs, and metrics, so you keep your telemetry and native AWS tools instead of replacing them.
 
-Ship on day 1 like on a PaaS: create web services, databases, caches, and networking from the [standard library](/module-definitions/standard-library) of production-ready modules — no Terraform to write, no DevOps hire needed. And because it all runs in your own AWS account, there's no platform to outgrow and nothing to migrate off later.
+### Establish a production-grade AWS system
 
-<AskAssistant question="How does Ravion work for a small team without DevOps, and what does it give me over a PaaS like Heroku or Vercel?">
-  "How does Ravion work for a small team without DevOps, and what does it give me over a PaaS like
-  Heroku or Vercel?"
+Start with production-ready modules and pipelines for web services, databases, caches, and networking, without assembling every DevOps capability yourself. Everything runs in your AWS account, and you can customize the system as your needs grow.
+
+<AskAssistant question="How does Ravion work for a team without dedicated DevOps, and what does it give me over a PaaS like Heroku or Vercel?">
+  "How does Ravion work for a team without dedicated DevOps, and what does it give me over a PaaS
+  like Heroku or Vercel?"
 </AskAssistant>
 
-### For platform teams
+### Unify a fragmented AWS estate or extend your developer platform
 
-Ravion is a framework for internal developer platforms. It turns your existing IaC into self-service building blocks: developers and agents create, update, and monitor services without touching Terraform or pinging you, while you keep full control of the underlying modules — fork, replace, or lock down every default module and pipeline. Your IaC, your standards, packaged behind interfaces your developers actually enjoy.
+Turn existing IaC into governed, self-service modules. Developers and AI agents provision, deploy, and operate services through Ravion while DevOps retains control of Terraform, module definitions, permissions, policies, pipelines, approvals, and the AWS account. Adopt Ravion incrementally instead of rewriting or migrating everything at once.
 
-<AskAssistant question="How does Ravion turn my existing Terraform into self-service building blocks, and how does my platform team keep control?">
+<AskAssistant question="How does Ravion turn my existing Terraform into self-service building blocks, and how does my DevOps team keep control?">
   "How does Ravion turn my existing Terraform into self-service building blocks, and how does my
-  platform team keep control?"
+  DevOps team keep control?"
 </AskAssistant>
 
 Two short pages give you the full picture:
@@ -44,9 +46,9 @@ Two short pages give you the full picture:
 - **[Turn your Terraform into reusable modules](/module-definitions/definition-schema)** with typed inputs, so consuming a VPC or database is filling in a form, not reading HCL
 - **[Provision infrastructure](/modules/stack)** with reviewable plans, approval gates, and every resource change tracked over time
 - **[Build](/modules/build) and [deploy](/modules/deploy) any app** with blue-green rollouts, instance-level visibility, and one-command rollback
-- **[Run CI/CD pipelines](/concepts/pipelines)** securely inside your own VPC — or keep your existing CI and trigger deploys from it
-- **[Manage everything as code](/config-as-code/project-config-file)** — environments, modules, and pipelines from declarative files in your repo
-- **[Let AI agents self-serve](/start-here)** with a CLI, API, and MCP server built for safe agent workflows
+- **[Run CI/CD pipelines](/concepts/pipelines)** securely inside your own VPC, or keep your existing CI and trigger deploys from it
+- **[Manage everything as code](/config-as-code/project-config-file)**: environments, modules, and pipelines from declarative files in your repo
+- **[Let AI agents discover, plan, act, verify, and recover](/start-here)** through structured configuration, a CLI, an API, and an MCP server, with governed permissions and reviewable plans
 
 ## Ready to start?
 

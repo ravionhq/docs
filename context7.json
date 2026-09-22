@@ -1,0 +1,25 @@
+{
+  "$schema": "https://context7.com/schema/context7.json",
+  "projectTitle": "Ravion",
+  "description": "Get a Vercel-like experience in your own AWS account. You and your agents get one place to manage and monitor Terraform resources, builds, and deploys.",
+  "excludeFolders": [
+    "node_modules",
+    "./scripts",
+    "./styles",
+    "./fonts",
+    "./images",
+    "./logo",
+    "./.agents",
+    "./.mintlify",
+    "./.github"
+  ],
+  "excludeFiles": ["README.md", "AGENTS.md"],
+  "rules": [
+    "Declare projects, environments, and module instances in a project config file (ravion.yaml, .jsonc, or .cue) kept in source control.",
+    "Apply config with `ravion project config apply <project-id> --file ravion.yaml`, and use `--dry-run` first to review planned changes.",
+    "Prefer standard library modules (types prefixed `rvn-`) over hand-written Terraform, and wire modules together with `moduleGivenIdRef`.",
+    "Reference secrets from AWS Secrets Manager with `valueFrom` instead of putting plaintext values in the config."
+  ],
+  "url": "https://context7.com/ravionhq/docs",
+  "public_key": "pk_maLSVsSAdqXBVIZEwSUTX"
+}

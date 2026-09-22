@@ -36,6 +36,8 @@ Writable project metadata accepted by project config apply.
 
 <ResponseField name="givenId" type="string">
   User-provided project identifier. When provided, it must match the project in the route.
+  When the route identifier does not resolve to an existing project, `givenId` is required and
+  must equal it, which confirms the config intends to create that project.
 </ResponseField>
 
 <ResponseField name="name" type="string">

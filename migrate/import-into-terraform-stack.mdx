@@ -114,8 +114,8 @@ The example imports an existing AWS S3 bucket. The same flow works for any resou
     When the run reaches the approval gate, check the plan:
 
     ```bash
-    # Poll until the status is PENDING_APPROVAL
-    ravion pipeline run get <run-id> --json
+    # Stream the run until it reaches the approval gate
+    ravion pipeline run wait <run-id> --until PENDING_APPROVAL --watch
 
     ravion pipeline run get-plan <run-id>
     ```

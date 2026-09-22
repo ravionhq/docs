@@ -19,3 +19,9 @@ jobs:
 
       - name: Check every page points at the Ravion OG renderer
         run: node scripts/sync-og-images.mjs --check
+
+      - name: Check docs SEO invariants
+        run: node scripts/check-docs-seo-invariants.mjs
+
+      - name: Run script tests
+        run: node --test scripts/*.test.mjs

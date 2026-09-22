@@ -12,8 +12,8 @@ The workflow uses path filters so unrelated changes do not allocate a runner. YA
 
 Three jobs cover projects and pipelines. Only the job for the current event runs:
 
-- **Plan on pull request** — shallow-fetches the comparison commit, runs `ravion ... config apply --dry-run` for each changed resource, and posts every plan in a single, updating PR comment.
-- **Apply on merge** — shallow-fetches the comparison commit and runs `ravion ... config apply` for each changed resource when the branch merges into your default branch. Project applies pass `--description` so every stack run they create links back to the merged pull request, or to the commit for a direct push. The description uses the same markdown as the run descriptions Ravion writes for pipeline runs it triggers from webhooks, such as `[PR #42 - Add dark mode support](https://github.com/acme/app/pull/42) ([abcdef1](https://github.com/acme/app/commit/abcdef123456))`.
+- **Plan on pull request** — shallow-fetches the comparison commit, runs `ravion ... config apply --dry-run` for each changed resource, and posts every plan in a single, updating PR comment. A rejected config still gets its errors commented, then fails the check so the pull request cannot merge.
+- **Apply on merge** — shallow-fetches the comparison commit and runs `ravion ... config apply` for each changed resource when the branch merges into your default branch. It diffs from the last successful run of the workflow rather than from the previous push, so a merge whose run was cancelled or failed is picked up by the next run instead of being skipped forever. Project applies pass `--description` so every stack run they create links back to the merged pull request, or to the commit for a direct push. The description uses the same markdown as the run descriptions Ravion writes for pipeline runs it triggers from webhooks, such as `[PR #42 - Add dark mode support](https://github.com/acme/app/pull/42) ([abcdef1](https://github.com/acme/app/commit/abcdef123456))`.
 - **Update the CLI monthly** — on the first of each month, opens a pull request bumping `.github/ravion-cli-version` when a newer [CLI release](/cli/releases) exists. Run it on demand from the **Actions** tab.
 
 ## Authenticate in CI
@@ -57,7 +57,7 @@ Copy the prompt below into your coding agent to add and configure the GitHub act
 
 4. Add every file anchor once to `on.pull_request.paths`. Keep the `&ravion_paths` anchor on that list and `paths: *ravion_paths` under `on.push`, so both events use the same filters without repeating any path string.
 
-5. Write the latest Ravion CLI tag, with its leading `v`, to `.github/ravion-cli-version` (a single line, such as `v0.2.23`). Find it from the latest release at https://github.com/flightcontrolhq/cli/releases/latest, which redirects to the newest tag. It must be `v0.2.23` or newer, because the apply job passes `--description`. The workflow's monthly `update-cli` job keeps this file current afterwards, so do not inline the version in the workflow.
+5. Write the latest Ravion CLI tag, with its leading `v`, to `.github/ravion-cli-version` (a single line, such as `v0.2.23`). Find it from the latest release at https://github.com/ravionhq/cli/releases/latest, which redirects to the newest tag. It must be `v0.2.23` or newer, because the apply job passes `--description`. The workflow's monthly `update-cli` job keeps this file current afterwards, so do not inline the version in the workflow.
 
 6. Set `on.push.branches` to the repository's default branch. Match the runner to the repo by checking the other workflows under `.github/workflows/`. If they run on a custom or self-hosted runner (a `runs-on` value other than the GitHub-hosted `ubuntu-latest`/`ubuntu-*` labels — for example a self-hosted label or a runner group), set `runs-on` to that same runner for both jobs. Otherwise keep `ubuntu-latest`.
 
@@ -105,6 +105,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
       pull-requests: write
     steps:
@@ -116,16 +117,40 @@ jobs:
         id: list
         name: List changed resources
         env:
-          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PUSH_BASE: ${{ github.event.before }}
           HEAD: ${{ github.sha }}
         run: |
+          fetch_commit() {
+            git cat-file -e "$1^{commit}" 2> /dev/null && return 0
+            git fetch --no-tags --depth=1 origin "$1" 2> /dev/null
+          }
+
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            BASE="$PR_BASE"
+          else
+            # Diff from the last successful run of this workflow instead of from the
+            # previous push. github.event.before assumes every earlier push was
+            # applied, so a cancelled or failed run's commits would fall outside
+            # every later diff and never reach Ravion.
+            workflow_file=${GITHUB_WORKFLOW_REF%@*}
+            BASE=$(gh run list --workflow "${workflow_file##*/}" --branch "$GITHUB_REF_NAME" \
+              --event push --status success --limit 30 --json headSha \
+              --jq "[.[].headSha | select(. != \"$HEAD\")] | first // empty") || BASE=""
+            if [ -n "$BASE" ] && ! fetch_commit "$BASE"; then
+              echo "The last successful run's commit $BASE is gone; using this push's base"
+              BASE=""
+            fi
+            # No successful run yet, or its commit was rewritten away.
+            BASE=${BASE:-$PUSH_BASE}
+          fi
+
           all_changed=false
           if [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
             all_changed=true
           else
-            if ! git cat-file -e "$BASE^{commit}" 2> /dev/null; then
-              git fetch --no-tags --depth=1 origin "$BASE"
-            fi
+            fetch_commit "$BASE"
             git diff --name-only "$BASE" "$HEAD" > changed.txt
           fi
 
@@ -185,7 +210,7 @@ jobs:
         if: steps.list.outputs.resources != '[]'
         run: |
           version=$(cat "$RAVION_CLI_VERSION_FILE")
-          curl -fsSL "https://github.com/flightcontrolhq/cli/releases/download/${version}/install.sh" | sh
+          curl -fsSL "https://github.com/ravionhq/cli/releases/download/${version}/install.sh" | sh
 
       - name: Build plan comment
         if: steps.list.outputs.resources != '[]'
@@ -193,6 +218,7 @@ jobs:
         env:
           RESOURCES: ${{ steps.list.outputs.resources }}
         run: |
+          failures=0
           {
             echo 'body<<BODY_EOF'
             echo '<!-- ravion-plan -->'
@@ -219,11 +245,15 @@ jobs:
               echo "$label: \`$file\`"
               echo
               plan_file=$(mktemp)
+              # Keep going on a rejected config so its errors reach the comment,
+              # and count it so the last step of the job can fail the check.
+              rc=0
               if [ "$kind" = project ]; then
-                NO_COLOR=1 ravion project config apply "$id" --file "$file" --dry-run > "$plan_file" 2>&1 || true
+                NO_COLOR=1 ravion project config apply "$id" --file "$file" --dry-run > "$plan_file" 2>&1 || rc=$?
               else
-                NO_COLOR=1 ravion pipeline config apply "$id" --file "$file" --dry-run > "$plan_file" 2>&1 || true
+                NO_COLOR=1 ravion pipeline config apply "$id" --file "$file" --dry-run > "$plan_file" 2>&1 || rc=$?
               fi
+              [ "$rc" -eq 0 ] || failures=$((failures + 1))
               echo '```diff'
               cat "$plan_file"
               echo '```'
@@ -232,6 +262,8 @@ jobs:
 
             echo 'BODY_EOF'
           } >> "$GITHUB_OUTPUT"
+
+          echo "failures=$failures" >> "$GITHUB_OUTPUT"
 
       - name: Comment the plan on the PR
         if: steps.list.outputs.resources != '[]'
@@ -262,6 +294,14 @@ jobs:
               });
             }
 
+      - name: Fail when a config is invalid
+        if: steps.plan.outputs.failures != '' && steps.plan.outputs.failures != '0'
+        env:
+          FAILURES: ${{ steps.plan.outputs.failures }}
+        run: |
+          echo "::error::$FAILURES Ravion config file(s) were rejected. See the plan comment."
+          exit 1
+
   update-cli:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -276,7 +316,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           current=$(cat "$RAVION_CLI_VERSION_FILE")
-          latest=$(gh release view --repo flightcontrolhq/cli --json tagName --jq .tagName)
+          latest=$(gh release view --repo ravionhq/cli --json tagName --jq .tagName)
           if [ "$current" = "$latest" ]; then
             echo "Already on the latest Ravion CLI ($current)"
             exit 0
@@ -299,12 +339,13 @@ jobs:
             --base "${{ github.ref_name }}" \
             --head "$branch" \
             --title "ci(ravion): update the Ravion CLI used by the GitHub Action to $latest" \
-            --body "Updates the Ravion CLI used by the Ravion config workflow from \`$current\` to [\`$latest\`](https://github.com/flightcontrolhq/cli/releases/tag/$latest)."
+            --body "Updates the Ravion CLI used by the Ravion config workflow from \`$current\` to [\`$latest\`](https://github.com/ravionhq/cli/releases/tag/$latest)."
 
   apply:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
     steps:
       - uses: actions/checkout@v4

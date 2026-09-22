@@ -142,7 +142,8 @@ ravion stack trigger-pipeline <stack-id> --pipeline-type change \
 ravion stack trigger-pipeline <stack-id> --pipeline-type change --autoapprove \
   --description "Apply infrastructure changes automatically"
 
-# Inspect Terraform runs and resources
+# Follow a run to completion, then inspect Terraform runs and resources
+ravion pipeline run wait <pipeline-run-id> --watch --timeout 30m
 ravion terraform execution-summary list --stack-id <stack-id>
 ravion pipeline run get-plan <pipeline-run-id>
 ravion pipeline run get-apply <pipeline-run-id>

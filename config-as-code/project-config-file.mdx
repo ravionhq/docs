@@ -67,24 +67,30 @@ environments:
 Store the config file in your repository and manage it with the CLI.
 
 <Steps>
-  <Step title="Create the project, if needed">
+  <Step title="Create or select the project">
+
+    For a new project, create the project and write its draft config file:
 
     ```bash
-    ravion project create --given-id <project-id> --name "My project"
-    ```
-
-  </Step>
-  <Step title="Pull the current config">
-    Write the live project config to a file.
-
-    ```bash
-    ravion project config pull <project-id> --file project.yaml
+    ravion project create --given-id <project-id> --name "My project" --file ravion.yaml
     ```
 
 <Note>
-  Pulling a `.yaml`, `.jsonc`, or `.cue` file adds an AI skill header, inline field comments, and
-  quick links to the generated file. Plain `.json` does not support comments, so it omits these
-  annotations.
+  If you already have a config file, you can skip this step. `ravion project config apply
+  <project-id>` creates the project when it does not exist yet and the file's `project.givenId`
+  matches `<project-id>`, and `--dry-run` plans that creation without creating anything.
+</Note>
+
+    For an existing project, write its live config to a file:
+
+    ```bash
+    ravion project config pull <project-id> --file ravion.yaml
+    ```
+
+<Note>
+  Creating or pulling a `.yaml`, `.jsonc`, or `.cue` file adds an AI skill header, inline field
+  comments, and quick links to the generated file. Plain `.json` does not support comments, so it
+  omits these annotations.
 </Note>
 
   </Step>
@@ -98,18 +104,28 @@ Store the config file in your repository and manage it with the CLI.
     Validate the file and print the planned changes without applying them.
 
     ```bash
-    ravion project config apply <project-id> --file project.yaml --dry-run
+    ravion project config apply <project-id> --file ravion.yaml --dry-run
     ```
+
+    A dry run writes nothing, so the project, environment, and module instance IDs it would create
+    do not exist yet and print as `(known after apply)`. Given IDs are the identifiers you control,
+    so use those to match plan output against your config file.
 
   </Step>
   <Step title="Apply the changes">
     Apply the config to update the stored config and run the Terraform plan if needed.
 
     ```bash
-    ravion project config apply <project-id> --file project.yaml
+    ravion project config apply <project-id> --file ravion.yaml
     ```
 
-    Add `--autoapprove` to approve supported stack change pipeline runs without a manual gate.
+    When the apply only creates new infrastructure, add `--autoapprove` so supported stack change pipeline runs apply without stopping at a manual gate:
+
+    ```bash
+    ravion project config apply <project-id> --file ravion.yaml --autoapprove
+    ```
+
+    Omit `--autoapprove` when the apply modifies, replaces, or removes existing infrastructure, so you can review each Terraform plan first.
 
     Add `--description` to set the description on every stack run the apply creates, for example `--description "https://github.com/acme/app/pull/12"` to link the runs to the pull request that changed the config. Without it, runs keep Ravion's generated description.
 
@@ -117,10 +133,25 @@ Store the config file in your repository and manage it with the CLI.
   <Step title="Review and approve the stack run">
     Applying a config change starts a [stack change pipeline run](/modules/stack#stacks-change-through-pipelines) when the affected module has a Terraform stack. The stack run creates a Terraform plan and waits for manual approval before applying, unless you pass `--autoapprove` to an apply command that supports it.
 
-    After the stack run starts, inspect the run and its Terraform results with these commands:
+    The apply prints a `PIPELINE_RUN_ID` for every stack run it starts, plus the wait command for those runs. Follow a run with `wait --watch` instead of polling `pipeline run get`.
+
+    The runs are listed in dependency order, so you can work through them one at a time: a run only starts once the runs it depends on succeed.
+
+    Without `--autoapprove`, each run stops at its approval gate, so wait for that gate, review the plan, approve, then wait for the apply:
 
     ```bash
-    ravion pipeline run get <pipeline-run-id>
+    ravion pipeline run wait <pipeline-run-id> --until PENDING_APPROVAL --watch
+
+    ravion pipeline run get-plan <pipeline-run-id>
+    ravion pipeline run approve <pipeline-run-id>
+    ravion pipeline run wait <pipeline-run-id> --watch
+    ```
+
+    With `--autoapprove`, wait for the run to finish, then inspect the Terraform results:
+
+    ```bash
+    ravion pipeline run wait <pipeline-run-id> --watch --timeout 30m
+
     ravion pipeline run get-plan <pipeline-run-id>
     ravion pipeline run get-apply <pipeline-run-id>
     ravion logs pipeline-step <step-execution-id>
@@ -138,6 +169,10 @@ Store the config file in your repository and manage it with the CLI.
 ## Agent tips
 
 Use these rules when an agent edits a project config file.
+
+Never hand-write a `ravion.yaml` from memory. Generate it with `ravion project create --file`
+for a new project or `ravion project config pull --file` for an existing project so it carries the
+current header, comments, and links, then edit it.
 
 ### Required workflow
 
@@ -165,16 +200,34 @@ ravion module schema <module-type> [version]
 ravion project config apply <project-id> --file ravion.yaml --dry-run
 ```
 
-5. Apply only after the dry run is correct and approved:
+5. Apply only after the dry run is correct and approved. When the change only creates new infrastructure, pass `--autoapprove` so the stack runs go straight through instead of waiting at an approval gate:
+
+```bash
+ravion project config apply <project-id> --file ravion.yaml --autoapprove
+```
+
+Drop `--autoapprove` when the change touches existing infrastructure:
 
 ```bash
 ravion project config apply <project-id> --file ravion.yaml
 ```
 
+6. After applying config, use `ravion pipeline run wait <id> --watch` instead of repeatedly polling `pipeline run get`. The apply output lists a `PIPELINE_RUN_ID` for every stack run it starts, followed by the exact wait command to run. Work through the commands in the printed order, which is dependency order:
+
+```bash
+# Runs stop for approval unless the apply passed --autoapprove
+ravion pipeline run wait <pipeline-run-id> --until PENDING_APPROVAL --watch
+
+# Autoapproved runs go straight through
+ravion pipeline run wait <pipeline-run-id> --watch --timeout 30m
+```
+
+7. Follow application deployments the same way, with `ravion deploy wait <deployment-id> --watch` instead of polling `deploy get`.
+
 ### Helpful hints
 
 - Pull the latest live config anytime with `ravion project config pull <project-id> --file ravion.yaml`.
-- Use `--autoapprove` only for supported stack changes that do not need a manual approval gate.
+- Use `--autoapprove` when creating new environments and module instances. Omit it when a change modifies, replaces, or removes existing infrastructure so a human reviews the Terraform plan.
 - To iterate on one target, pass `--environment-id`, `--environment-given-id`, `--module-instance-id`, or `--module-given-id`.
 - If a schema check, dry run, or apply fails unexpectedly, file it with `ravion report bug "<what happened>" --command "<the command that failed>"`. Include the exact error text and the project, environment, and module instance IDs involved. See [Report bugs and feedback](/report-bugs-and-feedback).
 
@@ -191,6 +244,7 @@ ravion project config apply <project-id> --file ravion.yaml
 - Copy module inputs from unrelated files or examples.
 - Invent fields that are not present in the CLI schema output.
 - Apply changes without a successful dry run first.
+- Poll `ravion pipeline run get` or `ravion deploy get` in a loop. Use the matching `wait --watch` command instead.
 
 ## Schema reference
 

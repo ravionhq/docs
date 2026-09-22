@@ -1,7 +1,7 @@
 ---
 title: "ravion metrics"
 sidebarTitle: "metrics"
-description: "Query CloudWatch metrics for Ravion modules and services, including CPU, memory, request volume, and latency, from the command line."
+description: "Query metrics for Ravion modules and services from CloudWatch, Amazon Managed Prometheus, or a Prometheus proxied through the Operator agent."
 "og:image": "https://www.ravion.com/og/docs/cli/reference/metrics.png"
 "twitter:image": "https://www.ravion.com/og/docs/cli/reference/metrics.png"
 ---
@@ -11,6 +11,27 @@ description: "Query CloudWatch metrics for Ravion modules and services, includin
 ## `ravion metrics`
 
 Query metrics
+
+### `ravion metrics aws-amp`
+
+Run a PromQL range query against Amazon Managed Prometheus
+
+```bash
+ravion metrics aws-amp [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--aws-account-id <string>` | yes | AWS account database ID (or the account's givenId) used to resolve credentials. |
+| `--end-time <startTime>` | yes | Inclusive end of the query window (ISO 8601). Must be after startTime and not in the future. |
+| `--query <$__interval>` | yes | PromQL expression. Occurrences of $__interval are replaced server-side with the normalized step, so range-vector windows always match the resolution actually queried. |
+| `--region <string>` | yes | AWS region the Amazon Managed Prometheus workspace lives in. |
+| `--start-time <endTime>` | yes | Inclusive start of the query window (ISO 8601). Must be earlier than endTime and within the workspace's 150-day retention. |
+| `--step <stepSeconds>` | yes | Requested step in seconds. Widened server-side to Amazon Managed Prometheus's 15s floor and to whatever keeps the window under the 11,000-samples-per-series cap; the effective value is echoed as stepSeconds. |
+| `--workspace-id <ws-1234abcd-...>` | yes | Amazon Managed Prometheus workspace id (e.g. ws-1234abcd-...). |
+| `--json` |  | emit response as JSON |
 
 ### `ravion metrics cloudwatch`
 
@@ -33,5 +54,26 @@ ravion metrics cloudwatch [flags]
 | `--start-time <string>` | yes | Inclusive start of the query window (ISO 8601) |
 | `--statistic <string>` | yes | CloudWatch statistic to apply, for example Average |
 | `--dimensions <strings>` |  | Repeated dimensionName=dimensionValue pairs scoping the metric |
+| `--json` |  | emit response as JSON |
+
+### `ravion metrics eks-prometheus`
+
+Run a PromQL range query through the Operator agent
+
+```bash
+ravion metrics eks-prometheus [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--cluster-arn <string>` | yes | ARN of the EKS cluster whose Operator agent proxies the query. Resolved to a connected agent inside the caller's own organization, which is what confines this endpoint to clusters the caller can see — an ARN belonging to another tenant resolves to nothing. |
+| `--end-time <startTime>` | yes | Inclusive end of the query window (ISO 8601). Must be after startTime and not in the future. |
+| `--endpoint </api/v1/query_range>` | yes | Base URL of the Prometheus to query, without the /api/v1/query_range suffix. Naming it is not a permission: the agent judges every proxied destination against its own `httpProxy.allowedEndpoints`, so an endpoint that install was not configured for is refused in the cluster. |
+| `--query <$__interval>` | yes | PromQL expression. Occurrences of $__interval are replaced server-side with the normalized step, so range-vector windows always match the resolution actually queried. |
+| `--start-time <endTime>` | yes | Inclusive start of the query window (ISO 8601). Must be earlier than endTime. |
+| `--step <stepSeconds>` | yes | Requested step in seconds. Widened server-side to a 15s floor and to whatever keeps the window under the 11,000-samples-per-series cap; the effective value is echoed as stepSeconds. |
+| `--auth-secret <string>` |  | Name of a Kubernetes Secret in the Operator namespace whose contents the AGENT presents as the Authorization header. A name, never a value — Ravion neither reads nor stores the credential. Omit for an endpoint that needs none. |
 | `--json` |  | emit response as JSON |
 

@@ -24,6 +24,7 @@ Discriminated union. The `type` field selects which schema applies.
 | -------------- | ------------------------------------------------------- |
 | `"aws:ec2"`    | [Ec2ModuleDeployment](#ec2moduledeployment)             |
 | `"aws:ecs"`    | [EcsModuleDeployment](/module-definitions/definition-schema/ecs-deployments#ecsmoduledeployment)             |
+| `"aws:eks"`    | [EksModuleDeployment](#eksmoduledeployment)             |
 | `"aws:lambda"` | [LambdaModuleDeployment](#lambdamoduledeployment)       |
 | `"aws:static"` | [AwsStaticModuleDeployment](#awsstaticmoduledeployment) |
 
@@ -58,7 +59,7 @@ AWS static site deployment configuration
   Deployment-specific inputs shown in the deploy modal.
   Same types as module inputs — reuses the InputProperty union.
 
-  See: [InputProperty](/module-definitions/definition-schema/inputs#inputproperty)
+  See: [InputProperty](/module-definitions/definition-schema/input-types#inputproperty)
 </ResponseField>
 
 <ResponseField name="definition" type="AwsStaticDeploymentDefinition" required>
@@ -127,7 +128,7 @@ only supported deployment strategy.
   Deployment-specific inputs shown in the deploy modal.
   Same types as module inputs — reuses the InputProperty union.
 
-  See: [InputProperty](/module-definitions/definition-schema/inputs#inputproperty)
+  See: [InputProperty](/module-definitions/definition-schema/input-types#inputproperty)
 </ResponseField>
 
 <ResponseField name="definition" type="Ec2DeploymentDefinition" required>
@@ -135,6 +136,58 @@ only supported deployment strategy.
   deploy.input references inside string fields.
 
   See: [Ec2DeploymentDefinition](#ec2deploymentdefinition)
+
+  _(templateable)_
+</ResponseField>
+
+### EksModuleDeployment
+
+AWS EKS deployment configuration. Helm executes on an ephemeral
+Ravion runner inside the cluster VPC — the deploy manager
+orchestrates but never touches the Kubernetes API itself.
+`helm upgrade --atomic` auto-reverts failed deploys.
+
+<ResponseField name="type" type="enum" required>
+  Deployment type discriminator
+
+  Allowed values: `aws:eks`
+</ResponseField>
+
+<ResponseField name="infrastructure" type="EksDeploymentInfrastructure" required>
+  Infrastructure resources required by the deployment.
+
+  See: [EksDeploymentInfrastructure](#eksdeploymentinfrastructure)
+</ResponseField>
+
+<ResponseField name="concurrency" type="EcsDeployConcurrency">
+  Concurrency policy — controls how simultaneous deploy requests are handled.
+  Omit to use defaults: queue_size=1, queue_overflow=oldest.
+
+  See: [EcsDeployConcurrency](/module-definitions/definition-schema/ecs-deployments#ecsdeployconcurrency)
+</ResponseField>
+
+<ResponseField name="timeout" type="integer">
+  Maximum total wall-clock budget (in seconds) for a single deploy,
+  measured from the moment the workflow starts (including time spent
+  waiting for the deployment-manager lock). Matches the semantics of
+  pipeline step `timeout`.
+  Default: unset (no wall-clock cap).
+
+  _(format:int32,min:60)_
+</ResponseField>
+
+<ResponseField name="inputs" type="InputProperty[]" required>
+  Deployment-specific inputs shown in the deploy modal.
+  Same types as module inputs — reuses the InputProperty union.
+
+  See: [InputProperty](/module-definitions/definition-schema/input-types#inputproperty)
+</ResponseField>
+
+<ResponseField name="definition" type="EksDeploymentDefinition" required>
+  Per-deploy definition. Templateable — supports both module.input and
+  deploy.input references inside string fields.
+
+  See: [EksDeploymentDefinition](#eksdeploymentdefinition)
 
   _(templateable)_
 </ResponseField>
@@ -171,7 +224,7 @@ routing alias shifts are deliberately out of scope for v1.
   Deployment-specific inputs shown in the deploy modal.
   Same types as module inputs — reuses the InputProperty union.
 
-  See: [InputProperty](/module-definitions/definition-schema/inputs#inputproperty)
+  See: [InputProperty](/module-definitions/definition-schema/input-types#inputproperty)
 </ResponseField>
 
 <ResponseField name="definition" type="LambdaDeploymentDefinition" required>
@@ -357,6 +410,163 @@ are absolute counts ("1", "5") or percentages ("25%").
   How many per-instance failures are tolerated before SSM stops sending
   the document to further instances. SSM SendCommand MaxErrors semantics.
   Default: "0" — the first failed instance halts the rollout.
+
+  _(templateable)_
+</ResponseField>
+
+### EksDeploymentDefinition
+
+Helm-engine EKS deploy definition. The runner executes
+`helm upgrade --install --atomic`, so a deploy either lands or leaves
+the cluster untouched. Release name and namespace are explicit —
+Ravion derives nothing implicitly.
+
+<ResponseField name="type" type="enum" required>
+  Definition engine discriminator.
+
+  Allowed values: `helm`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="release_name" type="string" required>
+  Helm release name the deploy upgrades. Explicit and stable per
+  module instance — rollback and history target this release.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="namespace" type="string" required>
+  Kubernetes namespace the release is installed into.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="source" type="HelmChartSource" required>
+  Where the chart comes from — a chart directory (bundled or checked
+  out of Git), an OCI registry, or an HTTP repository.
+
+  See: [HelmChartSource](#helmchartsource)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="values" type="map<string,any | null>">
+  Values passed to Helm (equivalent to a `--values` file). Merged over
+  the chart's defaults. Templateable — supports module.input and
+  deploy.input references, including object spread directives.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="secrets" type="EcsSecret[] | null">
+  Secret references injected into the release's containers. Reuses the
+  ECS `EcsSecret` shape verbatim — `{name, value_from: <ARN>}`, Parameter
+  Store or Secrets Manager, including ECS's JSON-key extraction suffix
+  (`arn:…:secret:db-AbCdEf:password::`) — so a service migrating from
+  `aws:ecs` to `aws:eks` carries its secret configuration unchanged.
+
+  Reference-only: Ravion never reads these values. The ARNs travel to the
+  chart as ordinary Helm values under the reserved `ravion.secrets` key,
+  the chart renders an External Secrets Operator `ExternalSecret` from
+  them, and ESO materializes the Kubernetes Secret in-cluster. No secret
+  value ever reaches Tower, the Helm values document, the release
+  manifest, `deploymentData`, or Ravion logs.
+
+  `value_from` must be a full ARN — unlike ECS, a bare Parameter Store
+  name is rejected, because the chart has to know which provider a
+  reference belongs to in order to pick the right ESO SecretStore.
+
+  See: [EcsSecret](/module-definitions/definition-schema/ecs-task-definitions#ecssecret)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="create_namespace" type="boolean | null">
+  Whether Helm creates the target namespace when it does not exist
+  (`--create-namespace`).
+  Default: false.
+
+  _(templateable)_
+</ResponseField>
+
+### EksDeploymentInfrastructure
+
+Infrastructure resources required for an AWS EKS deployment. Not provisioned
+by the deploy manager — must already exist (created by the `compute/eks`
+composite Terraform module). The deploy manager launches an ephemeral runner
+inside the cluster VPC, assembles a kubeconfig in-memory from these values
+plus `aws eks get-token`, and never persists credentials.
+
+<ResponseField name="cluster_arn" type="string" required>
+  Full ARN of the EKS cluster the deploy targets, e.g.
+  `arn:aws:eks:us-east-1:123456789012:cluster/prod`. Ravion parses the
+  AWS account number and region out of it to resolve which connected
+  AWS account owns the cluster — the same contract `aws:ecs` uses with
+  `ecs_cluster_arn`.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="cluster_name" type="string" required>
+  Name of the EKS cluster the deploy targets.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="cluster_endpoint" type="string" required>
+  HTTPS endpoint of the cluster's Kubernetes API server. May be a
+  private-only endpoint — the runner executes inside the cluster VPC, so
+  reachability is guaranteed by construction.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="cluster_certificate_authority_data" type="string" required>
+  Base64-encoded certificate authority data of the cluster, used to
+  verify the API server's TLS certificate when assembling the
+  kubeconfig.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="ravion_runner_role_arn" type="string" required>
+  ARN of the stable `<cluster>-ravion-runner` IAM role provisioned by
+  the EKS module alongside its cluster access entry. The runner assumes
+  this role to obtain a cluster token via `aws eks get-token --role-arn`
+  — per-step ephemeral roles are incompatible with
+  `authentication_mode = API` access entries. The field name matches
+  the shipped `rvn-eks` Terraform output, so the template reads
+  straight through.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="execution_environment_id" type="string | null">
+  ID or given ID of the execution environment the deploy's ephemeral Helm
+  runner is launched into. The environment supplies the runner's VPC,
+  subnet and security group.
+
+  Its AWS account and region must match the cluster's, both of which are
+  read out of `cluster_arn` — an environment elsewhere cannot assume the
+  cluster's runner role or reach its network, and the deploy fails naming
+  the environment rather than failing later at EC2 launch.
+
+  A pipeline `deploy` step, or an API deploy request, that names its own
+  environment overrides this one.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="execution_environment_overrides" type="Pipeline.ExecutionEnvironmentOverrides">
+  Overrides for individual attributes of the resolved execution
+  environment. Valid with or without `execution_environment_id`: without
+  one they apply on top of the AWS account's default environment.
+
+  Merged per field with the step- or request-level overrides, which win
+  wherever both name the same attribute.
+
+  See: [Pipeline.ExecutionEnvironmentOverrides](/module-definitions/definition-schema/build#pipeline-executionenvironmentoverrides)
 
   _(templateable)_
 </ResponseField>
@@ -606,6 +816,82 @@ artifact is involved.
   _(templateable)_
 </ResponseField>
 
+### EksHelmDefinition
+
+Helm-engine EKS deploy definition. The runner executes
+`helm upgrade --install --atomic`, so a deploy either lands or leaves
+the cluster untouched. Release name and namespace are explicit —
+Ravion derives nothing implicitly.
+
+<ResponseField name="type" type="enum" required>
+  Definition engine discriminator.
+
+  Allowed values: `helm`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="release_name" type="string" required>
+  Helm release name the deploy upgrades. Explicit and stable per
+  module instance — rollback and history target this release.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="namespace" type="string" required>
+  Kubernetes namespace the release is installed into.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="source" type="HelmChartSource" required>
+  Where the chart comes from — a chart directory (bundled or checked
+  out of Git), an OCI registry, or an HTTP repository.
+
+  See: [HelmChartSource](#helmchartsource)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="values" type="map<string,any | null>">
+  Values passed to Helm (equivalent to a `--values` file). Merged over
+  the chart's defaults. Templateable — supports module.input and
+  deploy.input references, including object spread directives.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="secrets" type="EcsSecret[] | null">
+  Secret references injected into the release's containers. Reuses the
+  ECS `EcsSecret` shape verbatim — `{name, value_from: <ARN>}`, Parameter
+  Store or Secrets Manager, including ECS's JSON-key extraction suffix
+  (`arn:…:secret:db-AbCdEf:password::`) — so a service migrating from
+  `aws:ecs` to `aws:eks` carries its secret configuration unchanged.
+
+  Reference-only: Ravion never reads these values. The ARNs travel to the
+  chart as ordinary Helm values under the reserved `ravion.secrets` key,
+  the chart renders an External Secrets Operator `ExternalSecret` from
+  them, and ESO materializes the Kubernetes Secret in-cluster. No secret
+  value ever reaches Tower, the Helm values document, the release
+  manifest, `deploymentData`, or Ravion logs.
+
+  `value_from` must be a full ARN — unlike ECS, a bare Parameter Store
+  name is rejected, because the chart has to know which provider a
+  reference belongs to in order to pick the right ESO SecretStore.
+
+  See: [EcsSecret](/module-definitions/definition-schema/ecs-task-definitions#ecssecret)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="create_namespace" type="boolean | null">
+  Whether Helm creates the target namespace when it does not exist
+  (`--create-namespace`).
+  Default: false.
+
+  _(templateable)_
+</ResponseField>
+
 ### LambdaImageDefinition
 
 Image-packaged Lambda deploy definition. The image must already
@@ -802,3 +1088,167 @@ VPC configuration for a Lambda function.
 
   _(templateable)_
 </ResponseField>
+
+### HelmChartSource
+
+Where the Helm chart comes from — discriminated by `type`.
+
+Discriminated union. The `type` field selects which schema applies.
+
+| `type` value | Schema                                      |
+| ------------ | ------------------------------------------- |
+| `git`        | [HelmGitChartSource](#helmgitchartsource)   |
+| `http`       | [HelmHttpChartSource](#helmhttpchartsource) |
+| `oci`        | [HelmOciChartSource](#helmocichartsource)   |
+
+### HelmGitChartSource
+
+Helm chart installed from a directory of chart files. Either the
+directory is already in the runner's working directory — the Ravion
+charts shipped with a module definition (`rvn-eks-web`,
+`rvn-eks-worker`, `rvn-eks-cron`) — or Ravion checks a repository out
+onto the runner first and the directory lives inside that checkout.
+
+Private repositories authenticate through the organization's connected
+code source, exactly as a build checkout does. There is no token field:
+the clone credential is resolved on the runner and never travels through
+the deploy's history.
+
+<ResponseField name="type" type="enum" required>
+  Chart source discriminator.
+
+  Allowed values: `git`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="repo_url" type="string | null">
+  Git repository URL containing the chart. Omit to install a chart
+  already present in the runner's working directory.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="branch" type="string | null">
+  Branch to check out. Required whenever `repo_url` is set — the
+  runner's clone needs a branch to start from.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="ref" type="string | null">
+  Exact commit SHA or tag to pin the checkout to, applied on top of
+  `branch`. Strongly preferred for reproducible deploys.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="base_path" type="string" required>
+  Path of the chart directory within the repository, or — when
+  `repo_url` is omitted — relative to the runner's working directory.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+### HelmHttpChartSource
+
+Helm chart pulled from a classic HTTP Helm repository.
+
+<ResponseField name="type" type="enum" required>
+  Chart source discriminator.
+
+  Allowed values: `http`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="repo_url" type="string" required>
+  HTTP(S) URL of the Helm repository.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="chart_name" type="string" required>
+  Name of the chart within the repository.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="version" type="string | null">
+  Chart version to install. Prefer pinning an exact version for
+  reproducibility.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="credentials" type="HelmRegistryCredentials">
+  Credentials for a private Helm repository.
+
+  See: [HelmRegistryCredentials](#helmregistrycredentials)
+
+  _(templateable)_
+</ResponseField>
+
+### HelmOciChartSource
+
+Helm chart pulled from an OCI registry.
+
+<ResponseField name="type" type="enum" required>
+  Chart source discriminator.
+
+  Allowed values: `oci`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="chart_url" type="string" required>
+  Full OCI chart reference.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="version" type="string | null">
+  Chart version to install. Prefer pinning an exact version for
+  reproducibility.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="credentials" type="HelmRegistryCredentials">
+  Credentials for a private OCI registry.
+
+  See: [HelmRegistryCredentials](#helmregistrycredentials)
+
+  _(templateable)_
+</ResponseField>
+
+### HelmRegistryCredentials
+
+Credentials for a private OCI registry or HTTP Helm repository, passed
+to `helm pull` as `--username` / `--password`. Supply both — a registry
+that wants one wants the other.
+
+<ResponseField name="username" type="HelmCredentialRef" required>
+  Registry / repository username reference.
+
+  See: [HelmCredentialRef](#helmcredentialref)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="password" type="HelmCredentialRef" required>
+  Registry / repository password reference.
+
+  See: [HelmCredentialRef](#helmcredentialref)
+
+  _(templateable)_
+</ResponseField>
+
+### HelmCredentialRef
+
+One credential a chart registry or repository authenticates with.
+The same reference shapes environment variables use: the value is read
+from Parameter Store or Secrets Manager on the runner and never enters
+the deploy's history, the instruction, or Ravion logs.
+
+One of: [Pipeline.ParameterStoreEnvVar](/module-definitions/definition-schema/build#pipeline-parameterstoreenvvar), [Pipeline.SecretsManagerEnvVar](/module-definitions/definition-schema/build#pipeline-secretsmanagerenvvar).

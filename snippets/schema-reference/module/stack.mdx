@@ -335,16 +335,29 @@ Concurrency configuration for controlling parallel execution
 
 <ResponseField name="behavior" type="enum" default="queue">
   Behavior when the concurrency limit is reached
+  "queue" waits for a slot; "cancel-in-progress" cancels older contenders;
+  "cancel-intermediate" preserves the oldest contender and newest
+  contenders while cancelling the oldest intermediates; "skip" denies the new contender and
+  ends the run as skipped.
+  This controls trigger/step/block admission only and never relaxes the
+  separate deployment-manager serialization used by deploy steps.
   Default: "queue"
 
-  Allowed values: `queue` | `cancel-in-progress` | `skip`
+  Allowed values: `queue` | `cancel-in-progress` | `cancel-intermediate` | `skip`
 </ResponseField>
 
 <ResponseField name="queue_size" type="integer">
-  Maximum queue size when behavior is "queue"
-  Only applies when behavior is "queue"
-  Unset means unlimited queue depth
-  0 disables queueing when behavior is "queue"
+  Maximum queue size for "queue"; for cancelling behaviors, widens the
+  survivor window. Unset means unlimited queue capacity; 0 means no queue
+  and immediate denial. With "queue", immediate denial is reported as
+  QUEUEING_DISABLED and the pipeline run ends as cancelled with "the trigger
+  concurrency queue was full"; "skip" also denies immediately but ends the
+  run as skipped. For "cancel-in-progress" and "cancel-intermediate", the
+  survivor window is value + queue_size (plus the oldest contender for
+  "cancel-intermediate"); contenders outside it are cancelled or evicted at
+  admission even when queue_size is unset, so unset does not mean unlimited
+  retention. For "cancel-intermediate", the survivors are the oldest
+  contender plus the newest value + queue_size - 1 contenders.
 
   _(format:int32,min:0)_
 </ResponseField>
@@ -381,7 +394,16 @@ Trigger filter configuration
 </ResponseField>
 
 <ResponseField name="paths" type="string[] | null">
-  Only trigger when files in these paths are changed
+  Only trigger when files in these paths are changed.
+  Each entry is a glob matched against every changed file path, relative to
+  the repository root: `*` matches within one path segment, `**` matches
+  across segments, and `{a,b}` and `[abc]` are supported. Dotfiles are
+  matched, and a leading `/` is ignored.
+  Prefix a pattern with `!` to exclude files: a changed file counts only if
+  it matches at least one non-`!` pattern and no `!` pattern. When every
+  pattern is a `!` exclusion, all changed files are included first, so
+  `paths: ["!docs/**"]` means "any change outside docs/".
+  The trigger fires when at least one changed file counts.
 
   _(templateable)_
 </ResponseField>
@@ -447,6 +469,7 @@ Allowed values:
 
 - `queue`
 - `cancel-in-progress`
+- `cancel-intermediate`
 - `skip`
 
 ### Pipeline.ConcurrencyScope

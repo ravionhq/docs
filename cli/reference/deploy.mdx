@@ -60,6 +60,20 @@ ravion deploy create [flags]
 | `--inputs <string>` |  | Deploy-time input values |
 | `--json` |  | emit response as JSON |
 
+### `ravion deploy definition`
+
+Get what a deployment applied
+
+```bash
+ravion deploy definition <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
 ### `ravion deploy get`
 
 Get Deployment by id
@@ -153,6 +167,37 @@ ravion deploy resource list [flags]
 | `--type <string>` |  | type |
 | `-v, --verbose` |  | show full output |
 
+#### `ravion deploy resource restart`
+
+Restart an EKS workload
+
+```bash
+ravion deploy resource restart <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--wait-seconds <int>` |  | How long, in seconds, the agent watches for the replacement pods to become ready before answering. Omitted takes the agent's default; a negative value asks it not to wait at all. Clamped by both the control plane and the agent, so a caller can only ever ask for less than the ceiling. |
+
+#### `ravion deploy resource rollback`
+
+Roll an EKS workload's Helm release back
+
+```bash
+ravion deploy resource rollback <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--revision <helm rollback>` | yes | Helm's own revision number, from the release's history — not a Ravion identifier. Required and must be positive: helm rollback with no revision means "the previous one", and after a failed upgrade the previous revision and the last revision known to have WORKED are not the same one, so the caller has to say which it means.  It is validated against the revisions Ravion RECORDED for this module instance's prior successful deploys, and then again by the agent against Helm's actual in-cluster history. Both checks are needed and neither subsumes the other: the control plane cannot read a private cluster's release Secrets, and Helm prunes its history to `--max-history`, so a revision Ravion recorded may no longer be there to reinstate. |
+| `--json` |  | emit response as JSON |
+| `--timeout-seconds <int>` |  | Seconds bounding the whole rollback, Helm's own wait included. Omitted takes the agent's default. Clamped on both ends. |
+
 ### `ravion deploy rollback`
 
 Start a rollback deployment
@@ -181,4 +226,33 @@ ravion deploy rollback-candidates <id> [flags]
 | --- | --- | --- |
 | `--json` |  | emit response as JSON |
 | `-v, --verbose` |  | show full output |
+
+### `ravion deploy wait`
+
+Wait for a deployment to finish, or to reach the status given by --until.
+
+Use this instead of polling `ravion deploy get` in a loop. With --watch the command prints
+status changes as they happen, then exits when the deployment is done. The command exits
+non-zero when the deployment fails, is cancelled, or is rolled back.
+
+```bash
+ravion deploy wait <id> [flags]
+```
+
+**Examples:**
+
+```bash
+ravion deploy wait dep_123 --watch
+ravion deploy wait dep_123 --watch --timeout 30m
+ravion deploy wait dep_123 --until IN_PROGRESS --watch
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--timeout <duration>` |  | maximum time to wait; zero waits indefinitely |
+| `--until <string>` |  | return when this status is reached, for example IN_PROGRESS |
+| `--watch` |  | print deployment status changes while waiting |
 

@@ -42,8 +42,25 @@ ravion values aws/ec2/instances [flags]
 
 | Flag | Required | Description |
 | --- | --- | --- |
-| `--aws-account-id <string>` | yes | AWS account ID |
+| `--aws-account-id <string>` | yes | AWS account reference: unique id, given id, or 12-digit AWS account number |
 | `--region <string>` | yes | AWS region code |
+| `--json` |  | emit response as JSON |
+| `-v, --verbose` |  | show full output |
+
+### `ravion values aws/eks-versions`
+
+Get AWS EKS version values
+
+```bash
+ravion values aws/eks-versions [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--region <string>` | yes | AWS region code |
+| `--current-version <string>` |  | Current cluster version. When set, returns versions greater than or equal to it (upgrade targets); when omitted, returns only versions supported for new cluster creation. |
 | `--json` |  | emit response as JSON |
 | `-v, --verbose` |  | show full output |
 
@@ -93,7 +110,7 @@ ravion values aws/security-groups [flags]
 
 | Flag | Required | Description |
 | --- | --- | --- |
-| `--aws-account-id <string>` | yes | AWS account ID |
+| `--aws-account-id <string>` | yes | AWS account reference: unique id, given id, or 12-digit AWS account number |
 | `--region <string>` | yes | AWS region code |
 | `--vpc-id <string>` | yes | AWS VPC ID |
 | `--json` |  | emit response as JSON |
@@ -111,7 +128,7 @@ ravion values aws/subnets [flags]
 
 | Flag | Required | Description |
 | --- | --- | --- |
-| `--aws-account-id <string>` | yes | AWS account ID |
+| `--aws-account-id <string>` | yes | AWS account reference: unique id, given id, or 12-digit AWS account number |
 | `--region <string>` | yes | AWS region code |
 | `--vpc-id <string>` | yes | AWS VPC ID |
 | `--json` |  | emit response as JSON |
@@ -129,7 +146,7 @@ ravion values aws/vpcs [flags]
 
 | Flag | Required | Description |
 | --- | --- | --- |
-| `--aws-account-id <string>` | yes | AWS account ID |
+| `--aws-account-id <string>` | yes | AWS account reference: unique id, given id, or 12-digit AWS account number |
 | `--region <string>` | yes | AWS region code |
 | `--json` |  | emit response as JSON |
 | `-v, --verbose` |  | show full output |

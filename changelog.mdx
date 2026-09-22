@@ -22,6 +22,390 @@ rss: true
 
 {/* ravion-changelog:august-3-2026 */}
 {/* ravion-changelog:august-10-2026 */}
+{/* ravion-changelog:august-17-2026 */}
+
+{/* ravion-changelog:august-24-2026 */}
+
+{/* ravion-changelog:august-31-2026 */}
+{/* ravion-changelog:september-7-2026 */}
+
+{/* ravion-changelog:september-14-2026 */}
+{/* ravion-changelog:september-21-2026 */}
+<Update
+  label="September 21, 2026"
+  rss={{
+    title: "GitHub access details, clearer billing usage, and module updates",
+  }}
+>
+
+## Platform
+
+### Features
+
+- **GitHub access details:** Git connections show organization member counts and repository users, including pending invitations.
+
+### Improvements
+
+- Project cards now show each environment's module total and infrastructure-run counts.
+- The module canvas now remembers zoom separately for each environment.
+
+### Fixes
+
+- Billing usage periods now follow the contract anniversary and show progress through the current period.
+- Invoice totals now use dollar units and invoice lists show finalized invoices without draft entries.
+- Billing usage pages now handle days that span two billing periods without duplicate entries.
+- Advanced Terraform variables now override fields inside generated nested objects.
+- AMP metric bursts now queue and transient failures retry instead of failing immediately.
+- Releasing a stuck stack lock now checks the specific lock reviewed before unlocking it.
+- Creating a service with EC2 capacity through a referenced cluster now uses the cluster's capacity provider strategy.
+- Nested module creation dialogs now show the form and can be closed.
+- Email verification no longer crashes when Chrome translation is enabled.
+
+## Modules
+
+### [Aurora Database](https://www.ravion.com/docs/module-definitions/catalog/rvn-aurora) [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%401.2.0) → [1.2.1](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%401.2.1)
+
+- Prevent selecting an older major engine version when updating a database.
+
+### [EC2 Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ec2-service) [1.4.2](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%401.4.2) → [1.6.0](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%401.6.0)
+
+- Add a managed ECR repository build source for services.
+- New services now default to one instance.
+
+### [ECS Cluster](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-cluster) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%401.0.1) → [1.0.2](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%401.0.2)
+
+- Clarify cluster labels and identify additional Network Load Balancer security groups in module forms.
+
+### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.3.0) → [1.5.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.5.1)
+
+- Add a managed ECR repository build source for services.
+- Services using EC2 capacity now create successfully when the cluster is selected by reference.
+- Pre-deploy and post-deploy tasks now follow the capacity provider strategy in advanced Terraform variables.
+
+### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.3.0) → [1.5.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.5.1)
+
+- Add a managed ECR repository build source for services.
+- Configure target group deregistration delays and use clearer cluster, routing, health check, and builder settings.
+- Services using EC2 capacity now create successfully when the cluster is selected by reference.
+- Pre-deploy and post-deploy tasks now follow the capacity provider strategy in advanced Terraform variables.
+
+### [ECS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-worker) [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%401.3.0) → [1.5.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%401.5.1)
+
+- Add a managed ECR repository build source for services.
+
+### [Lambda Function](https://www.ravion.com/docs/module-definitions/catalog/rvn-lambda) [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%401.1.0) → [1.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%401.1.1)
+
+- Use consistent Dockerfile and builder settings while keeping build policies in advanced settings.
+
+### [RDS Database](https://www.ravion.com/docs/module-definitions/catalog/rvn-rds) [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-rds%401.2.0) → [1.2.1](https://github.com/ravionhq/modules/releases/tag/rvn-rds%401.2.1)
+
+- Allow major engine upgrades while preventing selection of an older major version.
+
+### [Static Hosting](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-static) [1.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%401.1.1) → [1.1.2](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%401.1.2)
+
+- Use consistent Dockerfile and builder settings while keeping build policies in advanced settings.
+
+</Update>
+
+<Update
+  label="September 14, 2026"
+  rss={{
+    title: "Faster ECS rolling deployments and more reliable AWS account and EC2 recovery",
+  }}
+>
+
+## Platform
+### Improvements
+- ECS rolling deployments now succeed as soon as new tasks are healthy while old tasks drain in the background; deployment settings can choose a lower healthy-task threshold or wait for old tasks to drain. This applies to existing ECS modules, not just the new versions.
+### Fixes
+- GitLab code sources now refresh expiring credentials and recover access after successful reauthorization.
+- AWS account connection errors now explain that reconnection is needed and link directly to the account connection flow.
+- Orphaned EC2 runner instances are now reconciled and terminated after interrupted launches.
+- Successful EC2 deployments can now be redeployed or rolled back without failing during input resolution.
+- Organizations with billing data but no projects can now be deleted.
+## Modules
+### [CloudFront CDN](https://www.ravion.com/docs/module-definitions/catalog/rvn-cloudfront) [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%401.3.0) → [1.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%401.3.1)
+- CloudFront signed URLs now accept UUID-format key group IDs.
+### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.2.0) → [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.3.0)
+- Rolling deployments now succeed as soon as new tasks are healthy while old tasks drain in the background; deployment settings can choose a lower healthy-task threshold or wait for old tasks to drain.
+### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.2.0) → [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.3.0)
+- Rolling deployments now succeed as soon as new tasks are healthy while old tasks drain in the background; deployment settings can choose a lower healthy-task threshold or wait for old tasks to drain.
+### [ECS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-worker) [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%401.2.0) → [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%401.3.0)
+- Rolling deployments now succeed as soon as new tasks are healthy while old tasks drain in the background; deployment settings can choose a lower healthy-task threshold or wait for old tasks to drain.
+
+</Update>
+
+<Update
+  label="September 7, 2026"
+  rss={{
+    title: "Annual billing, clearer diffs, reliable deployments, new AWS KMS keys, and richer CLI controls",
+  }}
+>
+
+## Platform
+
+### Improvements
+
+- Module definition settings now offer category creation when an organization has no categories.
+- Deployment diffs now wrap long lines by default for easier reading.
+- ECS deployments now show when they are waiting behind their stack pipeline apply and identify the blocking work.
+
+### Fixes
+
+- The project creation wizard now stays open while moving between steps.
+- Cancelled EC2 deployments now target the current retry and remain within the original execution deadline.
+- GitLab webhook triggers now register project webhooks when configuration is applied.
+- Module references now resolve GitHub repositories that redirect to a new location.
+- You can now change the permitted identity providers for your organization; this setting was incorrectly locked before.
+
+## Modules
+
+### New modules
+
+- **[AWS KMS Key](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-kms)** 0.1.0: Provision regional symmetric AWS KMS encryption keys with optional key-user access.
+
+### [EC2 Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ec2-service) [1.4.1](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%401.4.1) → [1.4.2](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%401.4.2)
+
+- Default new services to one instance so they scale out only when Maximum instances is increased.
+
+### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [1.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.1.1) → [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.2.0)
+
+- Enable SOCI lazy loading automatically for Fargate builds while keeping it disabled for EC2 capacity.
+
+### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.1.0) → [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.2.0)
+
+- Enable SOCI lazy loading automatically for Fargate builds while keeping it disabled for EC2 capacity.
+
+### [ECS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-worker) [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%401.1.0) → [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%401.2.0)
+
+- Enable SOCI lazy loading automatically for Fargate builds while keeping it disabled for EC2 capacity.
+
+## CLI [1.3.2](https://github.com/ravionhq/cli/releases/tag/v1.3.2) → [1.4.0](https://github.com/ravionhq/cli/releases/tag/v1.4.0)
+
+### Features
+
+- **[AWS account references](https://www.ravion.com/docs/cli/reference/values):** AWS values commands accept a 12-digit AWS account number through `--aws-account-id`.
+- **[Feature flag listing](https://www.ravion.com/docs/cli/reference/feature-flag):** `ravion feature-flag list` evaluates flags for an organization and optional resource scope.
+- **[Billing cycle management](https://www.ravion.com/docs/cli/reference/billing):** `ravion billing cycle set` switches between monthly invoicing and a prepaid annual year, with `--yes` for non-interactive use.
+- **[Deployment waiting phase](https://www.ravion.com/docs/cli/reference/deploy):** Deploy commands report when a deployment is queued behind its stack pipeline apply and identify the blocking step.
+
+</Update>
+
+<Update
+  label="August 31, 2026"
+  rss={{
+    title: "SOCI lazy loading, billing management, and new metrics and logs commands",
+  }}
+>
+
+## Platform
+
+### Features
+
+- **SOCI lazy loading:** Set `soci_enabled` on a [`build:image` step](https://www.ravion.com/docs/pipelines/config-reference#buildimagecistep) to use lazy-loaded container images for Fargate. Standard modules will enable it by default after further testing.
+- **Billing and usage settings:** Manage organization plans, add-ons, payment methods, invoices, and usage from the settings pages.
+
+### Improvements
+
+- Build steps now cancel intermediate runs by default, while blocks apply concurrency only when configured directly.
+- Manual reference inputs no longer show default values as placeholders.
+- Image builds are faster now that cache exports use matching compression settings, avoiding unnecessary layer recompression.
+
+### Fixes
+
+- EC2 execution logs now include the user-facing AWS error when a launch fails.
+- Collapsed input tags now have a consistent height whether or not they include an icon.
+
+## AWS account IAM policy 1.0.45 → 1.0.47
+
+- **EKS cluster access:** Add `eks:DescribeCluster` to the deploy policy.
+- **AMP metrics access:** Add Amazon Managed Prometheus read actions to the broker policy for the EKS metrics dashboard.
+
+Update your AWS account connection in organization settings.
+
+## CLI [1.2.2](https://github.com/ravionhq/cli/releases/tag/v1.2.2) → [1.3.2](https://github.com/ravionhq/cli/releases/tag/v1.3.2)
+
+### Features
+
+- **EKS version lookup:** Use [`ravion values aws/eks-versions`](https://www.ravion.com/docs/cli/reference/values) to list Kubernetes versions available for cluster creation or upgrades.
+- **Amazon Managed Prometheus metrics:** Use [`ravion metrics aws-amp`](https://www.ravion.com/docs/cli/reference/metrics) to run PromQL range queries against an AMP workspace.
+- **Prometheus metrics:** Use [`ravion metrics eks-prometheus`](https://www.ravion.com/docs/cli/reference/metrics) to query Prometheus through an EKS deployment.
+- **EKS workload logs:** Use [`ravion logs eks-loki`](https://www.ravion.com/docs/cli/reference/logs) to tail EKS workload logs from Loki.
+- **Billing portal:** Use [`ravion billing portal-session`](https://www.ravion.com/docs/cli/reference/billing) to open the Stripe customer portal and manage payment methods.
+- **Billing add-ons:** Use [`ravion billing add-on list|enable|disable`](https://www.ravion.com/docs/cli/reference/billing) to manage subscription add-ons.
+- **Billing invoices:** Use [`ravion billing invoice list`](https://www.ravion.com/docs/cli/reference/billing) to list organization invoices with PDF links.
+- **Billing account details:** Use [`ravion billing get`](https://www.ravion.com/docs/cli/reference/billing) to view the billing provider, cards on file, and available payment options.
+
+</Update>
+
+<Update
+  label="August 24, 2026"
+  rss={{
+    title: "Module canvas editing, safer pipeline applies, clearer deployment status, and expanded CLI project configuration",
+  }}
+>
+
+## Platform
+
+### Features
+
+- **Module canvas editor:** Customize your module canvas with drag and drop, grouping, and configure which metrics show on each card
+- **Module categories:** Module definitions can now be organized into categories to make it easier for users to pick the correct module for their use case.
+- **Module build status now on canvas:** See build progress and failure details directly on module cards.
+- **Destructive change approval:** Destructive changes now require stack approval even when auto-approve is enabled.
+
+### Improvements
+
+- You can now create a module directly from the module catalog
+- Create-module dialogs now use more of the available height on short screens.
+- Creating a module now defaults to Create & Apply and uses clearer plan and apply actions.
+- The current-state resources view now uses stack-specific empty-state wording and tighter spacing.
+- API key empty states now use clearer language.
+- Terraform plan resources now use the same change colors as applied resources.
+- In-app AI chat can now set the log search query and time range in the logs view.
+- EC2 health-check status now separates release failures from target health and shows focused diagnostics.
+- Module canvas updates now avoid unnecessary re-rendering and layout work.
+- Modules can now reference producer modules before those producers have applied.
+- Creating an environment now offers Production, Staging, Development, and Test name presets.
+- Run tabs now show the same status icon as the corresponding stack tab, including timed-out runs.
+- Deploy-step drawers now show View deploy when the deployment is identified by the step output.
+
+### Fixes
+
+- Stack runs without current resources are now reachable from the stack page.
+- Pending-approval module cards now open their stack when clicked anywhere on the card.
+- The logs viewer now returns results reliably across supported time ranges.
+- Retrying a partially failed multi-module creation now reuses modules already created in the batch.
+- Pressing Enter inside an empty YAML flow collection now keeps the configuration valid.
+- Terraform resource changes now load correctly when the selected run is outside the pipeline bounds.
+- Cancelled queued runs now clear correctly instead of remaining stuck.
+- Failed partial applies no longer permanently lock module inputs when no live resources remain.
+- Static deployments now report genuine contention as queued and start uncontended work as in progress.
+
+## Modules
+
+### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.1.0) → [1.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.1.1)
+
+- Clarify documentation that one service can expose up to five TCP, UDP, or TLS ports.
+
+### [VPC Network](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-network) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-network%401.0.1) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-network%401.1.0)
+
+- Add VPC endpoints, including a free S3 gateway endpoint enabled by default for new VPCs, an optional DynamoDB gateway endpoint, and selectable interface endpoints for AWS services.
+
+## CLI [1.0.0](https://github.com/ravionhq/cli/releases/tag/v1.0.0) → [1.2.2](https://github.com/ravionhq/cli/releases/tag/v1.2.2)
+
+### Features
+
+- **[Project config apply](https://www.ravion.com/docs/config-as-code/project-config-file):** Apply configuration using a project given ID, create the project when it does not exist, and preview the same creation with `--dry-run`.
+- **Project actions:** See project creation actions and known-after-apply identifiers in configuration plans.
+- **Saved module canvas:** Read environment canvas arrangements, including card positions, groups, metrics, and connector shapes.
+- **Module step filtering:** List pipeline step executions for specific modules instead of every execution.
+- **Module categories:** Manage categories with generated API support and the `ravion module category` command group.
+
+### Improvements
+
+- **Project config validation:** Validation errors now appear as an indented tree with clear spacing around module details.
+
+</Update>
+
+<Update
+  label="August 17, 2026"
+  rss={{
+    title: "Inspect live stack state, wait for deployments, and configure more module capabilities",
+  }}
+>
+
+## Platform
+
+### Features
+
+- **Current stack state:** View live infrastructure, outputs, and workspace information from a persistent current-state view. [Learn more](https://www.ravion.com/docs/modules/stack)
+- **1-click shell into app commands:** Copy AWS CLI commands for interactive ECS and EC2 sessions from resource details.
+
+### Improvements
+
+- Deployment resource drawers can expand to the full page width.
+- Stack view dividers can be dragged across a wider range.
+- Deployment definition diffs now work consistently across ECS, EC2, Lambda, and static deployments.
+- Planned Terraform resources are visually distinct from applied resources and show their run state.
+- Terraform resource tables now show failed and changed resources before unchanged resources.
+- List-valued stack outputs now show one value per row with individual copy actions.
+- Log controls move into a compact menu on narrow screens.
+- Module catalog and configuration pages load version lists without fetching full configuration data.
+
+### Fixes
+
+- Missing projects, environments, pipelines, modules, deployments, and resources now show a clear not-found page with a way back.
+- Declared custom-step outputs are preserved, and missing declared output references now fail the run instead of silently becoming empty values.
+- Finished pipeline runs now show unreached steps as skipped, and parallel steps without an explicit strategy let remaining branches finish.
+- Project configuration now resolves AWS account given IDs in nested inputs.
+- Pipeline runs now accept repository URLs without a scheme when starting runner work.
+- Stack configuration diffs now show “No configuration changes” instead of a blank pane when no fields can be displayed.
+- AWS default-VPC errors now explain the fallback and how to resolve the missing default VPC.
+- Deployment failure reasons now remain available as structured, user-facing errors.
+- Pipeline runs now recover more reliably after worker restarts and long-running lock contention.
+- Terraform reports still complete after a failed or canceled run, including when all resources were destroyed.
+- EC2 builds retry Git installation and fail early with a clear infrastructure error when installation cannot complete.
+- EC2 builds no longer fail on certain temporary-file permissions that differ between build environments.
+- Changes to a concurrency limit now take effect for the next run without requiring a new concurrency key.
+
+## AWS account IAM policy 1.0.44 → 1.0.45
+
+- **Managed certificates:** Request, describe, and delete ACM certificates and attach or detach ALB listener certificates for Ravion-managed domains.
+
+Update your AWS account connection in organization settings.
+
+## Modules
+
+### [CloudFront CDN](https://www.ravion.com/docs/module-definitions/catalog/rvn-cloudfront) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%401.0.1) → [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%401.3.0)
+
+- Add standalone ALB origins, including optional private VPC origins.
+- CloudFront cache policy changes and module-managed feature changes no longer fail because of in-use errors.
+
+### [EC2 Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ec2-service) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%401.0.1) → [1.4.1](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%401.4.1)
+
+- Show an Endpoint link when HTTP traffic is enabled.
+- Mount the host Docker socket for container workloads when configured.
+- Configure extra Builder IAM policies or replace the default build policies for each build.
+- Rotate on-instance application logs with configurable Supervisor limits.
+- Document how to choose an instance type so services can use the newest generation available in their region.
+
+### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.0.1) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.1.0)
+
+- Configure extra Builder IAM policies or replace the default build policies for each build.
+
+### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.0.1) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.1.0)
+
+- Configure extra Builder IAM policies or replace the default build policies for each build.
+
+### [ECS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-worker) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%401.0.1) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%401.1.0)
+
+- Configure extra Builder IAM policies or replace the default build policies for each build.
+
+### [Lambda Function](https://www.ravion.com/docs/module-definitions/catalog/rvn-lambda) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%401.0.1) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%401.1.0)
+
+- Configure extra Builder IAM policies or replace the default build policies for each build.
+
+### [Route 53 DNS](https://www.ravion.com/docs/module-definitions/catalog/rvn-route53) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-route53%401.0.1) → [1.0.3](https://github.com/ravionhq/modules/releases/tag/rvn-route53%401.0.3)
+
+- Quoted values in structured DNS records are now accepted.
+- Long TXT and SPF records are encoded correctly for the AWS provider.
+
+### [Static Hosting](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-static) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%401.0.1) → [1.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%401.1.1)
+
+- Configure extra Builder IAM policies or replace the default build policies for each build.
+- CloudFront cache policy changes and module-managed feature changes no longer fail because of in-use errors.
+
+## CLI [0.2.31](https://github.com/ravionhq/cli/releases/tag/v0.2.31) → [1.0.0](https://github.com/ravionhq/cli/releases/tag/v1.0.0)
+
+### Features
+
+- **Deployment waiting:** Run `ravion deploy wait` with watch, timeout, until, and JSON output options. [Deploy commands](https://www.ravion.com/docs/cli/reference/deploy)
+- **Project configuration apply:** See the pipeline run IDs started for each module and the matching wait commands.
+- **Project file output:** Use `ravion project create --file` to write a generated project configuration draft. [Project commands](https://www.ravion.com/docs/cli/reference/project)
+
+</Update>
+
 <Update
   label="August 10, 2026"
   rss={{
@@ -30,46 +414,69 @@ rss: true
 >
 
 ## Platform
+
 ### Features
+
 - **Custom step outputs:** Custom pipeline steps can publish declared string outputs for later steps to use. [Learn more](https://www.ravion.com/docs/pipelines/step-types#publishing-outputs).
 - **Email verification:** Password signups now verify an email address before creating a session.
+
 ### Improvements
+
 - Pending Terraform approvals no longer hold the shared stack lock or wait behind plans that have already been superseded.
 - Metric charts now show run status markers, support shared time ranges, and link directly to individual runs.
 - Timestamps across calendars, charts, logs, and timelines now use the viewer's timezone.
 - Deployment resource logs now support resource-specific queries and incremental history loading.
 - Pipeline graphs now keep steps aligned after grouped sections and route group boundaries cleanly.
+
 ### Fixes
+
 - Cleared module defaults now remain cleared instead of being restored automatically.
 - Redeploying an image with multiple tags no longer reports the image as missing.
 - Output-only Terraform changes now remain eligible for apply instead of being treated as no-ops.
 - ECS deployments no longer fail or revert when AWS reports a stale deployment during rollout.
 - Deployment links now remain valid when an environment identifier is available only through the module instance.
 - Deployment detail panels now keep unavailable task-definition messages aligned with their row labels.
+
 ## AWS account IAM policy 1.0.42 → 1.0.44
+
 - **Managed policy capacity:** AWS account permissions are split across managed policies so future permission updates have room to grow without changing effective permissions.
 - **Account connectivity:** During this update, Ravion may briefly lose connectivity to your AWS account.
 
 Update your AWS account connection in organization settings.
 
 ## Modules
+
 ### New modules
+
 - **[RDS Proxy](https://www.ravion.com/docs/module-definitions/catalog/rvn-rds-proxy)** 0.1.0: Provision an RDS Proxy for connection pooling in front of an RDS database or Aurora cluster.
+
 ### [Aurora Database](https://www.ravion.com/docs/module-definitions/catalog/rvn-aurora) [0.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%400.1.1) → [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%401.2.0)
+
 - Add guarded password management controls for safe cluster imports.
 - Add optional RDS Proxy connection pooling.
+
 ### [ECS Cluster](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-cluster) [0.5.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%400.5.0) → [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%401.0.1)
+
 - Add security-group inputs for ALB ingress rules that reference source security groups.
+
 ### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [0.8.4](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%400.8.4) → [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.0.1)
+
 - ALB metric charts now include the required load balancer dimension.
 - Assign ALB listener rule priorities at apply time when no explicit priority is set.
+
 ### [RDS Database](https://www.ravion.com/docs/module-definitions/catalog/rvn-rds) [0.4.3](https://github.com/ravionhq/modules/releases/tag/rvn-rds%400.4.3) → [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-rds%401.2.0)
+
 - Add guarded password management controls for safe database imports.
 - Add optional RDS Proxy connection pooling.
+
 ### [Route 53 DNS](https://www.ravion.com/docs/module-definitions/catalog/rvn-route53) [0.2.1](https://github.com/ravionhq/modules/releases/tag/rvn-route53%400.2.1) → [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-route53%401.0.1)
+
 - Split TXT and SPF record values longer than 255 characters automatically and validate Route 53 record limits before apply.
+
 ## CLI [0.2.23](https://github.com/ravionhq/cli/releases/tag/v0.2.23) → [0.2.31](https://github.com/ravionhq/cli/releases/tag/v0.2.31)
+
 ### Features
+
 - **Terraform resource errors:** `ravion logs` now reports the error code, operation, HTTP status, request ID, and the relevant configuration context in plain text.
 - **Deployment resource log scope:** CloudWatch Logs Insights queries can target the log streams belonging to one deployment resource.
 - **Documentation access:** CLI help now includes a link to the full Ravion documentation and MCP server.
@@ -85,12 +492,16 @@ Update your AWS account connection in organization settings.
 >
 
 ## Platform
+
 ### Features
+
 - **Scheduled pipeline triggers:** Schedule pipeline and module-stack runs with cron-based triggers. [Learn more](https://www.ravion.com/docs/pipelines/config-reference).
 - **Deployment attribution:** External ECS deployments show who initiated them and whether they came from the AWS Console, CLI, Terraform, SDK, or API.
 - **Destructive-change confirmation:** Stack approvals now identify planned destroys and replacements before allowing approval.
 - **Terraform resource errors:** Failed plan and apply resources now show structured provider errors and the configuration location that caused them.
+
 ### Improvements
+
 - Deployment details now show normalized ECS task-definition changes consistently in cards and detail views.
 - Changed JSON and YAML diffs now start collapsed, while expanded content uses the enclosing panel's scrolling.
 - Dialogs now stay within the viewport and scroll their bodies while keeping headers and actions visible.
@@ -99,14 +510,18 @@ Update your AWS account connection in organization settings.
 - Config-apply stack runs now receive generated descriptions instead of action-only placeholders.
 - Metrics charts now load faster from persistent caching and show applied-run and deployment markers.
 - Module and deployment input values now ignore surrounding whitespace during validation.
+
 ### Fixes
+
 - Retrying a failed Terraform apply now preserves its errored state snapshot in the customer AWS account.
 - Deauthorized or deleted EventBridge connections now recover automatically so ECS events continue to arrive.
 - Lambda and Static deployment failures now use the same structured error display as other deployment types.
 - Failed binary downloads now retry transient connection and HTTP failures.
 - Deployment canvases now route wire crossovers and card layouts more clearly.
 - Marketing pages now recover from missing deploy-time JavaScript chunks with a one-time reload.
+
 ## AWS account IAM policy 1.0.39 → 1.0.42
+
 - **External ECS deployment attribution:** Grant CloudTrail event lookup access for identifying external ECS deployments.
 - **Cross-account Lambda images:** Allow Lambda container-image updates from ECR while keeping direct API calls restricted to Ravion's IP range.
 - **EventBridge connection recovery:** Allow EventBridge API destinations to be rebound after a connection is recreated.
@@ -114,22 +529,37 @@ Update your AWS account connection in organization settings.
 Update your AWS account connection in organization settings.
 
 ## Modules
-### [ACM Certificate](https://www.ravion.com/docs/module-definitions/catalog/rvn-acm-certificate) [0.4.0](https://github.com/flightcontrolhq/modules/releases/tag/rvn-acm-certificate%400.4.0) → [0.4.1](https://github.com/flightcontrolhq/modules/releases/tag/rvn-acm-certificate%400.4.1)
+
+### [ACM Certificate](https://www.ravion.com/docs/module-definitions/catalog/rvn-acm-certificate) [0.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-acm-certificate%400.4.0) → [0.4.1](https://github.com/ravionhq/modules/releases/tag/rvn-acm-certificate%400.4.1)
+
 - Allow existing certificates to upgrade to the `domains` input without being recreated.
-### [CloudFront CDN](https://www.ravion.com/docs/module-definitions/catalog/rvn-cloudfront) [0.4.0](https://github.com/flightcontrolhq/modules/releases/tag/rvn-cloudfront%400.4.0) → [0.4.2](https://github.com/flightcontrolhq/modules/releases/tag/rvn-cloudfront%400.4.2)
+
+### [CloudFront CDN](https://www.ravion.com/docs/module-definitions/catalog/rvn-cloudfront) [0.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%400.4.0) → [0.4.2](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%400.4.2)
+
 - Add a configurable VPC origin.
 - Default allowed methods to read-only.
-### [ECS Cluster](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-cluster) [0.3.1](https://github.com/flightcontrolhq/modules/releases/tag/rvn-ecs-cluster%400.3.1) → [0.5.0](https://github.com/flightcontrolhq/modules/releases/tag/rvn-ecs-cluster%400.5.0)
+
+### [ECS Cluster](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-cluster) [0.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%400.3.1) → [0.5.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%400.5.0)
+
 - Default private load balancers to no IPv6 ingress and allow IPv6 ingress CIDR inputs.
 - BREAKING: rename `ec2_managed_termination_protection` to `ec2_managed_termination_protection_enabled` and `ec2_managed_scaling_status` to `ec2_managed_scaling_enabled`, and change both inputs to booleans.
-### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [0.3.1](https://github.com/flightcontrolhq/modules/releases/tag/rvn-ecs-nlb%400.3.1) → [0.3.2](https://github.com/flightcontrolhq/modules/releases/tag/rvn-ecs-nlb%400.3.2)
+
+### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [0.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%400.3.1) → [0.3.2](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%400.3.2)
+
 - Allow existing services to upgrade to the `listeners` input without being recreated.
-### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [0.8.3](https://github.com/flightcontrolhq/modules/releases/tag/rvn-ecs-web%400.8.3) → [0.8.4](https://github.com/flightcontrolhq/modules/releases/tag/rvn-ecs-web%400.8.4)
+
+### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [0.8.3](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%400.8.3) → [0.8.4](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%400.8.4)
+
 - Clarify build source, Railpack command, and builder instance guidance.
-### [Lambda Function](https://www.ravion.com/docs/module-definitions/catalog/rvn-lambda) [0.3.2](https://github.com/flightcontrolhq/modules/releases/tag/rvn-lambda%400.3.2) → [0.4.0](https://github.com/flightcontrolhq/modules/releases/tag/rvn-lambda%400.4.0)
+
+### [Lambda Function](https://www.ravion.com/docs/module-definitions/catalog/rvn-lambda) [0.3.2](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%400.3.2) → [0.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%400.4.0)
+
 - Stop creating a module-owned ECR repository when pulling from an image registry and require an initial image tag or digest before the first deployment.
-## CLI [0.2.15](https://github.com/flightcontrolhq/cli/releases/tag/v0.2.15) → [0.2.23](https://github.com/flightcontrolhq/cli/releases/tag/v0.2.23)
+
+## CLI [0.2.15](https://github.com/ravionhq/cli/releases/tag/v0.2.15) → [0.2.23](https://github.com/ravionhq/cli/releases/tag/v0.2.23)
+
 ### Features
+
 - **Trigger-concurrency run status:** The CLI now treats skipped trigger-concurrency runs as terminal and reports a failure while waiting for completion.
 - **Module version validation:** Use `--dry-run` with `ravion module version create` to validate configuration and return defaults without creating a version. [Learn more](https://www.ravion.com/docs/cli/reference/module).
 - **Version filtering:** Use `--since-version` with `ravion module version list` to show versions at or newer than a semantic version. [Learn more](https://www.ravion.com/docs/cli/reference/module).
@@ -187,36 +617,36 @@ Update your AWS account connection in organization settings.
 - **[AWS IAM Policy](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-iam-policy) 0.1.0:** Provision a reusable customer-managed AWS IAM policy from structured statements or a complete policy document.
 - **[EC2 Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ec2-service) 0.1.1:** Run supervised workloads on an EC2 Auto Scaling Group with web and storage configuration.
 
-### [CloudFront CDN](https://www.ravion.com/docs/module-definitions/catalog/rvn-cloudfront) [0.3.2](https://github.com/flightcontrolhq/modules/releases/tag/rvn-cloudfront%400.3.2) → [0.4.0](https://github.com/flightcontrolhq/modules/releases/tag/rvn-cloudfront%400.4.0)
+### [CloudFront CDN](https://www.ravion.com/docs/module-definitions/catalog/rvn-cloudfront) [0.3.2](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%400.3.2) → [0.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%400.4.0)
 
 - Add custom headers for primary and additional origins.
 
-### [ECS Cluster](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-cluster) [0.3.0](https://github.com/flightcontrolhq/modules/releases/tag/rvn-ecs-cluster%400.3.0) → [0.3.1](https://github.com/flightcontrolhq/modules/releases/tag/rvn-ecs-cluster%400.3.1)
+### [ECS Cluster](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-cluster) [0.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%400.3.0) → [0.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%400.3.1)
 
 - Add additional load balancer certificate ARN fields for SNI.
 
-### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [0.2.2](https://github.com/flightcontrolhq/modules/releases/tag/rvn-ecs-nlb%400.2.2) → [0.3.1](https://github.com/flightcontrolhq/modules/releases/tag/rvn-ecs-nlb%400.3.1)
+### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [0.2.2](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%400.2.2) → [0.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%400.3.1)
 
 - BREAKING: replace `container_port`, `listener_port`, and `listener_protocol` with one or more `listeners` items before upgrading, and move TLS settings into the relevant listener.
 - Improve build source, Railpack command, and builder instance guidance.
 
-### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [0.8.2](https://github.com/flightcontrolhq/modules/releases/tag/rvn-ecs-web%400.8.2) → [0.8.3](https://github.com/flightcontrolhq/modules/releases/tag/rvn-ecs-web%400.8.3)
+### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [0.8.2](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%400.8.2) → [0.8.3](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%400.8.3)
 
 - Improve build source, Railpack command, and builder instance guidance.
 
-### [ECS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-worker) [0.3.2](https://github.com/flightcontrolhq/modules/releases/tag/rvn-ecs-worker%400.3.2) → [0.3.3](https://github.com/flightcontrolhq/modules/releases/tag/rvn-ecs-worker%400.3.3)
+### [ECS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-worker) [0.3.2](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%400.3.2) → [0.3.3](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%400.3.3)
 
 - Improve build source, Railpack command, and builder instance guidance.
 
-### [Lambda Function](https://www.ravion.com/docs/module-definitions/catalog/rvn-lambda) [0.3.1](https://github.com/flightcontrolhq/modules/releases/tag/rvn-lambda%400.3.1) → [0.3.2](https://github.com/flightcontrolhq/modules/releases/tag/rvn-lambda%400.3.2)
+### [Lambda Function](https://www.ravion.com/docs/module-definitions/catalog/rvn-lambda) [0.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%400.3.1) → [0.3.2](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%400.3.2)
 
 - Improve build source and builder instance guidance.
 
-### [Static Hosting](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-static) [0.3.3](https://github.com/flightcontrolhq/modules/releases/tag/rvn-aws-static%400.3.3) → [0.3.4](https://github.com/flightcontrolhq/modules/releases/tag/rvn-aws-static%400.3.4)
+### [Static Hosting](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-static) [0.3.3](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%400.3.3) → [0.3.4](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%400.3.4)
 
 - Improve build source, Railpack command, and builder instance guidance.
 
-## CLI [0.2.5](https://github.com/flightcontrolhq/cli/releases/tag/v0.2.5) → [0.2.15](https://github.com/flightcontrolhq/cli/releases/tag/v0.2.15)
+## CLI [0.2.5](https://github.com/ravionhq/cli/releases/tag/v0.2.5) → [0.2.15](https://github.com/ravionhq/cli/releases/tag/v0.2.15)
 
 ### Features
 

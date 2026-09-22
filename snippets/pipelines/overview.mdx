@@ -44,6 +44,50 @@ steps:
     module_instance: << pipeline.variant.id >>.web-app
 ```
 
+### One workflow per pipeline
+
+A pipeline should contain steps that depend on each other. If two sets of steps never consume each other's outputs and never need to wait on each other, they are separate workflows — make them separate pipelines, not parallel groups in one pipeline.
+
+The common mistake is a pipeline shaped like this:
+
+```yaml
+# Anti-pattern: independent workflows packed into one pipeline
+steps:
+  - parallel:
+      - group: API
+        steps:
+          - id: build_api
+            type: build
+            module_instance: << pipeline.variant.id >>.api
+          - id: deploy_api
+            type: deploy
+            module_instance: << pipeline.variant.id >>.api
+            input:
+              image_ref: << steps.build_api.output.image_digest >>
+      - group: Marketing site
+        steps:
+          - id: build_site
+            type: build
+            module_instance: << pipeline.variant.id >>.marketing-site
+          - id: deploy_site
+            type: deploy
+            module_instance: << pipeline.variant.id >>.marketing-site
+            input:
+              image_ref: << steps.build_site.output.image_digest >>
+```
+
+Nothing in the **API** branch reads from the **Marketing site** branch. Packing them together only couples them: a failing site build marks the whole run failed, every trigger runs both even when only one changed, and you can't re-run one without re-running the other. Split them into an **API** pipeline and a **Marketing site** pipeline, each with its own trigger and its own build → deploy steps.
+
+Keep steps in the same pipeline when they share a dependency:
+
+- A deploy that pins the image digest from a build.
+- One image build that several module instances deploy.
+- A test or `terraform:plan` step that gates a deploy or apply.
+- An approval that several deploys wait on.
+- Services that must roll out together, in a fixed order, because of a schema or API contract.
+
+Use `parallel` for steps that can overlap *inside* one of these workflows — build two images before a shared deploy stage, or fan a single build out to several deploys. Reach for `group` only occasionally: it labels a nested sequence in the UI and can carry a concurrency key for the block as a whole, so it's useful to hold a multi-step branch inside a `parallel` block. A pipeline whose top level is nothing but parallel groups is almost always several pipelines. See [Blocks](/pipelines/step-types#blocks) for the semantics.
+
 ### You might want to use Ravion pipelines for the following reasons:
 
 <Steps>

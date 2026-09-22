@@ -1,0 +1,244 @@
+---
+title: "ravion billing"
+sidebarTitle: "billing"
+description: "Inspect and manage billing"
+"og:image": "https://www.ravion.com/og/docs/cli/reference/billing.png"
+"twitter:image": "https://www.ravion.com/og/docs/cli/reference/billing.png"
+---
+
+{/* This page is generated from the Ravion CLI source. Do not edit by hand. */}
+
+## `ravion billing`
+
+Inspect and manage billing
+
+**Aliases:** `billings`
+
+### `ravion billing add-on`
+
+Manage subscription add-ons
+
+**Aliases:** `add-ons`
+
+#### `ravion billing add-on disable`
+
+Disable an add-on at the end of the paid period
+
+```bash
+ravion billing add-on disable <key> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `-y, --yes` |  | skip confirmation prompt |
+
+#### `ravion billing add-on enable`
+
+Enable an add-on; billed monthly from today
+
+```bash
+ravion billing add-on enable <key> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+#### `ravion billing add-on list`
+
+List add-ons
+
+```bash
+ravion billing add-on list [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `-v, --verbose` |  | show full output |
+
+### `ravion billing cycle`
+
+Switch between monthly and annual prepaid billing
+
+**Aliases:** `cycles`
+
+#### `ravion billing cycle set`
+
+Switch the organization between monthly and annual billing
+
+```bash
+ravion billing cycle set [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--billing-interval <string>` | yes | How the organization is billed: monthly in arrears, or a prepaid annual commitment. Available values: MONTHLY, ANNUAL. |
+| `--json` |  | emit response as JSON |
+| `-y, --yes` |  | skip confirmation prompt |
+
+### `ravion billing get`
+
+Get BillingAccount
+
+```bash
+ravion billing get [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+### `ravion billing invoice`
+
+Inspect invoices
+
+**Aliases:** `invoices`
+
+#### `ravion billing invoice list`
+
+List invoices
+
+```bash
+ravion billing invoice list [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--cursor <string>` |  | cursor |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | limit |
+| `-v, --verbose` |  | show full output |
+
+### `ravion billing plan`
+
+Inspect available billing plans
+
+**Aliases:** `plans`
+
+#### `ravion billing plan get`
+
+Get BillingPlan by id
+
+```bash
+ravion billing plan get <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+#### `ravion billing plan get-current`
+
+Get the organization's current billing plan
+
+```bash
+ravion billing plan get-current [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+#### `ravion billing plan list`
+
+List BillingPlans
+
+```bash
+ravion billing plan list [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--cursor <string>` |  | cursor |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | limit |
+| `-v, --verbose` |  | show full output |
+
+#### `ravion billing plan set`
+
+Change the organization's billing plan
+
+```bash
+ravion billing plan set [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--plan-id <string>` | yes | planId |
+| `--json` |  | emit response as JSON |
+| `-y, --yes` |  | skip confirmation prompt |
+
+### `ravion billing portal-session`
+
+Open the Stripe customer portal to add or change the payment method
+
+```bash
+ravion billing portal-session [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--return-url <string>` | yes | Where Stripe sends the user back to after they finish in the portal. Must be an app origin. |
+| `--json` |  | emit response as JSON |
+
+### `ravion billing usage-summary`
+
+Inspect current and previous billing usage
+
+**Aliases:** `usage-summaries`
+
+#### `ravion billing usage-summary get`
+
+Get billing usage summary by id
+
+```bash
+ravion billing usage-summary get <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+#### `ravion billing usage-summary list`
+
+List billing usage summaries
+
+```bash
+ravion billing usage-summary list [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--cursor <string>` |  | cursor |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | limit |
+| `--period <strings>` |  | period |
+| `-v, --verbose` |  | show full output |
+

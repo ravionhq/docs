@@ -1,7 +1,7 @@
 ---
 title: "ravion logs"
 sidebarTitle: "logs"
-description: "Query historical CloudWatch logs and stream live log output for Ravion modules, deployments, and services straight from the command line."
+description: "Query and stream logs for Ravion modules, deployments, and services from CloudWatch or the in-cluster Loki reached through the Operator agent."
 "og:image": "https://www.ravion.com/og/docs/cli/reference/logs.png"
 "twitter:image": "https://www.ravion.com/og/docs/cli/reference/logs.png"
 ---
@@ -34,6 +34,26 @@ ravion logs cloudwatch [flags]
 | `--log-stream-prefix <string>` |  | Log stream prefix to filter by |
 | `--start-time <string>` |  | Start time for historical logs (ISO 8601) |
 | `--tail` |  | Switch to live tail mode after fetching historical logs |
+
+### `ravion logs eks-loki`
+
+Stream in-cluster Loki logs through the Operator agent
+
+```bash
+ravion logs eks-loki [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--deployment-resource-id <string>` |  | EKS workload deployment resource to tail. Mutually exclusive with --log-source-key. |
+| `--end-time <string>` |  | Inclusive end of the historical phase (ISO 8601). Defaults to now. |
+| `--json` |  | emit response as JSON |
+| `--log-source-key <<moduleInstanceId>::<logSourceId>>` |  | Composite &lt;moduleInstanceId&gt;::&lt;logSourceId&gt; key of the ui.logs source to tail. Mutually exclusive with --deployment-resource-id. |
+| `--search <string>` |  | Case-sensitive substring the line must contain, compiled to a LogQL line filter. A plain string rather than the structured filter tree because a recursive model cannot ride a query param on an SSE GET. |
+| `--start-time <string>` |  | Inclusive start of the historical phase (ISO 8601). Defaults to fifteen minutes before now. |
+| `--tail` |  | Continue into a live tail after the historical phase. |
 
 ### `ravion logs pipeline-step`
 

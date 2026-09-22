@@ -132,9 +132,52 @@ Your organization has a module catalog that has our standard library of modules 
 | **S3 bucket**<br />`s3`                                   | `rvn-s3`                                             | Buckets with policies, encryption, versioning, and lifecycle rules.                                                                |
 | **Job Scheduler**<br />`scheduler` or `fargate-scheduler` | Not available yet                                    | Job scheduler support is still coming.                                                                                             |
 
-## Migrating services
+## Step-by-step migration
 
-Log into [Ravion](https://app.ravion.com) with your Flightcontrol credentials.
+There is no one-click or automatic migration from Flightcontrol to Ravion. You recreate your config in `ravion.yaml`, provision or import each module in Ravion, and cut traffic over yourself. Migration is piecemeal. You move one service at a time and both platforms keep running side by side until you're done.
+
+<Steps>
+  <Step title="Complete the human setup in Ravion">
+    Sign in to [Ravion](https://app.ravion.com) with your Flightcontrol credentials, then connect your AWS account and Git repository. Full checklist in [Start here](/start-here#human-setup).
+
+    Ravion and Flightcontrol share the same organization and memberships, but all other data is separate.
+  </Step>
+
+  <Step title="Draft your ravion.yaml with an AI agent">
+    Give your agent the [Docs MCP server](/mcp/overview), then paste your existing Flightcontrol config (for example `flightcontrol.json`) into the chat and ask the agent to produce a `ravion.yaml` draft.
+
+    Point the agent at [Start here (human + agent)](/start-here) and this page so it has the mapping table above and the [project config file workflow](/config-as-code/project-config-file#agent-tips).
+  </Step>
+
+  <Step title="Decide provision vs. import for each service">
+    - **Provision new in Ravion** for ECS services and static sites. It's easier to cut traffic over by updating DNS than to import running load balancers and CloudFront distributions.
+    - **Import existing** stateful resources like RDS, ElastiCache, S3, and CloudFront distributions you want to keep. Follow [Import into a standard module](/migrate/import-into-standard-module) or [Import into a Terraform Stack](/migrate/import-into-terraform-stack) — both include agent prompts.
+  </Step>
+
+  <Step title="Apply the config and set up pipelines">
+    Apply `ravion.yaml` with a dry run first, then for real. Ravion provisions the new infrastructure alongside your Flightcontrol resources in the same AWS account. Add pipeline config so builds and deploys run on push. See [Project config file](/config-as-code/project-config-file) and [Pipelines](/concepts/pipelines).
+  </Step>
+
+  <Step title="Cut traffic over one service at a time">
+    Deploy the service in Ravion, verify it's healthy, then update DNS to point at the Ravion load balancer or CloudFront distribution. Leave the Flightcontrol service running until you've confirmed the cutover.
+
+    **Stop deploying anything you imported into Ravion through Flightcontrol.** Once a resource is imported, Ravion manages it, and deploying it again from Flightcontrol means two platforms changing the same resource.
+
+    Services you provisioned new in Ravion, like ECS services and static sites, are separate infrastructure. You can keep deploying their Flightcontrol counterparts as usual until DNS moves.
+  </Step>
+
+  <Step title="Delete the migrated Flightcontrol services">
+    Once each service is fully cut over, remove it from Flightcontrol so you're not paying for duplicate infrastructure.
+
+    <Warning>
+      **Never delete a service in Flightcontrol that you imported into Ravion.** Deleting it in Flightcontrol destroys the underlying AWS resources that Ravion now manages, including databases and buckets.
+
+      Contact support instead and we'll remove the service from your Flightcontrol account without destroying anything. Self-serve delete-without-destroy is in the works.
+    </Warning>
+  </Step>
+</Steps>
+
+## Migrating services
 
 **Ravion can be used alongside Flightcontrol at the same time**. They both use the same Organization and memberships, but all other data is separate. So you can migrate piecemeal, service by service, instead of all at once.
 

@@ -20,7 +20,9 @@ Manage project config
 
 #### `ravion project config apply`
 
-Apply project config
+Apply project config.
+
+&lt;id&gt; is a project ID or given ID. When it names a project that does not exist yet, the project is created if the config file's project.givenId matches it. Use --dry-run to plan that creation without writing anything.
 
 ```bash
 ravion project config apply <id> [flags]
@@ -33,7 +35,7 @@ ravion project config apply <id> [flags]
 | `--file <string>` | yes | File to read project config from |
 | `--autoapprove` |  | Pass autoapprove=true to supported stack change pipeline runs |
 | `--description <string>` |  | Description recorded on every stack run this apply creates, for example a link to the pull request or commit that changed the config |
-| `--dry-run` |  | Validate and print planned changes without applying them |
+| `--dry-run` |  | Validate and print planned changes without applying them; IDs of resources that do not exist yet print as (known after apply) |
 | `--environment-given-id <strings>` |  | Environment given ID to include in the apply target set |
 | `--environment-id <strings>` |  | Environment ID to include in the apply target set |
 | `--json` |  | emit response as JSON |
@@ -78,6 +80,7 @@ ravion project create [flags]
 | `--given-id <string>` | yes | User-provided project identifier. Must be unique within organization. |
 | `--name <string>` | yes | name |
 | `--description <string>` |  | description |
+| `--file <string>` |  | File to write project config to |
 | `--json` |  | emit response as JSON |
 
 ### `ravion project delete`

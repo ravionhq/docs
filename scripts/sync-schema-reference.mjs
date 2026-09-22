@@ -38,6 +38,10 @@ const splitDocs = [
         },
         {title: "ECS task definitions", match: /^Ecs/},
       ],
+      Inputs: [
+        {title: "Inputs"},
+        {title: "Input types", match: /InputProperty$/},
+      ],
     },
     standaloneSections: ["Template expressions"],
     titleOverrides: {ui: "UI"},
@@ -70,7 +74,13 @@ const splitDocs = [
         title: "Module definition schema: Inputs",
         sidebarTitle: "Inputs",
         description:
-          "Reference module input fields, types, defaults, validation rules, visibility, and conditional behavior used to configure module instances safely.",
+          "Reference module input defaults, validation rules, visibility conditions, and dynamic value references used to configure module instances safely.",
+      },
+      "input-types": {
+        title: "Module definition schema: Input types",
+        sidebarTitle: "Input types",
+        description:
+          "Reference every module input type — string, number, boolean, object, array, map, compound, section, git repo, and ref — with its fields and options.",
       },
       module: {
         title: "Module definition schema: Module",

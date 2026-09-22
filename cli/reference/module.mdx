@@ -14,6 +14,96 @@ Manage module instances
 
 **Aliases:** `modules`, `mod`
 
+### `ravion module category`
+
+Manage module categories
+
+**Aliases:** `categories`
+
+#### `ravion module category create`
+
+Create ModuleCategory
+
+```bash
+ravion module category create [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--given-id <string>` | yes | User-provided stable identifier. |
+| `--name <string>` | yes | name |
+| `--sort-order <int>` | yes | sortOrder |
+| `--description <string>` |  | description |
+| `--icon <string>` |  | Lucide icon name. |
+| `--json` |  | emit response as JSON |
+
+#### `ravion module category delete`
+
+Delete ModuleCategory
+
+```bash
+ravion module category delete <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `-y, --yes` |  | skip confirmation prompt |
+
+#### `ravion module category get`
+
+Get ModuleCategory by id
+
+```bash
+ravion module category get <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+#### `ravion module category list`
+
+List ModuleCategories
+
+```bash
+ravion module category list [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--cursor <string>` |  | cursor |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | limit |
+| `-v, --verbose` |  | show full output |
+
+#### `ravion module category update`
+
+Patch ModuleCategory
+
+```bash
+ravion module category update <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--description <string>` |  | description |
+| `--given-id <string>` |  | User-provided identifier pattern used by all givenId fields |
+| `--icon <string>` |  | Lucide icon name. |
+| `--is-global-published` |  | Makes this category available to all organizations. |
+| `--json` |  | emit response as JSON |
+| `--name <string>` |  | name |
+| `--sort-order <int>` |  | sortOrder |
+
 ### `ravion module create`
 
 Create ModuleInstance
@@ -59,6 +149,7 @@ ravion module definition create [flags]
 | `--name <string>` | yes | name |
 | `--type <string>` | yes | Module type identifier, e.g. "aws-network". Must be unique within organization. |
 | `--json` |  | emit response as JSON |
+| `--module-category-ids <strings>` |  | Categories assigned to this module definition. |
 
 #### `ravion module definition delete`
 
@@ -131,6 +222,7 @@ ravion module definition update <id> [flags]
 | `--description <string>` |  | Short description displayed in the catalog. |
 | `--is-global-published` |  | Superadmin-only setting that publishes the module globally. |
 | `--json` |  | emit response as JSON |
+| `--module-category-ids <strings>` |  | Categories assigned to this module definition. |
 | `--name <string>` |  | name |
 
 ### `ravion module delete`
@@ -258,6 +350,26 @@ List ModuleVersions
 
 ```bash
 ravion module version list [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--cursor <string>` |  | cursor |
+| `--id <strings>` |  | id |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | limit |
+| `--module-definition-id <string>` |  | moduleDefinitionId |
+| `--since-version <string>` |  | Only return versions greater than or equal to this semantic version. Requires moduleDefinitionId. |
+| `-v, --verbose` |  | show full output |
+
+#### `ravion module version summaries`
+
+List module version summaries
+
+```bash
+ravion module version summaries [flags]
 ```
 
 **Flags:**

@@ -80,9 +80,31 @@ individual fields) from stack outputs.
 </ResponseField>
 
 <ResponseField name="source" type="LogSource" required>
-  Data source for the logs. Discriminated union — currently `cloudwatch`.
+  Data source for the logs. Discriminated on `type`: `cloudwatch`, `loki`,
+  or `external` (a vendor deep link rather than a queryable store).
 
   See: [LogSource](#logsource)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="enabled" type="boolean | null">
+  Whether this entry is shown at all. Resolved like every other field and
+  then applied: an entry resolving to `false` is DROPPED from the module
+  instance's UI before it reaches the API, as if it had never been
+  written. Absent means enabled — the guard is opt-in.
+
+  This is how a module follows a provider selection it does not know at
+  authoring time: list one entry per provider it could render from, each
+  guarded on the add-ons instance's rendering-provider list, and let the
+  resolver keep the ones the user actually chose.
+
+  Entries that survive and share an `id` form a FALLBACK CHAIN in listed
+  order, not a merge — rendering the same lines twice is the failure this
+  avoids. The dashboard reads the first that can answer and falls to the
+  next when the agent is offline or the source is missed, saying which
+  store it settled on. Entries with DIFFERENT ids still merge, which is
+  what keeps a mixed ECS + EKS environment showing one table.
 
   _(templateable)_
 </ResponseField>
@@ -111,113 +133,81 @@ fields piecemeal.
 <ResponseField name="type" type="enum" required>
   Chart type for the metric
 
-  Allowed values: `line` | `bar`
+  Allowed values: `line` | `bar` | `link`
 
   _(templateable)_
 </ResponseField>
 
-<ResponseField name="source" type="MetricSource" required>
-  Data source for the metric. Discriminated union — the only `type`
-  currently supported is `cloudwatch`. The aggregation period is chosen
-  by the requester (frontend) based on the selected time range, not by
-  the module definition. The display unit is auto-detected server-side
-  from the namespace + metric name; module authors no longer specify it.
+<ResponseField name="source" type="MetricSource">
+  Data source for the metric. Discriminated union — `cloudwatch` or
+  `prometheus`. The aggregation period (CloudWatch) / step (Prometheus) is
+  chosen by the requester (frontend) based on the selected time range, not
+  by the module definition. For `cloudwatch` the display unit is
+  auto-detected server-side from the namespace + metric name; for
+  `prometheus` it comes from the source's static `unit` field.
 
   See: [MetricSource](#metricsource)
 
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="enabled" type="boolean | null">
+  Whether this entry is shown at all. Resolved like every other field and
+  then applied: an entry resolving to `false` is DROPPED from the module
+  instance's UI before it reaches the API, as if it had never been
+  written. Absent means enabled — the guard is opt-in.
+
+  This is how a module follows a provider selection it does not know at
+  authoring time: list one entry per provider it could render from, each
+  guarded on the add-ons instance's rendering-provider list, and let the
+  resolver keep the ones the user actually chose.
+
+  Entries that survive and share an `id` form a FALLBACK CHAIN in listed
+  order, not a merge: the dashboard renders the first that can answer and
+  moves down the chain when it cannot, naming the store it settled on.
+
+  _(templateable)_
+</ResponseField>
+
 ### LogSource
 
-A CloudWatch Logs source for a module log stream. Mirrors
-CloudWatchMetricSource: every field is templateable so module authors can
-wire concrete values from stack outputs.
+Discriminated union of supported log sources: `cloudwatch` for ECS and EC2
+workloads, `eks_loki` for EKS, `external` for a vendor Ravion ships to but
+cannot read back.
 
-<ResponseField name="type" type="enum" required>
-  Allowed values: `cloudwatch`
+The first two are not interchangeable and are not meant to converge. They
+differ in where the data lives (an AWS service Ravion calls, versus a
+component in the customer's cluster Ravion reaches through an agent), in what
+makes them unavailable, and in what a query costs — so a consumer must
+discriminate on `type` rather than treat a source as a location-agnostic
+handle. `external` is a third thing again: not queryable at all, and every
+consumer that issues queries must skip it rather than fail on it.
 
-  _(templateable)_
-</ResponseField>
+Discriminated union. The `type` field selects which schema applies.
 
-<ResponseField name="aws_account_id" type="string" required>
-  _(minLen:1; templateable)_
-</ResponseField>
-
-<ResponseField name="region" type="string" required>
-  _(minLen:1; templateable)_
-</ResponseField>
-
-<ResponseField name="log_group" type="string" required>
-  _(minLen:1; templateable)_
-</ResponseField>
-
-<ResponseField name="log_stream_prefix" type="string | null">
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="filter_pattern" type="string | null">
-  _(templateable)_
-</ResponseField>
+| `type` value | Schema                                      |
+| ------------ | ------------------------------------------- |
+| `cloudwatch` | [CloudWatchLogSource](#cloudwatchlogsource) |
+| `eks_loki`   | [EksLokiLogSource](#ekslokilogsource)       |
+| `external`   | [ExternalLogSource](#externallogsource)     |
 
 ### MetricSource
 
-CloudWatch-backed metric source. Module authors fill this in with literal
-values or templated references (e.g. `<< stack.output.* >>`). The server
-uses `aws_account_id` to look up credentials and `region` to scope the
-CloudWatch call — no ARN parsing required. Every field is templateable
-so the entire source can be wired from a stack output map.
+Discriminated union of supported metric data sources.
+Discriminated by the `type` field on each variant: `cloudwatch`, `amp`
+(Amazon Managed Prometheus), `eks_prometheus` (a Prometheus reached through
+the cluster's Operator agent) and `link` (a vendor deep link). The union
+exists so additional sources (e.g. Datadog) can be added without breaking
+callers.
 
-<ResponseField name="type" type="enum" required>
-  Source type discriminator
+Discriminated union. The `type` field selects which schema applies.
 
-  Allowed values: `cloudwatch`
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="aws_account_id" type="string" required>
-  Ravion AWS account reference used to resolve credentials for the
-  CloudWatch call. Accepts either the Flightcontrol AWS account database
-  ID (e.g. `awsact_123`) or the user-provided `givenId` configured on the
-  AWS account. The resolver normalizes the value to the DB id before any
-  downstream use; the `givenId` form is an input alias only and is never
-  persisted as the canonical reference. The 12-digit AWS account number is
-  rejected because the same number can map to multiple connected accounts.
-
-  _(minLen:1; templateable)_
-</ResponseField>
-
-<ResponseField name="region" type="string" required>
-  AWS region the metric lives in.
-
-  _(minLen:1; templateable)_
-</ResponseField>
-
-<ResponseField name="namespace" type="string" required>
-  CloudWatch namespace
-
-  _(minLen:1; templateable)_
-</ResponseField>
-
-<ResponseField name="name" type="string" required>
-  CloudWatch metric name
-
-  _(minLen:1; templateable)_
-</ResponseField>
-
-<ResponseField name="statistic" type="string" required>
-  CloudWatch statistic to apply
-
-  _(minLen:1; templateable)_
-</ResponseField>
-
-<ResponseField name="dimensions" type="map<string,string>" required>
-  Dimensions used to scope the metric. Required — no longer derived from
-  any ARN since the source no longer carries one.
-
-  _(templateable)_
-</ResponseField>
+| `type` value     | Schema                                                  |
+| ---------------- | ------------------------------------------------------- |
+| `amp`            | [AmpMetricSource](#ampmetricsource)                     |
+| `cloudwatch`     | [CloudWatchMetricSource](#cloudwatchmetricsource)       |
+| `eks_prometheus` | [EksPrometheusMetricSource](#eksprometheusmetricsource) |
+| `link`           | [LinkMetricSource](#linkmetricsource)                   |
 
 ### MetricType
 
@@ -227,6 +217,7 @@ Allowed values:
 
 - `line`
 - `bar`
+- `link`
 
 ### CloudWatchLogSource
 
@@ -257,6 +248,168 @@ wire concrete values from stack outputs.
 </ResponseField>
 
 <ResponseField name="filter_pattern" type="string | null">
+  _(templateable)_
+</ResponseField>
+
+### EksLokiLogSource
+
+A Loki log source reached through the EKS cluster's Operator agent.
+
+Loki runs inside the customer's own cluster, storing to S3 in their account,
+and Ravion reaches it through the Operator agent's HTTP proxy rather than over
+any public endpoint. Two consequences show up directly in this shape:
+
+- The in-cluster Loki needs no endpoint field. Its service URL is not
+templated into a module's UI; it is the control plane's own default, and
+what permits the agent to reach it is the Operator install's
+`httpProxy.allowedEndpoints` allowlist. (`endpoint` exists for the separate
+case of an EXTERNAL Loki — see the field — and naming one is still not a
+permission: the allowlist judges it.)
+- `cluster_arn` is the whole addressing scheme. It resolves to the connected
+agent, and therefore to one cluster in one organization — an ARN belonging
+to somebody else resolves to nothing.
+
+Availability follows from that: with the agent disconnected these logs are
+unavailable, historical ones included, because the store sits behind the
+tunnel. Metrics are unaffected. The dashboard is expected to say so plainly
+rather than render an empty table.
+
+<ResponseField name="type" type="enum" required>
+  Allowed values: `eks_loki`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="cluster_arn" type="string" required>
+  ARN of the EKS cluster whose in-cluster Loki holds these logs. Resolves to
+  the Operator agent enrolled for that cluster.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="selector" type="string" required>
+  LogQL stream selector scoping the source, e.g.
+  `{namespace="prod", app="api"}`. The labels available are the ones the
+  addons module's collector attaches: `namespace`, `app`, `workload`, plus
+  `level` as structured metadata.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="endpoint" type="string | null">
+  Base URL of an EXTERNAL Loki to query instead of the in-cluster one — a
+  Grafana Cloud Logs endpoint, for instance — without the `/loki/api/v1`
+  suffix the control plane appends.
+
+  The query still goes through the Operator agent named by `cluster_arn`, and
+  still only reaches an address that install's `httpProxy.allowedEndpoints`
+  permits. Routing through the agent rather than calling the vendor from
+  Ravion is what keeps the credential inside the customer's cluster.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="auth_secret" type="string | null">
+  Name of a Kubernetes Secret in the Operator namespace holding the credential
+  the AGENT presents when reaching `endpoint` (keys `username`/`password`, or
+  `bearer_token`).
+
+  A NAME, never a value — see the identical field on
+  `EksPrometheusMetricSource`. Absent means no credential, which is what the
+  in-cluster Loki takes.
+
+  _(templateable)_
+</ResponseField>
+
+### ExternalLogSource
+
+A log destination Ravion ships to but cannot read back — Datadog, Grafana
+Cloud, New Relic, OpenSearch, Splunk, a custom OTLP collector.
+
+It is a log source in the sense that it is where this workload's logs went;
+it is not one in the sense that no query can be issued against it. The Logs
+tab therefore renders it as an "Open in &lt;provider&gt;" action rather than as
+rows, beside the rendered store when there is one and alone when there is
+not. Several are allowed: a cluster may ship to two vendors at once.
+
+It deliberately carries no credential and no API endpoint. Ravion holds
+nothing that would let it query the vendor, which is the whole distinction
+between this variant and the two that render.
+
+<ResponseField name="type" type="enum" required>
+  Allowed values: `external`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="provider" type="string" required>
+  Provider id, matching the add-ons module's `logs_providers` values:
+  `grafana_cloud`, `datadog`, `new_relic`, `opensearch`, `splunk`, `otlp`.
+  The dashboard maps it to a human label; an id it does not know is shown
+  verbatim rather than dropped.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="href" type="string" required>
+  Absolute URL the action opens, already scoped to this workload — the
+  module completes the vendor's base URL with its own namespace/workload
+  query so the link lands on the service, not the vendor's home page.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+### AmpMetricSource
+
+Amazon Managed Prometheus metric source. `aws_account_id` resolves the
+credentials, `region` + `workspace_id` name the AMP workspace, and Ravion
+signs the PromQL range query with SigV4 and calls AWS directly.
+
+Every field is templateable so the whole source can be wired from another
+module instance's stack outputs (e.g. the EKS observability add-ons
+instance).
+
+<ResponseField name="type" type="enum" required>
+  Metric source discriminator.
+
+  Allowed values: `amp`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="aws_account_id" type="string" required>
+  AWS account ID whose credentials sign the query.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="region" type="string" required>
+  AWS region of the AMP workspace.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="workspace_id" type="string" required>
+  Amazon Managed Prometheus workspace ID.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="query" type="string" required>
+  PromQL range query. `$__interval` is substituted with the query step.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="legend_format" type="string | null">
+  Series legend template, Grafana-style (`{{label}}`).
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="unit" type="string | null">
+  Display unit for the chart axis.
+
   _(templateable)_
 </ResponseField>
 
@@ -317,6 +470,102 @@ so the entire source can be wired from a stack output map.
   any ARN since the source no longer carries one.
 
   _(templateable)_
+</ResponseField>
+
+### EksPrometheusMetricSource
+
+Prometheus metric source reached through the EKS cluster's Operator agent.
+`cluster_arn` names the cluster whose Operator proxies the PromQL query;
+the Prometheus itself is the in-cluster one by default, or — with
+`endpoint` — an external Prometheus (Grafana Cloud Metrics, for instance)
+that the cluster can reach. The Operator install's
+`httpProxy.allowedEndpoints` allowlist decides what the agent may call.
+
+Availability follows from that: with the agent disconnected the metric is
+unavailable, and the dashboard moves down the metric's fallback chain.
+
+Every field is templateable so the whole source can be wired from another
+module instance's stack outputs.
+
+<ResponseField name="type" type="enum" required>
+  Metric source discriminator.
+
+  Allowed values: `eks_prometheus`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="cluster_arn" type="string" required>
+  ARN of the EKS cluster whose Operator agent proxies the query. Resolves
+  to the Operator enrolled for that cluster, and therefore to one cluster
+  in one organization.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="endpoint" type="string | null">
+  Base URL of an external Prometheus reachable from the cluster. Omit to
+  query the in-cluster Prometheus the add-ons install.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="auth_secret" type="string | null">
+  Name of a Kubernetes Secret, in the Operator's namespace, whose contents
+  the AGENT presents to `endpoint`. Ravion never reads it.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="query" type="string" required>
+  PromQL range query. `$__interval` is substituted with the query step.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="legend_format" type="string | null">
+  Series legend template, Grafana-style (`{{label}}`).
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="unit" type="string | null">
+  Display unit for the chart axis.
+
+  _(templateable)_
+</ResponseField>
+
+### LinkMetricSource
+
+A metric entry that is not a chart: a vendor Ravion ships metrics to but
+cannot query. Rendered as an "Open in &lt;provider&gt;" action. Pairs with
+`type: link` on the owning `UIMetric`.
+
+<ResponseField name="type" type="enum" required>
+  Metric source discriminator.
+
+  Allowed values: `link`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="provider" type="string" required>
+  Observability provider this entry belongs to. One of the provider ids
+  the add-ons module publishes: `loki`, `cloudwatch`, `grafana_cloud`,
+  `datadog`, `new_relic`, `opensearch`, `splunk`, `otlp`. The dashboard
+  turns it into a human label ("Open in Datadog"); an unknown id is shown
+  verbatim rather than hidden.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="href" type="string" required>
+  Absolute URL the "Open in &lt;provider&gt;" action opens. Built by the module
+  from the vendor's base URL plus the workload's own scoping (namespace,
+  workload name), so the link lands on this service rather than the
+  vendor's home page.
+
+  _(minLen:1; templateable)_
 </ResponseField>
 
 ## Readme

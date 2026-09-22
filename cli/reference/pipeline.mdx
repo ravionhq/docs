@@ -169,10 +169,20 @@ ravion pipeline run create [flags]
 
 #### `ravion pipeline run get`
 
-Get PipelineRun by id
+Read a single pipeline run.
+
+This returns one snapshot. To follow a run to completion, use
+`ravion pipeline run wait &lt;id&gt; --watch` instead of calling this command in a loop.
 
 ```bash
 ravion pipeline run get <id> [flags]
+```
+
+**Examples:**
+
+```bash
+ravion pipeline run get prun_123
+ravion pipeline run wait prun_123 --watch
 ```
 
 **Flags:**
@@ -183,10 +193,20 @@ ravion pipeline run get <id> [flags]
 
 #### `ravion pipeline run get-apply`
 
-Read applied Terraform resource results for a pipeline run
+Read applied Terraform resource results for a pipeline run.
+
+Terraform results appear once the run reaches the matching step, so follow the run with
+`ravion pipeline run wait &lt;id&gt; --watch` first instead of polling `ravion pipeline run get`.
 
 ```bash
 ravion pipeline run get-apply <id> [flags]
+```
+
+**Examples:**
+
+```bash
+ravion pipeline run wait prun_123 --watch
+ravion pipeline run get-apply prun_123
 ```
 
 **Flags:**
@@ -200,10 +220,20 @@ ravion pipeline run get-apply <id> [flags]
 
 #### `ravion pipeline run get-plan`
 
-Read planned Terraform resource changes for a pipeline run
+Read planned Terraform resource changes for a pipeline run.
+
+Terraform results appear once the run reaches the matching step, so follow the run with
+`ravion pipeline run wait &lt;id&gt; --watch` first instead of polling `ravion pipeline run get`.
 
 ```bash
 ravion pipeline run get-plan <id> [flags]
+```
+
+**Examples:**
+
+```bash
+ravion pipeline run wait prun_123 --until PENDING_APPROVAL --watch
+ravion pipeline run get-plan prun_123
 ```
 
 **Flags:**
@@ -277,10 +307,21 @@ ravion pipeline run terraform-resources <id> [flags]
 
 #### `ravion pipeline run wait`
 
-Wait for a pipeline run status
+Wait for a pipeline run to finish, or to reach the status given by --until.
+
+Use this instead of polling `ravion pipeline run get` in a loop. With --watch the command
+prints run and step status changes as they happen, then exits when the run is done.
 
 ```bash
 ravion pipeline run wait <id> [flags]
+```
+
+**Examples:**
+
+```bash
+ravion pipeline run wait prun_123 --watch
+ravion pipeline run wait prun_123 --watch --timeout 30m
+ravion pipeline run wait prun_123 --until PENDING_APPROVAL --watch
 ```
 
 **Flags:**
@@ -349,8 +390,11 @@ ravion pipeline step-execution list [flags]
 | `--cursor <string>` |  | cursor |
 | `--json` |  | emit response as JSON |
 | `--limit <int>` |  | limit |
+| `--limit-per-module-instance <moduleInstanceIds>` |  | When set together with moduleInstanceIds, return only the newest N step executions per module instance. |
+| `--module-instance-ids <strings>` |  | Return step executions acting on any of these module instances, newest first. |
 | `--pipeline-run-id <string>` |  | pipelineRunId |
 | `--pipeline-run-ids <strings>` |  | Batch filter: return step executions for any of these run ids in one call. |
+| `--step-type <build>` |  | Filter to step executions of any of these step types, such as build or `deploy`. |
 | `-v, --verbose` |  | show full output |
 
 #### `ravion pipeline step-execution terraform-resources`

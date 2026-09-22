@@ -73,7 +73,15 @@ Ravion surfaces every low-level event during a rollout — far more than a CI lo
 - **Resource-level status**: each ECS task's status ladder (provisioning → pending → running) and target-group health.
 - **AWS infrastructure events**: task state changes, service actions, and deployment state changes ingested from EventBridge.
 
-All of this streams live to the dashboard and is available via the API and `ravion deploy get`.
+All of this streams live to the dashboard and is available via the API.
+
+From the CLI, follow a deploy to completion instead of polling `ravion deploy get`:
+
+```bash
+ravion deploy wait <deployment-id> --watch --timeout 30m
+```
+
+`--watch` prints each status change as it happens, and the command exits non-zero if the deploy fails or is cancelled. Use `--until <status>` to return early on a specific status, such as `IN_PROGRESS`.
 
 ## Rollback, redeploy, cancel
 

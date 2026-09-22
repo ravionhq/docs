@@ -1,0 +1,131 @@
+---
+title: "ravion domain"
+sidebarTitle: "domain"
+description: "Manage custom domains for your Ravion environments from the CLI: create and delete domains, check availability, and track DNS and apex status."
+"og:image": "https://www.ravion.com/og/docs/cli/reference/domain.png"
+"twitter:image": "https://www.ravion.com/og/docs/cli/reference/domain.png"
+---
+
+{/* This page is generated from the Ravion CLI source. Do not edit by hand. */}
+
+## `ravion domain`
+
+Manage domains
+
+**Aliases:** `domains`
+
+### `ravion domain apex-status`
+
+```bash
+ravion domain apex-status [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--apex <string>` | yes | apex |
+| `--json` |  | emit response as JSON |
+
+### `ravion domain availability`
+
+```bash
+ravion domain availability [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--name <string>` | yes | name |
+| `--json` |  | emit response as JSON |
+
+### `ravion domain create`
+
+Create Domain
+
+```bash
+ravion domain create [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--data <string>` | yes | Request data as JSON |
+| `--json` |  | emit response as JSON |
+
+### `ravion domain delete`
+
+Delete Domain
+
+```bash
+ravion domain delete <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `-y, --yes` |  | skip confirmation prompt |
+
+### `ravion domain dns-status`
+
+```bash
+ravion domain dns-status [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--module-instance-id <string>` | yes | moduleInstanceId |
+| `--json` |  | emit response as JSON |
+
+### `ravion domain events`
+
+```bash
+ravion domain events [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--module-instance-id <string>` | yes | moduleInstanceId |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | Maximum number of recent events to return (default 200, maximum 500). |
+| `-v, --verbose` |  | show full output |
+
+### `ravion domain get`
+
+Get Domain by id
+
+```bash
+ravion domain get <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+### `ravion domain list`
+
+List Domains
+
+```bash
+ravion domain list [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--module-instance-id <string>` | yes | moduleInstanceId |
+| `--cursor <string>` |  | cursor |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | limit |
+| `-v, --verbose` |  | show full output |
+

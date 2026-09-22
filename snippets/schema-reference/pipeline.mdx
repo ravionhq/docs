@@ -30,6 +30,8 @@ Pipeline configuration - the top-level schema
   Deployment variants such as production, staging, or dev — each variant can lock specific input values
 
   See: [VariantDefinition](#variantdefinition)
+
+  _(minItems:1)_
 </ResponseField>
 
 <ResponseField name="steps" type="Step[]" required>
@@ -291,16 +293,29 @@ Concurrency configuration for controlling parallel execution
 
 <ResponseField name="behavior" type="enum" default="queue">
   Behavior when the concurrency limit is reached
+  "queue" waits for a slot; "cancel-in-progress" cancels older contenders;
+  "cancel-intermediate" preserves the oldest contender and newest
+  contenders while cancelling the oldest intermediates; "skip" denies the new contender and
+  ends the run as skipped.
+  This controls trigger/step/block admission only and never relaxes the
+  separate deployment-manager serialization used by deploy steps.
   Default: "queue"
 
-  Allowed values: `queue` | `cancel-in-progress` | `skip`
+  Allowed values: `queue` | `cancel-in-progress` | `cancel-intermediate` | `skip`
 </ResponseField>
 
 <ResponseField name="queue_size" type="integer">
-  Maximum queue size when behavior is "queue"
-  Only applies when behavior is "queue"
-  Unset means unlimited queue depth
-  0 disables queueing when behavior is "queue"
+  Maximum queue size for "queue"; for cancelling behaviors, widens the
+  survivor window. Unset means unlimited queue capacity; 0 means no queue
+  and immediate denial. With "queue", immediate denial is reported as
+  QUEUEING_DISABLED and the pipeline run ends as cancelled with "the trigger
+  concurrency queue was full"; "skip" also denies immediately but ends the
+  run as skipped. For "cancel-in-progress" and "cancel-intermediate", the
+  survivor window is value + queue_size (plus the oldest contender for
+  "cancel-intermediate"); contenders outside it are cancelled or evicted at
+  admission even when queue_size is unset, so unset does not mean unlimited
+  retention. For "cancel-intermediate", the survivors are the oldest
+  contender plus the newest value + queue_size - 1 contenders.
 
   _(format:int32,min:0)_
 </ResponseField>
@@ -337,7 +352,16 @@ Trigger filter configuration
 </ResponseField>
 
 <ResponseField name="paths" type="string[] | null">
-  Only trigger when files in these paths are changed
+  Only trigger when files in these paths are changed.
+  Each entry is a glob matched against every changed file path, relative to
+  the repository root: `*` matches within one path segment, `**` matches
+  across segments, and `{a,b}` and `[abc]` are supported. Dotfiles are
+  matched, and a leading `/` is ignored.
+  Prefix a pattern with `!` to exclude files: a changed file counts only if
+  it matches at least one non-`!` pattern and no `!` pattern. When every
+  pattern is a `!` exclusion, all changed files are included first, so
+  `paths: ["!docs/**"]` means "any change outside docs/".
+  The trigger fires when at least one changed file counts.
 
   _(templateable)_
 </ResponseField>
@@ -403,6 +427,7 @@ Allowed values:
 
 - `queue`
 - `cancel-in-progress`
+- `cancel-intermediate`
 - `skip`
 
 ### ConcurrencyScope
@@ -922,9 +947,9 @@ Parallel step - executes children concurrently
   See: [ConcurrencyConfig](#concurrencyconfig)
 </ResponseField>
 
-<ResponseField name="fail_strategy" type="enum" default="cancel-all">
+<ResponseField name="fail_strategy" type="enum" default="finish-all">
   How to handle failures while branches in this parallel block are running
-  Default: "cancel-all"
+  Default: "finish-all"
 
   Allowed values: `cancel-all` | `finish-running` | `finish-all`
 </ResponseField>
@@ -1034,6 +1059,15 @@ Build image CI action step
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="soci_enabled" type="boolean | null">
+  Build a SOCI-enabled image for lazy loading on AWS Fargate
+  When enabled, image layers are gzip-compressed (SOCI cannot index zstd)
+  and a SOCI index manifest v2 is generated and pushed alongside the image
+  Accepts either a boolean literal or a full template token
+
+  _(templateable)_
+</ResponseField>
+
 <ResponseField name="destinations" type="EcrDestination[]" required>
   ECR destinations where the built Docker image will be pushed
 
@@ -1137,6 +1171,12 @@ Build static CI action step
 ### BuildStep
 
 General-purpose build action step — triggers a build based on the module's build config.
+
+By default, build steps use `value: 2` with `behavior: cancel-intermediate`,
+keyed automatically by module instance and, when set, `input.branch`. This
+preserves the oldest in-flight build because its deployment may already be
+running, as well as the newest push, while cancelling stale intermediate
+builds. An explicit `concurrency` block opts out of this default entirely.
 
 <ResponseField name="id" type="string" required>
   Unique step identifier, used for referencing in logs and dependencies
@@ -1281,7 +1321,22 @@ Custom command CI action step
 
 ### DeployStep
 
-General-purpose deploy action step — triggers a deployment based on the module's deployment config.
+General-purpose deploy action step — triggers a deployment based on the
+module's deployment config.
+
+Deploy steps also acquire a separate deployment-manager lock scoped to the
+organization and module instance, so deployments of the same module
+instance serialize across pipelines and other deployment entry points.
+The effective defaults are max_concurrent=1, queue_size=1, and
+queue_overflow=oldest; module-level `deployment.concurrency` may override
+queue_size and queue_overflow. An entirely zero-valued deployment
+concurrency object receives queue_size=1, while an explicit queue_size=0
+(with the module resolver's explicit overflow value) disables queuing.
+When the queue is full and overflow is `oldest`, the queued deployment is
+evicted and its workflow is denied with reason `queue_rejected`, resulting
+in a deployment failure rather than a pipeline concurrency cancellation.
+This serialization is independent of trigger/step/block concurrency:
+`cancel-intermediate` and other pipeline behaviors do not relax it.
 
 <ResponseField name="id" type="string" required>
   Unique step identifier, used for referencing in logs and dependencies
@@ -1323,6 +1378,23 @@ General-purpose deploy action step — triggers a deployment based on the module
 <ResponseField name="description" type="string | null">
   Human-readable description of this deployment.
   Defaults to the pipeline run description if omitted.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="execution_environment_id" type="string | null">
+  ID or given ID of the execution environment the deploy's runner is
+  launched into. Applies to `aws:eks` deployments only.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="execution_environment_overrides" type="ExecutionEnvironmentOverrides">
+  Overrides for individual attributes of the resolved execution environment.
+  Valid with or without `execution_environment_id`.
+  The whole block and each field inside it accept template tokens.
+
+  See: [ExecutionEnvironmentOverrides](#executionenvironmentoverrides)
 
   _(templateable)_
 </ResponseField>
@@ -1812,6 +1884,17 @@ Note: Additional validation via CEL:
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="execution_environment_overrides" type="ExecutionEnvironmentOverrides">
+  Overrides for individual attributes of the resolved execution environment.
+  Valid with or without `execution_environment_id` — without one, they apply
+  on top of the default environment or the auto-selected network.
+  The whole block and each field inside it accept template tokens.
+
+  See: [ExecutionEnvironmentOverrides](#executionenvironmentoverrides)
+
+  _(templateable)_
+</ResponseField>
+
 <ResponseField name="aws_account_id" type="string | null">
   AWS account reference for automatic network selection.
 
@@ -1839,7 +1922,7 @@ Note: Additional validation via CEL:
 </ResponseField>
 
 <ResponseField name="instance_size" type="string | string[]" required>
-  Instance size — a single size like "large" or an array like ["large", "xlarge"] for spot fallback
+  EC2 instance type — a single type like "t3.large" or an array like ["t3.large", "t3.xlarge"] for spot fallback
 
   _(templateable)_
 </ResponseField>
@@ -1941,6 +2024,29 @@ Name of an output a step publishes. Must be usable both as a shell variable
 name and as a &lt;&lt; steps.&lt;id&gt;.output.&lt;name&gt; &gt;&gt; field.
 
 Type: string
+
+### ExecutionEnvironmentOverrides
+
+Overrides applied on top of the resolved execution environment.
+
+An execution environment is a saved network placement. These fields replace
+individual attributes of whichever environment the step resolved — the one
+named by `execution_environment_id`, the AWS account's default when none was
+named, or the network selected from `aws_account_id` plus `region`. Every
+attribute that is not overridden keeps the resolved value.
+
+Replace semantics, not append: an overridden attribute is the only value
+used. Overriding does not require naming an environment.
+
+Both the block as a whole and each field inside it are templateable, so a
+security group produced by an earlier step can be wired straight in.
+
+<ResponseField name="security_group" type="string | null">
+  Security group ID the runner is launched with, replacing the resolved
+  execution environment's security group.
+
+  _(minLen:1; templateable)_
+</ResponseField>
 
 ### TerraformTool
 

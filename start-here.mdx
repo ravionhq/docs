@@ -1,123 +1,115 @@
 ---
-title: "Start here (human + agent)"
+title: "Start here"
 sidebarTitle: "Start here"
-description: "Set up Ravion for an AI agent: connect human-owned accounts and point the agent to the authoritative config, pipeline, and CI workflows."
+description: "Paste one prompt into your coding agent and let it install the Ravion agent skill and CLI, connect your AWS account, and deploy your project to your own AWS account."
 "og:image": "https://www.ravion.com/og/docs/start-here.png"
 "twitter:image": "https://www.ravion.com/og/docs/start-here.png"
 ---
 
-## Human setup
+Ravion runs infrastructure in your own AWS account, and your coding agent drives it. Setup is one prompt.
 
-Complete these steps before asking an agent to create or change infrastructure.
+Paste this into Claude Code, Cursor, Codex, or any other agent that supports [Agent Skills](https://agentskills.io):
 
-<Steps>
-  <Step title="Sign up for a Ravion account">
-    Open [Ravion signup](https://app.ravion.com/signup) and create your account. Ravion is free for individuals, and teams start with a free trial.
+```text wrap
+Deploy this project to AWS with Ravion. If the use-ravion skill is not installed yet, install it first with `npx skills add ravionhq/skills`, then follow it.
+```
 
-  </Step>
+The agent installs the skill if it is missing, then installs the CLI, signs you in, connects your AWS account, writes the project config, applies it, and sets up a build and deploy pipeline. See [Ravion agent skill](/agent-skill) for the plugin and URL install options.
 
-  <Step title="Connect your AWS account">
-    Open [AWS accounts](https://app.ravion.com/org/settings/aws-accounts?connect=%7B%7D) and connect the AWS account where Ravion should provision infrastructure.
+## What the agent needs from you
 
-  </Step>
+The agent handles the terminal work. Three things need you, because only you can do them:
 
-  <Step title="Connect your Git repository">
-    Open [Git connections](https://app.ravion.com/org/settings/git-connections?modal=addConnection) and connect the Git repository(s) Ravion should use for app or Terraform source code.
+- **Approve the sign-in.** `ravion login` prints a URL and a short code for you to confirm in the browser. No account yet? [Sign up](https://app.ravion.com/signup) first — Ravion is free for individuals, and teams start with a free trial.
+- **Confirm the AWS account.** The agent runs `aws sts get-caller-identity` and asks whether that is the account Ravion should manage. It then connects it by deploying Ravion's CloudFormation stack, which creates a cross-account IAM role. Without AWS CLI credentials, connect it in [AWS accounts](https://app.ravion.com/org/settings/aws-accounts?connect=%7B%7D) instead.
+- **Connect your Git repository.** `ravion git connect` prints a URL that needs your Git permissions. Skip it if Ravion only deploys images from a registry.
 
-    Can be skipped if you just want Ravion to deploy images from an image registry.
+The agent also asks for the decisions it should not guess, such as region, instance sizes, and domains, and it pauses for your approval before any change that modifies, replaces, or removes existing infrastructure.
 
-  </Step>
+## Working without the skill
 
-  <Step title="Install the Docs MCP server">
+Agents that fetch URLs but do not support skills read the hosted copy:
 
-    ```bash
-    npx add-mcp https://www.ravion.com/docs/mcp --name ravion-docs
-    ```
+```
+Deploy this project with Ravion: https://www.ravion.com/SKILL.md
+```
 
-    The Docs MCP server lets agents search and read current Ravion documentation from their context window. See [Ravion Docs MCP](/mcp/overview).
+To search the docs from the agent's context window, add the [Ravion Docs MCP server](/mcp/overview) — the skill installs it on its own, so this is only for doing it up front:
 
-  </Step>
+```bash
+npx add-mcp https://www.ravion.com/docs/mcp --name ravion-docs
+```
 
-  <Step title="Install the CLI and sign in">
-    On macOS, install the Ravion CLI with Homebrew:
+<Accordion title="Set up the CLI yourself">
+  Nothing here is required when an agent does the setup for you.
 
-    ```bash
-    brew install flightcontrolhq/tap/ravion
-    ```
+  Install the CLI with Homebrew on macOS:
 
-    Or install it with the install script:
+  ```bash
+  brew install ravionhq/tap/ravion
+  ```
 
-    ```bash
-    curl -fsSL https://github.com/flightcontrolhq/cli/releases/latest/download/install.sh | sh
-    ```
+  Or with the install script:
 
-    Then sign in:
+  ```bash
+  curl -fsSL https://github.com/ravionhq/cli/releases/latest/download/install.sh | sh
+  ```
 
-    ```bash
-    ravion login
-    # If you belong to more than one organization, select the active organization:
-    ravion switch
-    ```
+  Sign in, then select your active organization if you belong to more than one:
 
+  ```bash
+  ravion login
+  ravion switch
+  ```
 
-    See [Install the Ravion CLI](/cli/installation) and [Authentication](/cli/authentication).
+  See [Install the Ravion CLI](/cli/installation) and [Authentication](/cli/authentication).
+</Accordion>
 
-  </Step>
+<Accordion title="Connect AWS from the AWS CLI yourself">
+  Confirm which account your credentials belong to:
 
-</Steps>
+  ```bash
+  aws sts get-caller-identity
+  ```
 
-## Agent workflow
+  Create the Ravion AWS account record and get the CloudFormation template for it:
 
-After the human setup is complete, give the agent this checklist.
+  ```bash
+  ravion aws account create --given-id my-account --name "My account" --json
+  ravion aws account cloudformation-template-url <aws-account-id> --json
+  ```
 
-<Steps>
-  <Step title="Read the core concepts page">
-    Read [Core concepts](/concepts/core-concepts) (through the Docs MCP server or directly) before making changes to understand how modules, stacks, deploys, and pipelines relate.
+  Deploy the template in `us-east-1`, where the template's authenticator runs. The role it creates lets Ravion provision in any region:
 
-  </Step>
+  ```bash
+  aws cloudformation create-stack \
+    --region us-east-1 \
+    --stack-name ravion-<aws-account-id> \
+    --template-url "<templateUrl>" \
+    --capabilities CAPABILITY_NAMED_IAM
 
-  <Step title="Use the project config file flow to create and manage modules">
-    Use project config to set up or change things in Ravion, including environments, module instances, and references between modules.
+  aws cloudformation wait stack-create-complete \
+    --region us-east-1 \
+    --stack-name ravion-<aws-account-id>
+  ```
 
-    Follow the required workflow in [Project config file](/config-as-code/project-config-file#agent-tips). Check schemas before editing, preserve existing IDs and versions, preview every change with a dry run, and apply only after the dry run is correct and approved.
+  The template carries your account id and a single-use token, so pass no `--parameters` and keep the URL private. `CAPABILITY_NAMED_IAM` is required because the stack creates a named role and named managed policies.
 
-  </Step>
+  Confirm the connection:
 
-  <Step title="Set up build and deploy pipelines using pipeline config file">
-    After modules are created, use pipeline config to define build and deploy pipelines for modules that are deployable.
+  ```bash
+  ravion aws account get <aws-account-id> --json
+  ```
 
-    Follow [Pipeline config file](/config-as-code/pipeline-config-file). Pull the live config, edit the file, and apply through the documented config file flow.
-
-  </Step>
-
-  <Step title="Set up CI for applying config changes">
-    Configure CI to plan Ravion configuration changes on every pull request and apply them after merge.
-
-    Follow [CI integration](/config-as-code/ci-integration). Use a service-account API key, store it as `RAVION_API_KEY`, and keep project and pipeline resource IDs in the workflow configuration.
-
-  </Step>
-
-  <Step title="Report bugs and feedback as you go">
-    When a command fails unexpectedly or Ravion behaves differently than documented, file it:
-
-    ```bash
-    ravion report bug "<what happened and what you expected>" --command "<the command that failed>"
-    ```
-
-    When something is confusing, harder than it should be, or missing, say so:
-
-    ```bash
-    ravion report feedback "<what was confusing or missing>"
-    ```
-
-    Be thorough: include the exact error text and the IDs of the resources involved. Both commands are non-interactive and exit `0` on success, so they are safe to run unattended. See [Report bugs and feedback](/report-bugs-and-feedback).
-
-  </Step>
-</Steps>
+  The `status` field reads `CONNECTED` once the stack finishes. When Ravion later ships new permissions, review them with `ravion aws account policy-diff <aws-account-id>`, then apply them with `aws cloudformation update-stack` and a freshly fetched template URL.
+</Accordion>
 
 ## Useful references
 
 <CardGroup cols={2}>
+  <Card title="Ravion agent skill" icon="sparkles" href="/agent-skill">
+    Install the skill that teaches agents how to use Ravion.
+  </Card>
   <Card title="Project config file" icon="file-code" href="/config-as-code/project-config-file">
     Define environments and module instances from one file.
   </Card>
