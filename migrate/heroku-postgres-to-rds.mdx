@@ -1,0 +1,119 @@
+---
+title: "Migrate Heroku Postgres to AWS RDS"
+sidebarTitle: "Heroku Postgres to RDS"
+description: "Move a Heroku Postgres database to Amazon RDS with a short maintenance window using pg_dump and pg_restore, or with zero downtime using dual writes."
+"og:image": "https://www.ravion.com/og/docs/migrate/heroku-postgres-to-rds.png"
+"twitter:image": "https://www.ravion.com/og/docs/migrate/heroku-postgres-to-rds.png"
+---
+
+This guide moves a PostgreSQL database from Heroku Postgres to an RDS instance managed by Ravion. It assumes your application already runs on AWS — if not, start with [Migrate from Heroku to AWS](/migrate/from-heroku), which gets the app onto AWS before touching the database.
+
+There are two approaches. Most teams take the first.
+
+| Approach                    | Downtime                 | Complexity                             |
+| --------------------------- | ------------------------ | -------------------------------------- |
+| Dump and restore            | Minutes to an hour       | Low — standard `pg_dump`/`pg_restore`  |
+| Dual writes                 | None                     | High — application code changes        |
+
+## Step 1: Create the RDS instance
+
+Add an [`rvn-rds`](/module-definitions/catalog/rvn-rds) module to the environment your app runs in, in the same network module, with `engine: postgres`. Match the Heroku Postgres major version (`heroku pg:info --app my-app` shows it) — you can upgrade after the migration. Size the instance from Heroku's plan: the `standard-0` plan is roughly a `db.t4g.medium`; `standard-2` and up map to `db.m7g` or `db.r7g` classes.
+
+```yaml ravion.yaml
+- givenId: db
+  name: Database
+  type: rvn-rds
+  input:
+    network:
+      moduleGivenIdRef: vpc
+    name: myapp-production
+    restore_mode: none
+    engine: postgres
+    engine_major_version: "16"
+    instance_class: db.t4g.medium
+    allocated_storage: 100
+    max_allocated_storage: 500
+    db_name: myapp
+    username: myapp
+    allowed_security_group_ids: []   # the ECS service security groups
+```
+
+Apply the config. The module generates the master password into Secrets Manager; the endpoint and the secret ARN are in the module's outputs.
+
+<Note>
+  RDS for PostgreSQL 15 and later requires TLS by default (`rds.force_ssl = 1`). Make sure your app's connection string works with `sslmode=require` before the cutover — see [PostgreSQL SSL connection error](/troubleshooting/postgres-ssl-connection).
+</Note>
+
+## Step 2: Reach the database
+
+The RDS instance is in a private subnet, so `pg_restore` has to run from inside the VPC or over a tunnel. Options, from simplest:
+
+- **A pipeline step.** Run the dump and restore from a [`custom` step](/pipelines/step-types#custom) — it runs on an EC2 instance in your VPC with no extra setup. Install `postgresql-client` in a `setup` action, pull the Heroku dump URL and the RDS credentials from Secrets Manager, and run the commands below.
+- **A bastion or SSM tunnel** from your laptop to a small EC2 instance in the VPC.
+- **Temporary public access.** Set `public_access_enabled: true` and add your IP to `allowed_cidr_blocks` on the module, apply, migrate, then revert. Fine for a one-off; do not leave it on.
+
+## Step 3: Do a dry run
+
+Run the whole procedure once against a scratch RDS instance before the real thing. You want two numbers: how long the dump takes, and how long the restore takes. Their sum is your maintenance window. A restore of a few tens of GB typically takes 10–30 minutes with parallel jobs.
+
+## Step 4: Migrate with a maintenance window
+
+<Steps>
+  <Step title="Announce the window and stop writes">
+    Scale worker services to zero and put the app in maintenance mode, or stop the web service. Any write that happens after the dump starts is lost, so make sure nothing is writing.
+  </Step>
+  <Step title="Take a fresh backup on Heroku">
+    ```bash
+    heroku pg:backups:capture --app my-app
+    heroku pg:backups:download --app my-app   # writes latest.dump
+    ```
+
+    Heroku produces a `pg_dump` custom-format archive. Alternatively, get a signed URL with `heroku pg:backups:url` and `curl` it from inside the VPC.
+  </Step>
+  <Step title="Restore into RDS">
+    ```bash
+    pg_restore --verbose --clean --if-exists --no-acl --no-owner \
+      --jobs=4 \
+      --dbname="postgresql://myapp:PASSWORD@myapp-production.xxxx.us-east-1.rds.amazonaws.com:5432/myapp?sslmode=require" \
+      latest.dump
+    ```
+
+    - `--no-acl --no-owner` drops Heroku-specific role grants that do not exist on RDS.
+    - `--jobs` restores tables in parallel; set it to the number of cores on the machine running the restore.
+    - Expect warnings about extensions Heroku installs by default that you do not use. Errors about `CREATE EXTENSION` for extensions you do use mean you need `rds_superuser` (the master user has it) or the extension is not available on RDS.
+  </Step>
+  <Step title="Verify">
+    Compare row counts on a few large tables between Heroku and RDS. Check that sequences are at the right values (`SELECT last_value FROM my_table_id_seq`) — a restore sets them correctly, but this is the thing that hurts most when it is wrong. Run any data validation scripts your app has.
+  </Step>
+  <Step title="Point the app at RDS">
+    Update the `DATABASE_URL` key in your environment secret to the RDS connection string (with `?sslmode=require`), then redeploy the web and worker services. Redeploying is required: ECS reads secrets when a task starts.
+  </Step>
+  <Step title="Reopen writes">
+    Take the app out of maintenance mode and scale workers back up. Watch error rates and the RDS metrics tab for CPU, connections, and IOPS.
+  </Step>
+</Steps>
+
+## Zero downtime with dual writes
+
+If you cannot take a window, the pattern is:
+
+1. Create the RDS instance and do an initial dump and restore as above, without stopping writes.
+2. Change the application to write every mutation to both databases while continuing to read from Heroku. This is application code — an ORM hook or a repository layer — and it has to handle a failed write to one side.
+3. Backfill rows that changed on Heroku between the initial restore and the moment dual writes started (compare `updated_at` columns, or re-copy the affected tables).
+4. Validate the two databases match, then switch reads to RDS.
+5. Stop writing to Heroku.
+
+An alternative to hand-written dual writes is logical replication with [AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html), using Heroku Postgres as the source. It requires a Heroku plan that exposes logical replication settings and a publicly reachable source, so check both before planning around it.
+
+## Afterwards
+
+- Keep the Heroku database for about a week, on the smallest plan, in case you need to recover anything. Then delete it.
+- Turn on the module's CloudWatch alarms and review the RDS metrics after a full day of traffic. Adjust `instance_class` and `max_allocated_storage` if needed — both are in-place changes.
+- Consider [RDS Proxy](/module-definitions/catalog/rvn-rds#connection-pooling) if your Heroku setup relied on PgBouncer.
+
+## Related pages
+
+- [Migrate from Heroku to AWS](/migrate/from-heroku)
+- [`rvn-rds`](/module-definitions/catalog/rvn-rds)
+- [Managing secrets](/guides/managing-secrets)
+- [PostgreSQL SSL connection error](/troubleshooting/postgres-ssl-connection)

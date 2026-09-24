@@ -1,0 +1,97 @@
+---
+title: "Running database migrations"
+description: "Run schema migrations once per deploy with an ECS pre-deploy hook or a pipeline step, and avoid the pitfalls of running them at build time or on every task."
+"og:image": "https://www.ravion.com/og/docs/guides/database-migrations.png"
+"twitter:image": "https://www.ravion.com/og/docs/guides/database-migrations.png"
+---
+
+Most frameworks ship a command that applies pending schema changes — `rails db:migrate`, `prisma migrate deploy`, `alembic upgrade head`, `php artisan migrate`. The question is where in the deploy that command runs. Two things matter:
+
+- It must run **once** per release, not once per task or once per service.
+- It must run **against the target database**, from inside the VPC, with the same credentials as the app.
+
+Ravion gives you two places that satisfy both. Pick one.
+
+## Option 1: Pre-deploy hook (recommended)
+
+[`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web) and [`rvn-ecs-worker`](/module-definitions/catalog/rvn-ecs-worker) can start a one-off ECS task before the service rolls out. The task uses the image that is about to be deployed, the same task role, subnets, security groups, environment variables, and secrets as the service, so it reaches the database exactly the way your app does. If the command exits non-zero, the deploy is aborted and the running tasks are left untouched.
+
+```yaml ravion.yaml
+- givenId: web
+  type: rvn-ecs-web
+  input:
+    # ...
+    pre_deploy_enabled: true
+    pre_deploy_command: ["/bin/sh", "-lc", "bundle exec rails db:migrate"]
+```
+
+The command is an ECS argument array, not a shell string. Wrap it in `/bin/sh -lc` when you need shell features such as `&&` or environment variable expansion.
+
+Hooks accept their own `pre_deploy_environment_variables`, `pre_deploy_cpu`, `pre_deploy_memory`, `pre_deploy_ephemeral_storage_size_gib`, and `pre_deploy_timeout`, so a heavy backfill can get more resources than the steady-state web task without changing the service.
+
+<Warning>
+  Enable the hook on **one** service per environment — usually the web service. A web and a worker
+  deployed from the same image both running `db:migrate` at the same time is the most common cause
+  of migration lock errors.
+</Warning>
+
+## Option 2: A pipeline step
+
+When migrations need to run before several services deploy, or need to run from a different image than the app, use a [`custom` step](/pipelines/step-types#custom) in your pipeline. Steps in a list run in order, so place it between the build and the deploys:
+
+```yaml pipeline.yaml
+steps:
+  - id: build_web
+    type: build
+    module_instance: production.web
+  - id: migrate
+    name: Run database migrations
+    type: custom
+    source:
+      type: git
+      repo: https://github.com/my-org/my-repo
+      branch: main
+    commands:
+      - bundle install
+      - bundle exec rails db:migrate
+    environment_variables:
+      DATABASE_URL:
+        from_secrets_manager: "arn:aws:secretsmanager:us-east-2:111122223333:secret:prod/myapp-AbCdEf:DATABASE_URL::"
+    infrastructure:
+      type: ec2
+      instance_size: t3.medium
+  - parallel:
+      - id: deploy_web
+        type: deploy
+        module_instance: production.web
+        input:
+          image_ref: << steps.build_web.output.image_digest >>
+      - id: deploy_worker
+        type: deploy
+        module_instance: production.worker
+        input:
+          image_ref: << steps.build_web.output.image_digest >>
+```
+
+Pipeline steps run on temporary EC2 instances in your account, so they can reach a private RDS instance without exposing it. Reference the database URL from Secrets Manager rather than pasting it into the pipeline file — see [Managing secrets](/guides/managing-secrets).
+
+Prefer the pre-deploy hook when a single service owns the schema. Prefer a pipeline step when you want the migration visible as its own step, gated by an [`approval`](/pipelines/step-types#approval), or shared by several deploys.
+
+## Where not to run migrations
+
+**Build commands.** Builds run before you know whether the deploy will succeed, often without network access to the database, and a Dockerfile build should be reproducible. Keep `db:migrate` out of `RUN` instructions and out of Railpack build commands.
+
+**Procfile `release` phase.** Ravion does not run Heroku-style `release` processes. If you are migrating from Heroku, move the command from `release:` to a pre-deploy hook.
+
+**Application start.** Running migrations in the container entrypoint runs them on every task — including autoscaling events and task replacements — and usually in parallel. It also means a broken migration takes the whole service down rather than failing the deploy.
+
+## Rollbacks
+
+A [rollback](/modules/deploy#rollback-redeploy-cancel) redeploys a previous image; it does not reverse the schema. Write migrations that are backward compatible with the previous release — add columns before reading them, drop columns one release after you stop writing them — so a rollback is always safe.
+
+## Related pages
+
+- [Deploy](/modules/deploy) — deployment types, hooks, and rollback
+- [Pipeline step types](/pipelines/step-types)
+- [Managing secrets](/guides/managing-secrets)
+- [Migrate Heroku Postgres to RDS](/migrate/heroku-postgres-to-rds)

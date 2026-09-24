@@ -1,0 +1,93 @@
+---
+title: "Migrate from Heroku to AWS"
+sidebarTitle: "From Heroku"
+description: "Move a Heroku app to your own AWS account with Ravion, with zero downtime: deploy against the Heroku database first, cut over DNS, then migrate the data."
+"og:image": "https://www.ravion.com/og/docs/migrate/from-heroku.png"
+"twitter:image": "https://www.ravion.com/og/docs/migrate/from-heroku.png"
+---
+
+Heroku gets you running fast, but you pay for it in cost at scale, in limited control over the underlying infrastructure, and in features AWS has had for years. Moving to AWS fixes all three — and Ravion removes the reason people stay on Heroku, which is that AWS is a lot of work to set up and operate by hand.
+
+Everything Ravion provisions lives in your AWS account, built from Terraform you can inspect. There is no lock-in on the way out either.
+
+## The zero-downtime plan
+
+1. Deploy your app to AWS, connected to your **existing Heroku database**.
+2. Verify it end to end, then switch production traffic to AWS by updating DNS.
+3. Migrate the database to RDS.
+4. Shut down the Heroku app.
+
+Each step is independently reversible until you delete Heroku.
+
+### Terminology
+
+| Heroku                         | Ravion                                                                         |
+| ------------------------------ | ------------------------------------------------------------------------------ |
+| Pipeline                       | [Project](/concepts/projects-and-environments)                                 |
+| Pipeline stage                 | [Environment](/concepts/projects-and-environments)                             |
+| Review apps                    | Preview environments                                                           |
+| Web dyno                       | [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web)                       |
+| Worker dyno                    | [`rvn-ecs-worker`](/module-definitions/catalog/rvn-ecs-worker)                 |
+| Heroku Postgres                | [`rvn-rds`](/module-definitions/catalog/rvn-rds) or [`rvn-aurora`](/module-definitions/catalog/rvn-aurora) |
+| Heroku Redis / Key-Value Store | [`rvn-elasticache`](/module-definitions/catalog/rvn-elasticache)               |
+| Config vars                    | Runtime environment variables and [secrets](/guides/managing-secrets)          |
+| Buildpacks                     | [Railpack](/modules/build) (auto-detected) or your own Dockerfile              |
+| Procfile `release`             | [Pre-deploy hook](/guides/database-migrations)                                 |
+| Heroku Scheduler               | `rvn-ecs-worker` or [`rvn-lambda`](/module-definitions/catalog/rvn-lambda) on a schedule |
+
+## Step 1: Deploy to AWS against the Heroku database
+
+1. [Connect your AWS account](/start-here) and your Git provider to Ravion.
+2. Create a project with a production environment. Pick **`us-east-1`** (or `eu-west-1` for EU apps) — that is where Heroku runs, and keeping the app in the same region as the Heroku database keeps latency low during the transition.
+3. Add a network, an ECS cluster, and one `rvn-ecs-web` module per web process type, plus an `rvn-ecs-worker` per worker process type. Copy build and start commands from your `Procfile`. The [framework guides](/deploy/aws) have working configs for Rails, Django, Node, Laravel, and others.
+4. Export your Heroku config vars and load them into one Secrets Manager secret, then reference them from the modules:
+
+   ```bash
+   heroku config --json --app my-app > config.json
+   aws secretsmanager create-secret --name prod/my-app --secret-string file://config.json
+   ```
+
+   See [Managing secrets](/guides/managing-secrets) for the reference format. Leave `DATABASE_URL` and `REDIS_URL` pointing at Heroku for now.
+
+5. Allow the AWS app to reach Heroku Postgres. Heroku Postgres is publicly reachable over TLS, so this works from a private subnet through the NAT gateway. If you use Heroku's IP allowlisting (Private or Shield spaces), allowlist the NAT gateway's public IP. Pass pre-allocated `nat_gateway_eip_allocation_ids` to the network module so that IP stays stable — see [`rvn-aws-network`](/module-definitions/catalog/rvn-aws-network).
+6. Deploy and test on the Ravion-provided URL. Your app is now running on AWS against production data, but serving no production traffic.
+
+<Tip>
+  Make sure `db:migrate` is not in your build command and does not run on container start. Heroku
+  users usually have it in the Procfile `release` phase — move it to a
+  [pre-deploy hook](/guides/database-migrations) instead.
+</Tip>
+
+## Step 2: Switch production traffic
+
+1. Add your domain in Ravion — see [Custom domains](/guides/custom-domains). Adding it issues a certificate and shows the DNS records to create. It does not move traffic.
+2. Lower the TTL on your existing DNS records to 60 seconds and wait for the old TTL to expire.
+3. Save the current Heroku DNS values, then update the records to the Ravion-provided ones.
+4. Watch error rates and the Ravion logs and metrics tabs. To revert, point DNS back at Heroku.
+
+## Step 3: Migrate the database
+
+Production traffic is now served from AWS, but the database is still on Heroku. Follow [Migrate Heroku Postgres to RDS](/migrate/heroku-postgres-to-rds) to move it, then update the `DATABASE_URL` key in your environment secret and redeploy.
+
+Do the same for Redis if you use it: create an `rvn-elasticache` module and update `REDIS_URL`. Cache data usually does not need to be migrated; queue data (Sidekiq, Bull, Celery) should be drained on Heroku before the switch.
+
+## Step 4: Decommission Heroku
+
+Keep the Heroku app and database running for about a week after the database cutover, scaled to the minimum. Then delete them.
+
+## Application changes to expect
+
+- **Commit SHA.** `HEROKU_SLUG_COMMIT` and `SOURCE_VERSION` do not exist. If your app needs the commit at runtime (for Sentry releases, for example), pass it through the pipeline: take the commit as a pipeline input and forward it as a build environment variable or image tag — see [Build](/modules/build).
+- **Client IP.** Behind an ALB the socket peer address is the load balancer's. Read the client IP from `X-Forwarded-For` (first entry), or from `CloudFront-Viewer-Address` if CloudFront fronts the ALB. Rate limiters and audit logs are the usual places this bites.
+- **No swap.** Heroku dynos swap to disk when memory is exhausted; Fargate tasks are killed. Set `task_memory` with headroom and watch the memory chart after cutover. Node apps also need `NODE_OPTIONS=--max-old-space-size` sized to the task — see [JavaScript heap out of memory](/troubleshooting/node-heap-out-of-memory).
+- **Keep-alive timeouts.** The ALB idle timeout is 60 seconds, and several frameworks default to less. See [Random 502 errors behind a load balancer](/troubleshooting/load-balancer-502-keepalive-timeout).
+- **Postgres over TLS.** RDS enforces TLS on PostgreSQL 15+ by default. See [PostgreSQL SSL connection error](/troubleshooting/postgres-ssl-connection).
+- **Port.** Ravion sets `PORT` from the module's `container_port`, the same way Heroku does.
+- **Ephemeral filesystem.** Same as Heroku: anything written to disk is lost when the task is replaced. Use S3 ([`rvn-s3`](/module-definitions/catalog/rvn-s3)) or EFS ([`rvn-efs`](/module-definitions/catalog/rvn-efs)) for files that must persist.
+
+## Related pages
+
+- [Migrate Heroku Postgres to RDS](/migrate/heroku-postgres-to-rds)
+- [Running database migrations](/guides/database-migrations)
+- [Custom domains](/guides/custom-domains)
+- [Managing secrets](/guides/managing-secrets)

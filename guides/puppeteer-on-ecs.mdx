@@ -1,0 +1,78 @@
+---
+title: "Run Puppeteer or Playwright on ECS"
+description: "Configure headless Chromium for AWS Fargate or EC2 tasks: install the browser in the image, disable the sandbox, size the task, and isolate browser work in a worker service."
+"og:image": "https://www.ravion.com/og/docs/guides/puppeteer-on-ecs.png"
+"twitter:image": "https://www.ravion.com/og/docs/guides/puppeteer-on-ecs.png"
+---
+
+Headless browsers work well on ECS, but three things differ from a laptop: there is no display, the container runs as a process that Chromium's sandbox does not trust, and Chromium needs memory and shared-memory space that the defaults do not provide.
+
+## Install Chromium in the image
+
+Puppeteer and Playwright download a browser at install time, but that browser needs system libraries the base image lacks. Either use the maintainers' images or install the dependencies yourself.
+
+<Tabs>
+  <Tab title="Playwright (recommended)">
+    ```dockerfile
+    FROM mcr.microsoft.com/playwright:v1.50.0-noble
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm ci
+    COPY . .
+    CMD ["node", "server.js"]
+    ```
+
+    Pin the image tag to the Playwright version in `package.json`; mismatches fail at launch.
+  </Tab>
+  <Tab title="Puppeteer">
+    ```dockerfile
+    FROM public.ecr.aws/docker/library/node:22-slim
+    RUN apt-get update && apt-get install -y --no-install-recommends \
+        chromium fonts-liberation libnss3 libatk-bridge2.0-0 libgtk-3-0 libgbm1 libasound2 \
+        && rm -rf /var/lib/apt/lists/*
+    ENV PUPPETEER_SKIP_DOWNLOAD=true \
+        PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm ci
+    COPY . .
+    CMD ["node", "server.js"]
+    ```
+
+    Using the distro Chromium avoids a second 300 MB download during the build and keeps the image
+    compatible with the installed libraries.
+  </Tab>
+</Tabs>
+
+## Launch options
+
+Chromium's sandbox relies on user namespaces that containers usually do not grant, and `/dev/shm` inside a Fargate task is 64 MB — too small for a real page. Disable both:
+
+```js
+const browser = await puppeteer.launch({
+  headless: true,
+  args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+})
+```
+
+Playwright uses the same flags via `chromium.launch({args: [...]})`.
+
+<Warning>
+  Only render content you trust with the sandbox disabled. A page that exploits Chromium gains the
+  permissions of the task role.
+</Warning>
+
+## Task sizing
+
+- **Memory.** Budget at least 1 GB per concurrent browser page plus your app. The default `fargate_size` of 2 vCPU / 4 GB handles a couple of pages; raise it before scaling out.
+- **Ephemeral storage.** Chromium writes profiles and caches to disk. If you screenshot or download at volume, increase `task_ephemeral_storage_size_gib` above the 20 GiB Fargate default.
+- **Architecture.** Distro Chromium packages exist for both amd64 and arm64, so `cpu_architecture: arm64` works. Puppeteer's bundled download does not ship arm64 Linux builds — use the distro package or Playwright's image.
+
+## Isolate browser work in a worker
+
+Run the browser in a separate [`rvn-ecs-worker`](/module-definitions/catalog/rvn-ecs-worker) that pulls jobs from a queue, rather than in the web service. That keeps a crashed or leaked Chromium from taking down request handling, lets you scale renderers independently, and means the web service does not need the larger image or `--no-sandbox` at all.
+
+## Related pages
+
+- [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web)
+- [`rvn-ecs-worker`](/module-definitions/catalog/rvn-ecs-worker)
