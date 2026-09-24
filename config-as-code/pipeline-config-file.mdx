@@ -5,7 +5,7 @@ description: "Pull, edit, version-control, and apply a Ravion pipeline's configu
 "twitter:image": "https://www.ravion.com/og/docs/config-as-code/pipeline-config-file.png"
 ---
 
-Define a pipeline declaratively in `.yaml`, `.jsonc`, or `.cue`. The config file describes steps, parallel and group blocks, inputs, variants, and triggers.
+Define a pipeline declaratively in `.yaml`, `.jsonc`, or `.cue`. The config file describes steps, parallel and group blocks, inputs, variants, and triggers. One file describes one workflow — services that build and deploy independently of each other get their own pipeline and config file each, not parallel groups in a shared one. See [One workflow per pipeline](/concepts/pipelines#one-workflow-per-pipeline).
 
 <Accordion title="Example pipeline config">
   A minimal pipeline that builds and deploys the `web-app` module from the [example `ravion.yaml`](/config-as-code/project-config-file). The `build` and `deploy` steps reference the module by given ID with `environmentGivenId.moduleGivenId`. Here the `production` variant ID matches the environment given ID, so `<< pipeline.variant.id >>.web-app` resolves to `production.web-app`.
@@ -36,21 +36,19 @@ Define a pipeline declaratively in `.yaml`, `.jsonc`, or `.cue`. The config file
     - id: production
       name: Production
   steps:
-    - group: Build and deploy
-      steps:
-        - id: build_web_app
-          name: Build web-app
-          type: build
-          module_instance: << pipeline.variant.id >>.web-app
-          input:
-            branch: << pipeline.input.branch >>
-            ref: << pipeline.input.commit >>
-        - id: deploy_web_app
-          name: Deploy web-app
-          type: deploy
-          module_instance: << pipeline.variant.id >>.web-app
-          input:
-            image_ref: << steps.build_web_app.output.image_digest >>
+    - id: build_web_app
+      name: Build web-app
+      type: build
+      module_instance: << pipeline.variant.id >>.web-app
+      input:
+        branch: << pipeline.input.branch >>
+        ref: << pipeline.input.commit >>
+    - id: deploy_web_app
+      name: Deploy web-app
+      type: deploy
+      module_instance: << pipeline.variant.id >>.web-app
+      input:
+        image_ref: << steps.build_web_app.output.image_digest >>
   ```
 </Accordion>
 

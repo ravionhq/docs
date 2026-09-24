@@ -1,0 +1,56 @@
+---
+title: "JavaScript heap out of memory"
+description: "Fix 'Reached heap limit Allocation failed - JavaScript heap out of memory' in Node.js builds and running tasks by raising the V8 heap limit or the task size."
+"og:image": "https://www.ravion.com/og/docs/troubleshooting/node-heap-out-of-memory.png"
+"twitter:image": "https://www.ravion.com/og/docs/troubleshooting/node-heap-out-of-memory.png"
+---
+
+A Node.js build or task dies with:
+
+```text
+FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory
+```
+
+## Why this happens
+
+V8 caps the old-space heap independently of how much memory the container has. On 64-bit systems the default limit is a few gigabytes and depends on the Node version and the memory it detects, so a task with 8 GB reserved can still crash with the heap at 2 GB. Builds hit this most often — `next build`, `tsc`, webpack, and Vite all hold large in-memory graphs.
+
+## Fix: raise the heap limit
+
+Set `NODE_OPTIONS` so Node is allowed to use the memory you already pay for. The value is in megabytes; leave headroom below the container limit for the rest of the process.
+
+<Tabs>
+  <Tab title="During builds">
+    Add it to the module's build environment variables:
+
+    ```yaml ravion.yaml
+    build_environment_variables:
+      NODE_OPTIONS: "--max-old-space-size=8192"
+    ```
+
+    Builds run on the `build_instance_type` (default `c7a.4xlarge`, 32 GB), so there is usually plenty of room — the heap cap, not the machine, is the constraint.
+
+    For `dockerfile` builds, build environment variables only reach `docker build` as build args when `dockerfile_environment_variable_injection_enabled: true` is set and the Dockerfile declares `ARG NODE_OPTIONS`. Simpler: put `ENV NODE_OPTIONS=--max-old-space-size=8192` in the Dockerfile before the build step.
+  </Tab>
+  <Tab title="At runtime">
+    Add it to the module's runtime environment variables and pick a value below the task memory:
+
+    ```yaml ravion.yaml
+    fargate_size:
+      vcpu: 2
+      memory_gb: 4
+    environment_variables:
+      - name: NODE_OPTIONS
+        value: "--max-old-space-size=3072"
+    ```
+  </Tab>
+</Tabs>
+
+## Fix: give the task more memory
+
+If the process genuinely needs more than the container has, the container is killed by ECS instead — the log shows the task stopped with `OutOfMemoryError: Container killed due to memory usage` rather than a V8 error. Increase `fargate_size` (Fargate) or `task_memory` (EC2 capacity) on the module. See [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web).
+
+## Related pages
+
+- [Build](/modules/build)
+- [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web)

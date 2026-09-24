@@ -29,6 +29,112 @@ rss: true
 {/* ravion-changelog:august-31-2026 */}
 {/* ravion-changelog:september-7-2026 */}
 
+{/* ravion-changelog:september-14-2026 */}
+{/* ravion-changelog:september-21-2026 */}
+<Update
+  label="September 21, 2026"
+  rss={{
+    title: "GitHub access details, clearer billing usage, and module updates",
+  }}
+>
+
+## Platform
+
+### Features
+
+- **GitHub access details:** Git connections show organization member counts and repository users, including pending invitations.
+
+### Improvements
+
+- Project cards now show each environment's module total and infrastructure-run counts.
+- The module canvas now remembers zoom separately for each environment.
+
+### Fixes
+
+- Billing usage periods now follow the contract anniversary and show progress through the current period.
+- Invoice totals now use dollar units and invoice lists show finalized invoices without draft entries.
+- Billing usage pages now handle days that span two billing periods without duplicate entries.
+- Advanced Terraform variables now override fields inside generated nested objects.
+- AMP metric bursts now queue and transient failures retry instead of failing immediately.
+- Releasing a stuck stack lock now checks the specific lock reviewed before unlocking it.
+- Creating a service with EC2 capacity through a referenced cluster now uses the cluster's capacity provider strategy.
+- Nested module creation dialogs now show the form and can be closed.
+- Email verification no longer crashes when Chrome translation is enabled.
+
+## Modules
+
+### [Aurora Database](https://www.ravion.com/docs/module-definitions/catalog/rvn-aurora) [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%401.2.0) → [1.2.1](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%401.2.1)
+
+- Prevent selecting an older major engine version when updating a database.
+
+### [EC2 Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ec2-service) [1.4.2](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%401.4.2) → [1.6.0](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%401.6.0)
+
+- Add a managed ECR repository build source for services.
+- New services now default to one instance.
+
+### [ECS Cluster](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-cluster) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%401.0.1) → [1.0.2](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%401.0.2)
+
+- Clarify cluster labels and identify additional Network Load Balancer security groups in module forms.
+
+### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.3.0) → [1.5.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.5.1)
+
+- Add a managed ECR repository build source for services.
+- Services using EC2 capacity now create successfully when the cluster is selected by reference.
+- Pre-deploy and post-deploy tasks now follow the capacity provider strategy in advanced Terraform variables.
+
+### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.3.0) → [1.5.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.5.1)
+
+- Add a managed ECR repository build source for services.
+- Configure target group deregistration delays and use clearer cluster, routing, health check, and builder settings.
+- Services using EC2 capacity now create successfully when the cluster is selected by reference.
+- Pre-deploy and post-deploy tasks now follow the capacity provider strategy in advanced Terraform variables.
+
+### [ECS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-worker) [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%401.3.0) → [1.5.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%401.5.1)
+
+- Add a managed ECR repository build source for services.
+
+### [Lambda Function](https://www.ravion.com/docs/module-definitions/catalog/rvn-lambda) [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%401.1.0) → [1.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%401.1.1)
+
+- Use consistent Dockerfile and builder settings while keeping build policies in advanced settings.
+
+### [RDS Database](https://www.ravion.com/docs/module-definitions/catalog/rvn-rds) [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-rds%401.2.0) → [1.2.1](https://github.com/ravionhq/modules/releases/tag/rvn-rds%401.2.1)
+
+- Allow major engine upgrades while preventing selection of an older major version.
+
+### [Static Hosting](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-static) [1.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%401.1.1) → [1.1.2](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%401.1.2)
+
+- Use consistent Dockerfile and builder settings while keeping build policies in advanced settings.
+
+</Update>
+
+<Update
+  label="September 14, 2026"
+  rss={{
+    title: "Faster ECS rolling deployments and more reliable AWS account and EC2 recovery",
+  }}
+>
+
+## Platform
+### Improvements
+- ECS rolling deployments now succeed as soon as new tasks are healthy while old tasks drain in the background; deployment settings can choose a lower healthy-task threshold or wait for old tasks to drain. This applies to existing ECS modules, not just the new versions.
+### Fixes
+- GitLab code sources now refresh expiring credentials and recover access after successful reauthorization.
+- AWS account connection errors now explain that reconnection is needed and link directly to the account connection flow.
+- Orphaned EC2 runner instances are now reconciled and terminated after interrupted launches.
+- Successful EC2 deployments can now be redeployed or rolled back without failing during input resolution.
+- Organizations with billing data but no projects can now be deleted.
+## Modules
+### [CloudFront CDN](https://www.ravion.com/docs/module-definitions/catalog/rvn-cloudfront) [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%401.3.0) → [1.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%401.3.1)
+- CloudFront signed URLs now accept UUID-format key group IDs.
+### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.2.0) → [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.3.0)
+- Rolling deployments now succeed as soon as new tasks are healthy while old tasks drain in the background; deployment settings can choose a lower healthy-task threshold or wait for old tasks to drain.
+### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.2.0) → [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.3.0)
+- Rolling deployments now succeed as soon as new tasks are healthy while old tasks drain in the background; deployment settings can choose a lower healthy-task threshold or wait for old tasks to drain.
+### [ECS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-worker) [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%401.2.0) → [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%401.3.0)
+- Rolling deployments now succeed as soon as new tasks are healthy while old tasks drain in the background; deployment settings can choose a lower healthy-task threshold or wait for old tasks to drain.
+
+</Update>
+
 <Update
   label="September 7, 2026"
   rss={{

@@ -20,13 +20,14 @@ flowchart BT
   rvn_ec2_service["rvn-ec2-service"] --> rvn_aws_network
   rvn_ecs_cluster["rvn-ecs-cluster"] --> rvn_aws_network
   rvn_efs["rvn-efs"] --> rvn_aws_network
+  rvn_eks_cluster["rvn-eks-cluster"] --> rvn_aws_network
   rvn_elasticache["rvn-elasticache"] --> rvn_aws_network
   rvn_lambda["rvn-lambda"] -.-> rvn_aws_network
   rvn_rds["rvn-rds"] --> rvn_aws_network
   rvn_rds_proxy["rvn-rds-proxy"] --> rvn_aws_network
 
   class rvn_aws_network current
-  class rvn_aurora,rvn_aws_alb,rvn_ec2_service,rvn_ecs_cluster,rvn_efs,rvn_elasticache,rvn_lambda,rvn_rds,rvn_rds_proxy consumer
+  class rvn_aurora,rvn_aws_alb,rvn_ec2_service,rvn_ecs_cluster,rvn_efs,rvn_eks_cluster,rvn_elasticache,rvn_lambda,rvn_rds,rvn_rds_proxy consumer
 
   classDef current fill:#C4B5FD,stroke:#8B5CF6,color:#3B0764
   classDef dependency fill:#FAF8FF,stroke:#DDD6FE,color:#6D28D9
@@ -38,6 +39,7 @@ flowchart BT
   click rvn_ec2_service "/module-definitions/catalog/rvn-ec2-service" "Open rvn-ec2-service docs"
   click rvn_ecs_cluster "/module-definitions/catalog/rvn-ecs-cluster" "Open rvn-ecs-cluster docs"
   click rvn_efs "/module-definitions/catalog/rvn-efs" "Open rvn-efs docs"
+  click rvn_eks_cluster "/module-definitions/catalog/rvn-eks-cluster" "Open rvn-eks-cluster docs"
   click rvn_elasticache "/module-definitions/catalog/rvn-elasticache" "Open rvn-elasticache docs"
   click rvn_lambda "/module-definitions/catalog/rvn-lambda" "Open rvn-lambda docs"
   click rvn_rds "/module-definitions/catalog/rvn-rds" "Open rvn-rds docs"
