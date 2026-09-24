@@ -25,7 +25,7 @@ Two independent inputs decide what each git event runs. Each accepts `none`, `pl
 | `pull_request_runs`   | A pull request against the primary branch is opened, updated, or reopened      | `plan`           |
 | `primary_branch_runs` | A push to the primary branch — **including the push created by merging a PR** | `plan_and_apply` |
 
-- `plan` runs `terraform:plan` and finishes. Nothing is applied. For pull requests, the plan summary is posted to the PR as a comment and a `ravion/plan` commit check.
+- `plan` runs `terraform:plan` and finishes. Nothing is applied. Review the plan in the Ravion run view or with the CLI; posting it to the PR as a comment and commit check is coming soon.
 - `plan_and_apply` runs the full pipeline and stops at the approval gate. Only runs you approve apply, and the apply uses exactly the plan file you reviewed.
 - `none` doesn't start a run for that event.
 
@@ -59,7 +59,7 @@ Manual runs (`ravion stack trigger-pipeline`, or **Plan** / **Apply** / **Destro
 </Tabs>
 
 <Note>
-  `pull_request_runs`, `primary_branch_runs`, and PR comments/checks require `rvn-stack` **1.3.0** or later. Earlier versions run plan → approve → apply on every push and every pull request, and don't post to the PR.
+  `pull_request_runs` and `primary_branch_runs` require `rvn-stack` **1.3.0** or later. Earlier versions run plan → approve → apply on every push and every pull request.
 </Note>
 
 ## Before you start
@@ -190,9 +190,9 @@ The steps are the [manual walkthrough](#manual-walkthrough) below — copy this 
   </Step>
 
   <Step title="Open a pull request">
-    Push a branch that changes something under `watch_paths` and open a PR against `main`. With `pull_request_runs: plan`, Ravion plans the branch and posts the summary — resource counts, a destructive-change warning if needed, and a link to the run — as a PR comment and a `ravion/plan` commit check. Nothing applies.
+    Push a branch that changes something under `watch_paths` and open a PR against `main`. With `pull_request_runs: plan`, Ravion plans the branch and nothing applies. The run appears on the stack's **Runs** tab in the dashboard; posting the summary back to the PR as a comment and commit check is coming soon.
 
-    Read the full plan from the linked run, or from the CLI:
+    Read the full plan from the run, or from the CLI:
 
     ```bash
     ravion pipeline run list --limit 5
