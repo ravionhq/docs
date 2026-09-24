@@ -1,6 +1,6 @@
 ---
 title: "Running database migrations"
-description: "Run schema migrations once per deploy with an ECS pre-deploy hook or a pipeline step, and avoid the pitfalls of running them at build time or on every task."
+description: "Run schema migrations once per deploy — at the end of the build, in an ECS pre-deploy hook, or as a pipeline step — and understand the trade-offs of each."
 "og:image": "https://www.ravion.com/og/docs/guides/database-migrations.png"
 "twitter:image": "https://www.ravion.com/og/docs/guides/database-migrations.png"
 ---
@@ -10,11 +10,49 @@ Most frameworks ship a command that applies pending schema changes — `rails db
 - It must run **once** per release, not once per task or once per service.
 - It must run **against the target database**, from inside the VPC, with the same credentials as the app.
 
-Ravion gives you two places that satisfy both. Pick one.
+Ravion gives you three places that satisfy both. Which one to pick depends mostly on whether Ravion builds your image.
 
-## Option 1: Pre-deploy hook (recommended)
+| | Build step | Pre-deploy hook | Pipeline step |
+| --- | --- | --- | --- |
+| Best for | Ravion builds the image (Railpack or Dockerfile) | Prebuilt images (`ecr`, `image_registry`) | Several services share one schema, or you want a gate |
+| Extra time per deploy | None — reuses the build runner | Starts and stops a one-off ECS task | Provisions an EC2 runner |
+| Database access | Build runner needs `DATABASE_URL` and network access to the database | Inherits the service's secrets, subnets, and security groups | Runner needs `DATABASE_URL` and network access |
+| Runs before | The image exists | The service rolls out | Any downstream deploy |
 
-[`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web) and [`rvn-ecs-worker`](/module-definitions/catalog/rvn-ecs-worker) can start a one-off ECS task before the service rolls out. The task uses the image that is about to be deployed, the same task role, subnets, security groups, environment variables, and secrets as the service, so it reaches the database exactly the way your app does. If the command exits non-zero, the deploy is aborted and the running tasks are left untouched.
+## Option 1: At the end of the build (recommended when Ravion builds your image)
+
+If Ravion builds your image with Railpack or a Dockerfile, run the migration as the last build command. The build runner is already running, so the migration adds only its own execution time to the deploy — no container to schedule, pull, and tear down.
+
+Builds run on EC2 in your AWS account, inside the module's builder execution environment (see [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web); by default, the same network placement as the ECS cluster). That is what lets the runner reach a private RDS instance. You need to give it two things it does not get by default:
+
+1. **The connection string.** Add `DATABASE_URL` to `build_environment_variables`, referenced from Secrets Manager rather than pasted in. Build variables are separate from runtime variables, so the value has to be declared in both places.
+2. **Network access to the database.** Allow the build runner's security group or subnet CIDR in the RDS module's `allowed_security_group_ids` or `allowed_cidr_blocks`. If the runner is in the same VPC, the VPC CIDR is the simplest rule.
+
+```yaml ravion.yaml
+- givenId: web
+  type: rvn-ecs-web
+  input:
+    build_source: railpack
+    # Migrate after the app build so a failing migration fails the build.
+    railpack_build_cmd: "bundle exec rails assets:precompile && bundle exec rails db:migrate"
+    build_environment_variables:
+      DATABASE_URL:
+        fromSecretManager: "arn:aws:secretsmanager:us-east-2:111122223333:secret:prod/myapp-AbCdEf:DATABASE_URL::"
+    # ...
+```
+
+For a Dockerfile build, enable `dockerfile_environment_variable_injection_enabled` so build variables arrive as build arguments, declare `ARG DATABASE_URL` and run the migration in a `RUN` instruction that uses it directly. Do not copy it into an `ENV`, or the connection string is baked into the image.
+
+Trade-offs to be aware of:
+
+- **The build environment has production database access.** A compromised build step can reach your database. Keep the build variables scoped to the one service that owns the schema, and use a database user that can alter schema but nothing more than the app needs.
+- **The migration runs before the image is deployed.** If the deploy itself later fails (health checks, capacity), the schema has already moved. This is the same window a pre-deploy hook has, just earlier; backward-compatible migrations (below) make it safe.
+- **Builds are no longer reproducible on their own.** Rebuilding an old commit reruns its migrations, which is a no-op for frameworks that track applied migrations but worth knowing.
+- **One service per environment.** If a web and a worker both build from the same repo, put the migration in only one of the two build configs — otherwise both runners race for the migration lock.
+
+## Option 2: Pre-deploy hook (recommended for prebuilt images)
+
+When you deploy an image Ravion did not build — `build_source: ecr` or `image_registry` — there is no build runner to piggyback on, so use the pre-deploy hook instead. [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web) and [`rvn-ecs-worker`](/module-definitions/catalog/rvn-ecs-worker) can start a one-off ECS task before the service rolls out. The task uses the image that is about to be deployed, the same task role, subnets, security groups, environment variables, and secrets as the service, so it reaches the database exactly the way your app does without any extra configuration. If the command exits non-zero, the deploy is aborted and the running tasks are left untouched.
 
 ```yaml ravion.yaml
 - givenId: web
@@ -29,15 +67,17 @@ The command is an ECS argument array, not a shell string. Wrap it in `/bin/sh -l
 
 Hooks accept their own `pre_deploy_environment_variables`, `pre_deploy_cpu`, `pre_deploy_memory`, `pre_deploy_ephemeral_storage_size_gib`, and `pre_deploy_timeout`, so a heavy backfill can get more resources than the steady-state web task without changing the service.
 
+The cost is time: every deploy waits for ECS to place the task, pull the image, run the command, and stop, typically a minute or more on top of the migration itself. If Ravion builds your image and deploy speed matters, prefer option 1. Pre-deploy is still the right choice when you do not want the build environment to have database access.
+
 <Warning>
   Enable the hook on **one** service per environment — usually the web service. A web and a worker
   deployed from the same image both running `db:migrate` at the same time is the most common cause
   of migration lock errors.
 </Warning>
 
-## Option 2: A pipeline step
+## Option 3: A pipeline step
 
-When migrations need to run before several services deploy, or need to run from a different image than the app, use a [`custom` step](/pipelines/step-types#custom) in your pipeline. Steps in a list run in order, so place it between the build and the deploys:
+When migrations need to run before several services deploy, need to run from a different image than the app, or should be gated by an [`approval`](/pipelines/step-types#approval), use a [`custom` step](/pipelines/step-types#custom) in your pipeline. Steps in a list run in order, so place it between the build and the deploys:
 
 ```yaml pipeline.yaml
 steps:
@@ -75,15 +115,13 @@ steps:
           image_ref: << steps.build_web.output.image_digest >>
 ```
 
-Pipeline steps run on temporary EC2 instances in your account, so they can reach a private RDS instance without exposing it. Reference the database URL from Secrets Manager rather than pasting it into the pipeline file — see [Managing secrets](/guides/managing-secrets).
-
-Prefer the pre-deploy hook when a single service owns the schema. Prefer a pipeline step when you want the migration visible as its own step, gated by an [`approval`](/pipelines/step-types#approval), or shared by several deploys.
+Pipeline steps run on temporary EC2 instances in your account, so they can reach a private RDS instance without exposing it — with the same database access requirements as option 1. Reference the database URL from Secrets Manager rather than pasting it into the pipeline file — see [Managing secrets](/guides/managing-secrets). Like the pre-deploy hook, this adds runner startup time to every deploy; its advantage is that the migration is visible as its own step and shared by every deploy after it.
 
 ## Where not to run migrations
 
-**Build commands.** Builds run before you know whether the deploy will succeed, often without network access to the database, and a Dockerfile build should be reproducible. Keep `db:migrate` out of `RUN` instructions and out of Railpack build commands.
+**Dockerfile image build instructions on their own.** Running `db:migrate` in an arbitrary `RUN` without the setup in option 1 fails for lack of credentials or network access, and leaking the connection string into an `ENV` bakes it into the image.
 
-**Procfile `release` phase.** Ravion does not run Heroku-style `release` processes. If you are migrating from Heroku, move the command from `release:` to a pre-deploy hook.
+**Procfile `release` phase.** Ravion does not run Heroku-style `release` processes. If you are migrating from Heroku, move the command from `release:` to the end of the build or to a pre-deploy hook.
 
 **Application start.** Running migrations in the container entrypoint runs them on every task — including autoscaling events and task replacements — and usually in parallel. It also means a broken migration takes the whole service down rather than failing the deploy.
 
@@ -93,6 +131,7 @@ A [rollback](/modules/deploy#rollback-redeploy-cancel) redeploys a previous imag
 
 ## Related pages
 
+- [Build](/modules/build) — build sources and build environment variables
 - [Deploy](/modules/deploy) — deployment types, hooks, and rollback
 - [Pipeline step types](/pipelines/step-types)
 - [Managing secrets](/guides/managing-secrets)

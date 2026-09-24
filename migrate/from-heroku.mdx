@@ -32,7 +32,7 @@ Steps 1 and 2 are reversible by pointing DNS back at Heroku. After the database 
 | Heroku Redis / Key-Value Store | [`rvn-elasticache`](/module-definitions/catalog/rvn-elasticache)               |
 | Config vars                    | Runtime environment variables and [secrets](/guides/managing-secrets)          |
 | Buildpacks                     | [Railpack](/modules/build) (auto-detected) or your own Dockerfile              |
-| Procfile `release`             | [Pre-deploy hook](/guides/database-migrations)                                 |
+| Procfile `release`             | [End of build or pre-deploy hook](/guides/database-migrations)                 |
 | Heroku Scheduler               | `rvn-ecs-worker` or [`rvn-lambda`](/module-definitions/catalog/rvn-lambda) on a schedule |
 
 ## Step 1: Deploy to AWS against the Heroku database
@@ -53,9 +53,10 @@ Steps 1 and 2 are reversible by pointing DNS back at Heroku. After the database 
 6. Deploy and test on the Ravion-provided URL. Your app is now running on AWS against production data, but serving no production traffic.
 
 <Tip>
-  Make sure `db:migrate` is not in your build command and does not run on container start. Heroku
-  users usually have it in the Procfile `release` phase — move it to a
-  [pre-deploy hook](/guides/database-migrations) instead.
+  Make sure `db:migrate` does not run on container start. Heroku users usually have it in the
+  Procfile `release` phase — move it to the end of the build (fastest, when Ravion builds your
+  image) or to a pre-deploy hook. See [Running database migrations](/guides/database-migrations)
+  for the trade-offs.
 </Tip>
 
 ## Step 2: Switch production traffic
