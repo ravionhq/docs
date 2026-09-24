@@ -14,7 +14,7 @@ authenticating and upgrading: https://www.docker.com/increase-rate-limit
 
 ## Why this happens
 
-Docker Hub limits unauthenticated image pulls per source IP address. Builds run on EC2 instances in your AWS account, and instances in private subnets share the VPC's NAT gateway — so every build in the environment counts against the same IP. A busy team, or a burst of preview environments, exhausts the anonymous quota quickly. Docker Hub has tightened these limits several times, and they are lower than the number of `FROM` pulls a day of active development produces.
+Docker Hub limits unauthenticated image pulls per source IP address. Builds run on EC2 instances in your AWS account, and instances in private subnets share the VPC's NAT gateway — so every build in the environment counts against the same IP. A busy team, or a burst of preview environments, exhausts the anonymous quota quickly. At the time of writing the anonymous limit is 100 pulls per 6 hours per IPv4 address (200 for an authenticated free account); check [Docker Hub usage and limits](https://docs.docker.com/docker-hub/usage/) for the current numbers.
 
 ## Fix: pull from the ECR Public mirror
 
@@ -22,10 +22,10 @@ AWS mirrors the Docker Hub official images on ECR Public, with no rate limits fo
 
 ```dockerfile
 # Before
-FROM node:22-alpine
+FROM node:24-alpine
 
 # After
-FROM public.ecr.aws/docker/library/node:22-alpine
+FROM public.ecr.aws/docker/library/node:24-alpine
 ```
 
 Every Docker official image is available under `public.ecr.aws/docker/library/<image>`. Browse the [ECR Public Gallery](https://gallery.ecr.aws/docker/library) to confirm a tag exists.
