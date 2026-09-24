@@ -62,6 +62,7 @@
               "migrate/from-flightcontrol",
               "migrate/from-heroku",
               "migrate/heroku-postgres-to-rds",
+              "migrate/existing-terraform-stack",
               "migrate/import-into-standard-module",
               "migrate/import-into-terraform-stack"
             ]
