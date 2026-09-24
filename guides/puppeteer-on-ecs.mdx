@@ -13,6 +13,7 @@ Puppeteer and Playwright download a browser at install time, but that browser ne
 
 <Tabs>
   <Tab title="Playwright (recommended)">
+
     ```dockerfile
     FROM mcr.microsoft.com/playwright:v1.50.0-noble
     WORKDIR /app
@@ -25,6 +26,7 @@ Puppeteer and Playwright download a browser at install time, but that browser ne
     Pin the image tag to the Playwright version in `package.json`; mismatches fail at launch.
   </Tab>
   <Tab title="Puppeteer">
+
     ```dockerfile
     FROM public.ecr.aws/docker/library/node:22-slim
     RUN apt-get update && apt-get install -y --no-install-recommends \

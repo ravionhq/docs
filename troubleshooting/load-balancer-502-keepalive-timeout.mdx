@@ -31,6 +31,7 @@ Set the app's keep-alive timeout **higher** than the load balancer's idle timeou
 
 <Tabs>
   <Tab title="Next.js">
+
     ```json package.json
     {
       "scripts": {
@@ -40,6 +41,7 @@ Set the app's keep-alive timeout **higher** than the load balancer's idle timeou
     ```
   </Tab>
   <Tab title="Node.js (Express, custom server)">
+
     ```js
     const server = app.listen(process.env.PORT || 3000)
 
@@ -55,16 +57,19 @@ Set the app's keep-alive timeout **higher** than the load balancer's idle timeou
     ```
   </Tab>
   <Tab title="Rails (Puma)">
+
     ```ruby config/puma.rb
     persistent_timeout 65
     ```
   </Tab>
   <Tab title="Django (Gunicorn)">
+
     ```bash
     gunicorn myapp.wsgi --keep-alive 65
     ```
   </Tab>
   <Tab title="FastAPI (Uvicorn)">
+
     ```bash
     uvicorn main:app --timeout-keep-alive 65
     ```

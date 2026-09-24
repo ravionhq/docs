@@ -63,6 +63,7 @@ Run the whole procedure once against a scratch RDS instance before the real thin
     Scale worker services to zero and put the app in maintenance mode, or stop the web service. Any write that happens after the dump starts is lost, so make sure nothing is writing.
   </Step>
   <Step title="Take a fresh backup on Heroku">
+
     ```bash
     heroku pg:backups:capture --app my-app
     heroku pg:backups:download --app my-app   # writes latest.dump
@@ -71,6 +72,7 @@ Run the whole procedure once against a scratch RDS instance before the real thin
     Heroku produces a `pg_dump` custom-format archive. Alternatively, get a signed URL with `heroku pg:backups:url` and `curl` it from inside the VPC.
   </Step>
   <Step title="Restore into RDS">
+
     ```bash
     pg_restore --verbose --clean --if-exists --no-acl --no-owner \
       --jobs=4 \

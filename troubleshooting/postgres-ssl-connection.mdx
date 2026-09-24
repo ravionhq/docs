@@ -47,6 +47,7 @@ postgresql://myapp:PASSWORD@myapp-production.xxxx.us-east-1.rds.amazonaws.com:54
     Prisma: append `?sslmode=require` to `DATABASE_URL`. Drizzle: pass `ssl: "require"` to the driver.
   </Tab>
   <Tab title="Rails">
+
     ```yaml config/database.yml
     production:
       url: <%= ENV["DATABASE_URL"] %>
@@ -54,6 +55,7 @@ postgresql://myapp:PASSWORD@myapp-production.xxxx.us-east-1.rds.amazonaws.com:54
     ```
   </Tab>
   <Tab title="Django">
+
     ```python
     DATABASES["default"]["OPTIONS"] = {"sslmode": "require"}
     ```
