@@ -60,6 +60,8 @@
             "group": "Migrate",
             "pages": [
               "migrate/from-flightcontrol",
+              "migrate/from-heroku",
+              "migrate/heroku-postgres-to-rds",
               "migrate/import-into-standard-module",
               "migrate/import-into-terraform-stack"
             ]
@@ -125,13 +127,21 @@
             "pages": [
               "guides/custom-domains",
               "guides/aws/multi-region",
-              "guides/managing-secrets"
+              "guides/managing-secrets",
+              "guides/database-migrations",
+              "guides/puppeteer-on-ecs"
             ]
           },
           {
             "group": "Troubleshooting",
             "pages": [
-              "troubleshooting/stuck-terraform-state-lock"
+              "troubleshooting/stuck-terraform-state-lock",
+              "troubleshooting/postgres-ssl-connection",
+              "troubleshooting/load-balancer-502-keepalive-timeout",
+              "troubleshooting/docker-hub-rate-limits",
+              "troubleshooting/node-heap-out-of-memory",
+              "troubleshooting/too-many-vpcs",
+              "troubleshooting/fargate-vcpu-quota"
             ]
           },
           {

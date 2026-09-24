@@ -1,0 +1,51 @@
+---
+title: "Too many VPCs: VpcLimitExceeded"
+sidebarTitle: "Too many VPCs"
+description: "Fix the 'VpcLimitExceeded' or 'maximum number of VPCs has been reached' error when deploying a network module by sharing a VPC or raising the AWS quota."
+"og:image": "https://www.ravion.com/og/docs/troubleshooting/too-many-vpcs.png"
+"twitter:image": "https://www.ravion.com/og/docs/troubleshooting/too-many-vpcs.png"
+---
+
+A network module fails to deploy with:
+
+```text
+VpcLimitExceeded: The maximum number of VPCs has been reached.
+```
+
+or the equivalent for internet gateways:
+
+```text
+InternetGatewayLimitExceeded: The maximum number of internet gateways has been reached.
+```
+
+## Why this happens
+
+AWS accounts start with a quota of **5 VPCs per region**, and the same number of internet gateways. Each [`rvn-aws-network`](/module-definitions/catalog/rvn-aws-network) module instance creates one of each. Five environments — or three environments plus a couple of VPCs left over from earlier experiments — hit the ceiling.
+
+## Fix: share one network across environments
+
+You rarely need a VPC per environment. Create one `rvn-aws-network` instance for your non-production environments and have staging, preview, and development services reference it. Keep production in its own VPC.
+
+Every module that takes a `network` dependency can also point at existing infrastructure by supplying the VPC and subnet IDs directly instead of a `moduleGivenIdRef`, so services can join a VPC that Ravion did not create. See [Import into a standard module](/migrate/import-into-standard-module) if you want to bring an existing VPC under Ravion management.
+
+## Fix: delete unused VPCs
+
+Check the VPC console for VPCs from deleted projects, old tooling, or the default VPC in regions you do not use. Deleting the default VPC is safe if nothing runs in it; you can recreate it from the console later.
+
+## Fix: request a quota increase
+
+VPC quotas are adjustable. Request an increase in Service Quotas — make sure the console is set to the region you deploy to:
+
+- [VPCs per region (L-F678F1CE)](https://console.aws.amazon.com/servicequotas/home/services/vpc/quotas/L-F678F1CE)
+- [Internet gateways per region (L-A4707A72)](https://console.aws.amazon.com/servicequotas/home/services/vpc/quotas/L-A4707A72)
+
+The two quotas must match, so request both. Increases up to a few dozen are usually approved automatically; larger ones go to support and can take a day.
+
+## Fix: use another region
+
+Quotas are per region. If you need an environment right now and the account is full in one region, deploying to a neighbouring region works — but keep latency to your database in mind.
+
+## Related pages
+
+- [`rvn-aws-network`](/module-definitions/catalog/rvn-aws-network)
+- [Multi-region deployments](/guides/aws/multi-region)

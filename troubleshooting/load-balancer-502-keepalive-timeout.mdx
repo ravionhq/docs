@@ -1,0 +1,99 @@
+---
+title: "Random 502 errors behind a load balancer"
+description: "Diagnose and fix intermittent 502 Bad Gateway responses caused by a keep-alive timeout mismatch between your app server and the AWS Application Load Balancer."
+"og:image": "https://www.ravion.com/og/docs/troubleshooting/load-balancer-502-keepalive-timeout.png"
+"twitter:image": "https://www.ravion.com/og/docs/troubleshooting/load-balancer-502-keepalive-timeout.png"
+---
+
+Your service is healthy, deploys succeed, and yet a small fraction of requests — often well under 1% — come back as `502 Bad Gateway` from the load balancer. The cause is almost always a **keep-alive timeout mismatch** between your app and the ALB.
+
+## Why this happens
+
+HTTP/1.1 connections stay open between requests so the ALB can reuse the same TCP socket to your task. Both ends have an idle timeout. If **your app closes an idle connection before the ALB does**, the ALB may already have sent the next request down that socket. The app resets the connection and the ALB returns a 502 to the client.
+
+The ALB idle timeout is 60 seconds by default. Framework defaults vary, and several are below that:
+
+| Framework / runtime | Default keep-alive timeout        |
+| ------------------- | --------------------------------- |
+| Node.js `http`      | 5 s                               |
+| Next.js             | 5 s (inherits Node)               |
+| Fastify             | 72 s                              |
+| Puma (Rails)        | 20 s (`persistent_timeout`)       |
+| Gunicorn (Django)   | 2 s (`keepalive`)                 |
+| Uvicorn (FastAPI)   | 5 s (`timeout_keep_alive`)        |
+| Go `net/http`       | none (never closes idle) — fine   |
+
+Anything lower than the ALB idle timeout can produce 502s.
+
+## The fix
+
+Set the app's keep-alive timeout **higher** than the load balancer's idle timeout, so the ALB always closes idle connections first. With the default 60 s ALB timeout, use 65 s or more.
+
+<Tabs>
+  <Tab title="Next.js">
+
+    ```json package.json
+    {
+      "scripts": {
+        "start": "next start --keepAliveTimeout 65000"
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Node.js (Express, custom server)">
+
+    ```js
+    const server = app.listen(process.env.PORT || 3000)
+
+    server.keepAliveTimeout = 65000 // above the ALB idle timeout
+    server.headersTimeout = 66000 // must be above keepAliveTimeout
+    ```
+  </Tab>
+  <Tab title="Fastify">
+    Already above 60 s by default. If you override it, keep it above the ALB timeout:
+
+    ```js
+    const fastify = require("fastify")({keepAliveTimeout: 65000})
+    ```
+  </Tab>
+  <Tab title="Rails (Puma)">
+
+    ```ruby config/puma.rb
+    persistent_timeout 65
+    ```
+  </Tab>
+  <Tab title="Django (Gunicorn)">
+
+    ```bash
+    gunicorn myapp.wsgi --keep-alive 65
+    ```
+  </Tab>
+  <Tab title="FastAPI (Uvicorn)">
+
+    ```bash
+    uvicorn main:app --timeout-keep-alive 65
+    ```
+  </Tab>
+</Tabs>
+
+For any other server, find its keep-alive or persistent-connection timeout and set it above the ALB's.
+
+## Infrastructure settings
+
+If you would rather change the ALB than every app, lower its idle timeout instead — the rule is only that the ALB timeout is the smaller of the two. The relevant inputs:
+
+| Setting                             | Module          | Input                               | Default |
+| ----------------------------------- | --------------- | ----------------------------------- | ------- |
+| ALB idle timeout                    | `rvn-aws-alb`   | `idle_timeout`                      | 60 s    |
+| Target group deregistration delay   | `rvn-ecs-web`   | `target_group_deregistration_delay` | 300 s   |
+
+Dropping `target_group_deregistration_delay` to around 60 s does not affect 502s from keep-alive, but it lets rolling deploys finish faster without holding old tasks for five minutes. Set it to something longer than your slowest request.
+
+## 502s only during deploys
+
+If the 502s line up with deployments rather than appearing at random, the cause is different: tasks are being stopped while they still hold open connections. Make sure your server handles `SIGTERM` by finishing in-flight requests and closing idle keep-alive connections before exiting. Node's `server.close()` and Puma's default behavior both do this.
+
+## Related pages
+
+- [`rvn-aws-alb`](/module-definitions/catalog/rvn-aws-alb)
+- [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web)

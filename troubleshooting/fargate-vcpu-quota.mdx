@@ -1,0 +1,52 @@
+---
+title: "Unable to place a task: Fargate vCPU quota"
+sidebarTitle: "Fargate vCPU quota"
+description: "Fix ECS deployments that fail with 'You've reached the limit on the number of vCPUs you can run concurrently' by requesting a Fargate On-Demand vCPU quota increase."
+"og:image": "https://www.ravion.com/og/docs/troubleshooting/fargate-vcpu-quota.png"
+"twitter:image": "https://www.ravion.com/og/docs/troubleshooting/fargate-vcpu-quota.png"
+---
+
+A deploy fails and the ECS service events show:
+
+```text
+(service myapp-production-web) was unable to place a task. Reason: You've reached the limit on
+the number of vCPUs you can run concurrently. For more information, see the Troubleshooting
+section of the Amazon ECS Developer Guide.
+```
+
+## Why this happens
+
+Fargate has an account-level, per-region quota on the total vCPU running at once — one for On-Demand and a separate one for Spot. New accounts start low (often 6 vCPU) and AWS raises it gradually as usage grows. Rolling deploys briefly run old and new tasks side by side, so a service can fail to deploy even though its steady-state footprint fits.
+
+Size the quota for **at least twice** the sum of `vcpu × max_capacity` (or `vcpu × desired_count` for services without autoscaling) across every Fargate service in the region. That covers a full-scale rollout while scaled to the maximum.
+
+## Fix: request a quota increase
+
+Open Service Quotas for Fargate in the region you deploy to and request an increase:
+
+- [Fargate On-Demand vCPU resource count (L-3032A538)](https://console.aws.amazon.com/servicequotas/home/services/fargate/quotas/L-3032A538)
+- [Fargate Spot vCPU resource count (L-36FBB829)](https://console.aws.amazon.com/servicequotas/home/services/fargate/quotas/L-36FBB829) if you use `fargate_spot`
+
+Moderate increases are approved within minutes; large jumps may need a support case. Retry the deployment once the new quota shows as applied.
+
+<Note>
+  In a brand-new account, the first Fargate task in a region may fail even at tiny sizes until AWS
+  finishes activating the service. Wait a few minutes and retry before requesting an increase.
+</Note>
+
+## Fix: reduce the footprint
+
+If you cannot wait for the increase:
+
+- Lower `fargate_size` on services that do not need the default 2 vCPU.
+- Lower `max_capacity` or `desired_count` temporarily so the rollout fits.
+- Scale down preview or staging environments in the same region.
+
+## Fix: move to EC2 capacity
+
+The Fargate quota does not apply to tasks placed on EC2 capacity. Set `capacity_provider: ec2` on the service and attach it to a cluster with an EC2 capacity provider — see [`rvn-ecs-cluster`](/module-definitions/catalog/rvn-ecs-cluster). EC2 has its own instance quotas, but they are separate and typically larger.
+
+## Related pages
+
+- [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web)
+- [`rvn-ecs-cluster`](/module-definitions/catalog/rvn-ecs-cluster)
