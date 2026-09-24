@@ -60,6 +60,8 @@ steps:
     infrastructure:
       type: ec2
       instance_size: t3.medium
+      aws_account_id: awsacct_123
+      region: us-east-2
   - parallel:
       - id: deploy_web
         type: deploy

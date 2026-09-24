@@ -21,13 +21,13 @@ FATAL: no pg_hba.conf entry for host "10.0.12.34", user "myapp", database "myapp
 RDS for PostgreSQL 15 and later ships with the `rds.force_ssl` parameter set to `1`, so the server rejects connections that do not negotiate TLS. Older major versions default to `0`, which is why an app that worked against Postgres 13 or 14 breaks after an upgrade or a fresh instance.
 
 - **`no encryption`** in the message means the client connected without TLS. This is the common case.
-- **`SSL encryption`** in the message means TLS was negotiated but the client certificate verification or the `pg_hba` rules still rejected it — usually a driver that connected with TLS but is authenticating as a user or against a database that does not match the connection string.
+- **`SSL encryption`** means TLS was negotiated and the rejection is about the user, database, or source: check the username and database in the connection string, and that the task's security group or CIDR is in the RDS module's `allowed_security_group_ids`/`allowed_cidr_blocks`. The TLS fixes below do not apply to this variant.
 
 Both are client-side configuration problems, not network problems. If the app could not reach the instance at all you would see a connection timeout instead.
 
 ## Fix: require TLS in the connection string
 
-Add `sslmode=require` to the connection URL, or the equivalent driver option:
+For the `no encryption` variant, add `sslmode=require` to the connection URL, or the equivalent driver option:
 
 ```text
 postgresql://myapp:PASSWORD@myapp-production.xxxx.us-east-1.rds.amazonaws.com:5432/myapp?sslmode=require

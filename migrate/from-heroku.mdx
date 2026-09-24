@@ -17,7 +17,7 @@ Everything Ravion provisions lives in your AWS account, built from Terraform you
 3. Migrate the database to RDS.
 4. Shut down the Heroku app.
 
-Each step is independently reversible until you delete Heroku.
+Steps 1 and 2 are reversible by pointing DNS back at Heroku. After the database cutover in step 3, rolling back means moving data written to RDS back to Heroku, so treat that step as the point of no return.
 
 ### Terminology
 
@@ -60,7 +60,7 @@ Each step is independently reversible until you delete Heroku.
 
 ## Step 2: Switch production traffic
 
-1. Add your domain in Ravion — see [Custom domains](/guides/custom-domains). Adding it issues a certificate and shows the DNS records to create. It does not move traffic.
+1. Set up your domain following [Custom domains](/guides/custom-domains): request an `rvn-acm-certificate`, create the validation record, attach the certificate to the ECS cluster load balancer (or CloudFront). None of this moves traffic yet.
 2. Lower the TTL on your existing DNS records to 60 seconds and wait for the old TTL to expire.
 3. Save the current Heroku DNS values, then update the records to the Ravion-provided ones.
 4. Watch error rates and the Ravion logs and metrics tabs. To revert, point DNS back at Heroku.
@@ -78,7 +78,7 @@ Keep the Heroku app and database running for about a week after the database cut
 ## Application changes to expect
 
 - **Commit SHA.** `HEROKU_SLUG_COMMIT` and `SOURCE_VERSION` do not exist. If your app needs the commit at runtime (for Sentry releases, for example), pass it through the pipeline: take the commit as a pipeline input and forward it as a build environment variable or image tag — see [Build](/modules/build).
-- **Client IP.** Behind an ALB the socket peer address is the load balancer's. Read the client IP from `X-Forwarded-For` (first entry), or from `CloudFront-Viewer-Address` if CloudFront fronts the ALB. Rate limiters and audit logs are the usual places this bites.
+- **Client IP.** Behind an ALB the socket peer address is the load balancer's, and the ALB *appends* the client IP it saw to `X-Forwarded-For` — so the first entry is client-controlled and spoofable. Take the rightmost entry the ALB added, or configure the framework's trusted-proxy setting for one hop (Express `app.set("trust proxy", 1)`, Rails `config.action_dispatch.trusted_proxies`). With CloudFront in front, use `CloudFront-Viewer-Address` or trust two hops. Rate limiters and audit logs are the usual places this bites.
 - **No swap.** Heroku dynos swap to disk when memory is exhausted; Fargate tasks are killed. Set `task_memory` with headroom and watch the memory chart after cutover. Node apps also need `NODE_OPTIONS=--max-old-space-size` sized to the task — see [JavaScript heap out of memory](/troubleshooting/node-heap-out-of-memory).
 - **Keep-alive timeouts.** The ALB idle timeout is 60 seconds, and several frameworks default to less. See [Random 502 errors behind a load balancer](/troubleshooting/load-balancer-502-keepalive-timeout).
 - **Postgres over TLS.** RDS enforces TLS on PostgreSQL 15+ by default. See [PostgreSQL SSL connection error](/troubleshooting/postgres-ssl-connection).

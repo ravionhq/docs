@@ -29,6 +29,8 @@ Set `NODE_OPTIONS` so Node is allowed to use the memory you already pay for. The
     ```
 
     Builds run on the `build_instance_type` (default `c7a.4xlarge`, 32 GB), so there is usually plenty of room — the heap cap, not the machine, is the constraint.
+
+    For `dockerfile` builds, build environment variables only reach `docker build` as build args when `dockerfile_environment_variable_injection_enabled: true` is set and the Dockerfile declares `ARG NODE_OPTIONS`. Simpler: put `ENV NODE_OPTIONS=--max-old-space-size=8192` in the Dockerfile before the build step.
   </Tab>
   <Tab title="At runtime">
     Add it to the module's runtime environment variables and pick a value below the task memory:
@@ -43,8 +45,6 @@ Set `NODE_OPTIONS` so Node is allowed to use the memory you already pay for. The
     ```
   </Tab>
 </Tabs>
-
-If you use a `Dockerfile`, you can also bake it in with `ENV NODE_OPTIONS=--max-old-space-size=3072`. Environment variables set on the module override the image.
 
 ## Fix: give the task more memory
 

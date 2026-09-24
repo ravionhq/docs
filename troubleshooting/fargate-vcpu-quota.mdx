@@ -18,7 +18,7 @@ section of the Amazon ECS Developer Guide.
 
 Fargate has an account-level, per-region quota on the total vCPU running at once — one for On-Demand and a separate one for Spot. New accounts start low (often 6 vCPU) and AWS raises it gradually as usage grows. Rolling deploys briefly run old and new tasks side by side, so a service can fail to deploy even though its steady-state footprint fits.
 
-Size the quota for **at least twice** the sum of `vcpu × max_capacity` across every Fargate service in the region. That covers a full-scale rollout while scaled to the maximum.
+Size the quota for **at least twice** the sum of `vcpu × max_capacity` (or `vcpu × desired_count` for services without autoscaling) across every Fargate service in the region. That covers a full-scale rollout while scaled to the maximum.
 
 ## Fix: request a quota increase
 

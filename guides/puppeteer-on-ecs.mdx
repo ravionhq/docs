@@ -68,7 +68,7 @@ Playwright uses the same flags via `chromium.launch({args: [...]})`.
 
 - **Memory.** Budget at least 1 GB per concurrent browser page plus your app. The default `fargate_size` of 2 vCPU / 4 GB handles a couple of pages; raise it before scaling out.
 - **Ephemeral storage.** Chromium writes profiles and caches to disk. If you screenshot or download at volume, increase `task_ephemeral_storage_size_gib` above the 20 GiB Fargate default.
-- **Architecture.** Distro Chromium packages exist for both amd64 and arm64, so `cpu_architecture: arm64` works. Puppeteer's bundled download does not ship arm64 Linux builds — use the distro package or Playwright's image.
+- **Architecture.** Distro Chromium packages exist for both amd64 and arm64, so `cpu_architecture: ARM64` works. Puppeteer's bundled download does not ship arm64 Linux builds — use the distro package or Playwright's image.
 
 ## Isolate browser work in a worker
 

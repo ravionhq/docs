@@ -35,8 +35,10 @@ Add an [`rvn-rds`](/module-definitions/catalog/rvn-rds) module to the environmen
     max_allocated_storage: 500
     db_name: myapp
     username: myapp
-    allowed_security_group_ids: []   # the ECS service security groups
+    allowed_cidr_blocks: ["10.0.0.0/16"]   # your VPC CIDR
 ```
+
+This allows anything inside the VPC, including the pipeline runner that does the restore. To restrict to the app, list the ECS service security group IDs in `allowed_security_group_ids` instead.
 
 Apply the config. The module generates the master password into Secrets Manager; the endpoint and the secret ARN are in the module's outputs.
 
@@ -74,12 +76,14 @@ Run the whole procedure once against a scratch RDS instance before the real thin
   <Step title="Restore into RDS">
 
     ```bash
+    export PGPASSWORD=$(aws secretsmanager get-secret-value --secret-id <rds-master-secret-arn> --query SecretString --output text | jq -r .password)
     pg_restore --verbose --clean --if-exists --no-acl --no-owner \
       --jobs=4 \
-      --dbname="postgresql://myapp:PASSWORD@myapp-production.xxxx.us-east-1.rds.amazonaws.com:5432/myapp?sslmode=require" \
+      --dbname="postgresql://myapp@myapp-production.xxxx.us-east-1.rds.amazonaws.com:5432/myapp?sslmode=require" \
       latest.dump
     ```
 
+    - `PGPASSWORD` keeps the password out of the command line and shell history; `~/.pgpass` works too.
     - `--no-acl --no-owner` drops Heroku-specific role grants that do not exist on RDS.
     - `--jobs` restores tables in parallel; set it to the number of cores on the machine running the restore.
     - Expect warnings about extensions Heroku installs by default that you do not use. Errors about `CREATE EXTENSION` for extensions you do use mean you need `rds_superuser` (the master user has it) or the extension is not available on RDS.
@@ -101,7 +105,7 @@ If you cannot take a window, the pattern is:
 
 1. Create the RDS instance and do an initial dump and restore as above, without stopping writes.
 2. Change the application to write every mutation to both databases while continuing to read from Heroku. This is application code — an ORM hook or a repository layer — and it has to handle a failed write to one side.
-3. Backfill rows that changed on Heroku between the initial restore and the moment dual writes started (compare `updated_at` columns, or re-copy the affected tables).
+3. Backfill rows that changed on Heroku between the initial restore and the moment dual writes started (compare `updated_at` columns, or re-copy the affected tables). `updated_at` cannot find rows deleted in that gap — use soft deletes, log deletes to a table you replay, or re-copy the affected tables. If your schema cannot support this, use AWS DMS with change data capture (below) instead.
 4. Validate the two databases match, then switch reads to RDS.
 5. Stop writing to Heroku.
 
