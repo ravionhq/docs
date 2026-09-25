@@ -75,9 +75,11 @@ Pipeline trigger for generic webhooks.
   Unique identifier for this trigger
 </ResponseField>
 
-<ResponseField name="enabled" type="boolean" default="true">
+<ResponseField name="enabled" type="boolean | null" default="true">
   Whether this trigger is active. Disabled triggers are not registered.
   Default: true
+
+  _(templateable)_
 </ResponseField>
 
 <ResponseField name="repo" type="string" required>
@@ -121,9 +123,11 @@ Pipeline trigger for GitHub webhooks.
   Unique identifier for this trigger
 </ResponseField>
 
-<ResponseField name="enabled" type="boolean" default="true">
+<ResponseField name="enabled" type="boolean | null" default="true">
   Whether this trigger is active. Disabled triggers are not registered.
   Default: true
+
+  _(templateable)_
 </ResponseField>
 
 <ResponseField name="repo" type="string" required>
@@ -173,9 +177,11 @@ Pipeline trigger for GitLab webhooks.
   Unique identifier for this trigger
 </ResponseField>
 
-<ResponseField name="enabled" type="boolean" default="true">
+<ResponseField name="enabled" type="boolean | null" default="true">
   Whether this trigger is active. Disabled triggers are not registered.
   Default: true
+
+  _(templateable)_
 </ResponseField>
 
 <ResponseField name="repo" type="string" required>
@@ -225,9 +231,11 @@ Pipeline trigger that starts runs on a cron schedule.
   Unique identifier for this trigger
 </ResponseField>
 
-<ResponseField name="enabled" type="boolean" default="true">
+<ResponseField name="enabled" type="boolean | null" default="true">
   Whether this trigger is active. Disabled triggers are not registered.
   Default: true
+
+  _(templateable)_
 </ResponseField>
 
 <ResponseField name="type" type="enum" required>
@@ -1876,7 +1884,6 @@ Step infrastructure configuration
 
 Note: Additional validation via CEL:
 - exactly one target mode is required: execution_environment_id, or aws_account_id plus region
-- instance_size as array only valid when type == "ec2-spot"
 
 <ResponseField name="execution_environment_id" type="string | null">
   ID or given ID of a pre-configured execution environment
@@ -1922,7 +1929,7 @@ Note: Additional validation via CEL:
 </ResponseField>
 
 <ResponseField name="instance_size" type="string | string[]" required>
-  EC2 instance type — a single type like "t3.large" or an array like ["t3.large", "t3.xlarge"] for spot fallback
+  EC2 instance type — a single type like "t3.large" or an array like ["t3.large", "t3.xlarge"]; when an array is given the first entry is used
 
   _(templateable)_
 </ResponseField>

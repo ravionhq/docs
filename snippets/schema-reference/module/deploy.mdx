@@ -22,11 +22,65 @@ Discriminated union. The `type` field selects which schema applies.
 
 | `type` value   | Schema                                                  |
 | -------------- | ------------------------------------------------------- |
+| `"aws:ami"`    | [AwsAmiModuleDeployment](#awsamimoduledeployment)       |
 | `"aws:ec2"`    | [Ec2ModuleDeployment](#ec2moduledeployment)             |
 | `"aws:ecs"`    | [EcsModuleDeployment](/module-definitions/definition-schema/ecs-deployments#ecsmoduledeployment)             |
 | `"aws:eks"`    | [EksModuleDeployment](#eksmoduledeployment)             |
 | `"aws:lambda"` | [LambdaModuleDeployment](#lambdamoduledeployment)       |
 | `"aws:static"` | [AwsStaticModuleDeployment](#awsstaticmoduledeployment) |
+
+### AwsAmiModuleDeployment
+
+AWS AMI deployment configuration. One deployment builds the image in the
+home region with EC2 Image Builder, copies it to every distribution
+region, tags it, publishes it when `definition.publish` is true, and
+retires older images past the retention window. A redeploy or rollback
+re-releases the source deployment's images without rebuilding them.
+
+<ResponseField name="type" type="enum" required>
+  Deployment type discriminator
+
+  Allowed values: `aws:ami`
+</ResponseField>
+
+<ResponseField name="infrastructure" type="AwsAmiDeploymentInfrastructure" required>
+  Infrastructure resources required by the deployment.
+
+  See: [AwsAmiDeploymentInfrastructure](#awsamideploymentinfrastructure)
+</ResponseField>
+
+<ResponseField name="concurrency" type="EcsDeployConcurrency">
+  Concurrency policy — controls how simultaneous deploy requests are handled.
+  Omit to use defaults: queue_size=1, queue_overflow=oldest.
+
+  See: [EcsDeployConcurrency](/module-definitions/definition-schema/ecs-deployments#ecsdeployconcurrency)
+</ResponseField>
+
+<ResponseField name="timeout" type="integer">
+  Maximum total wall-clock budget (in seconds) for a single deploy,
+  measured from the moment the workflow starts (including time spent
+  waiting for the deployment-manager lock). Matches the semantics of
+  pipeline step `timeout`.
+  Default: unset (no wall-clock cap).
+
+  _(format:int32,min:60)_
+</ResponseField>
+
+<ResponseField name="inputs" type="InputProperty[]" required>
+  Deployment-specific inputs shown in the deploy modal.
+  Same types as module inputs — reuses the InputProperty union.
+
+  See: [InputProperty](/module-definitions/definition-schema/input-types#inputproperty)
+</ResponseField>
+
+<ResponseField name="definition" type="AwsAmiDeploymentDefinition" required>
+  Per-deploy definition. Templateable — supports both module.input and
+  deploy.input references inside string fields.
+
+  See: [AwsAmiDeploymentDefinition](#awsamideploymentdefinition)
+
+  _(templateable)_
+</ResponseField>
 
 ### AwsStaticModuleDeployment
 
@@ -247,6 +301,114 @@ routing alias shifts are deliberately out of scope for v1.
   deploy.input references.
 
   See: [LambdaFunctionConfiguration](#lambdafunctionconfiguration)
+
+  _(templateable)_
+</ResponseField>
+
+### AwsAmiDeploymentDefinition
+
+Per-deploy AMI definition. Each deployment creates the image recipe
+`<name>-<deploymentId>` version `1.0.0` from the infrastructure's
+components with these parameters.
+
+<ResponseField name="name" type="string" required>
+  Image recipe name prefix.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="component_parameters" type="map<string,map<string,string>> | null">
+  Parameters per component, keyed by component name.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="tags" type="map<string,string> | null">
+  Tags added to every AMI and snapshot the deploy creates, beside the
+  `ravion:*` tags the deploy manager always adds.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="publish" type="boolean | null">
+  Whether the deploy grants launch permission `all` on its AMIs.
+  `false` keeps them private, a candidate to test before a redeploy
+  publishes it.
+
+  _(templateable)_
+</ResponseField>
+
+### AwsAmiDeploymentInfrastructure
+
+Infrastructure the AMI deploy builds with. Not provisioned by the deploy
+manager — the Image Builder infrastructure configuration, distribution
+configuration and components must already exist. Each deployment creates
+its own image recipe from these components.
+
+<ResponseField name="aws_account_id" type="string" required>
+  Ravion AWS account ID (`awsact_…`, as selected from
+  `$values:ravion/aws_accounts`) that builds and owns the images — not the
+  raw AWS account number.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="region" type="string" required>
+  Home region: where the image is built and where Image Builder resources live.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="image_builder_infrastructure_configuration_arn" type="string" required>
+  Image Builder infrastructure configuration ARN (instance type, subnet,
+  instance profile) the build runs on.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="image_builder_distribution_configuration_arn" type="string" required>
+  Image Builder distribution configuration ARN for the home region only.
+  It names and tags the build's AMI and keeps it private; the deploy
+  manager copies the AMI to `distribution_regions` itself.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="components" type="AwsAmiComponent[]" required>
+  Image Builder components the recipe runs, in order.
+
+  See: [AwsAmiComponent](#awsamicomponent)
+
+  _(minItems:1; templateable)_
+</ResponseField>
+
+<ResponseField name="parent_image" type="AwsAmiParentImage" required>
+  Image the build starts from. A `lookup` resolves at deploy time.
+
+  See: [AwsAmiParentImage](#awsamiparentimage)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="block_device_mappings" type="AwsAmiBlockDeviceMapping[] | null">
+  EBS volumes of the built image (root volume size and type).
+
+  See: [AwsAmiBlockDeviceMapping](#awsamiblockdevicemapping)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="distribution_regions" type="string[] | null">
+  Regions besides the home region the built AMI is copied to.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="retention" type="AwsAmiRetentionConfig">
+  How many images each region keeps. Every deploy applies the module's
+  current retention, a redeploy or rollback included.
+
+  See: [AwsAmiRetentionConfig](#awsamiretentionconfig)
 
   _(templateable)_
 </ResponseField>
@@ -762,6 +924,92 @@ https://docs.aws.amazon.com/lambda/latest/api/API_UpdateFunctionConfiguration.ht
   _(templateable)_
 </ResponseField>
 
+### AwsAmiBlockDeviceMapping
+
+One EBS volume on the built image.
+
+<ResponseField name="device_name" type="string" required>
+  Device name.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="volume_size" type="integer" required>
+  Volume size in GiB.
+
+  _(format:int32,min:1; templateable)_
+</ResponseField>
+
+<ResponseField name="volume_type" type="enum">
+  EBS volume type.
+
+  Allowed values: `gp3` | `gp2` | `io2` | `io1`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="iops" type="integer | null">
+  Provisioned IOPS, for gp3 / io1 / io2 volumes. Image Builder accepts
+  100 to 64,000 on an image recipe.
+
+  _(format:int32,min:100,max:64000; templateable)_
+</ResponseField>
+
+<ResponseField name="throughput" type="integer | null">
+  Provisioned throughput in MiB/s, for gp3 volumes. Image Builder accepts
+  125 to 1,000 on an image recipe.
+
+  _(format:int32,min:125,max:1000; templateable)_
+</ResponseField>
+
+### AwsAmiComponent
+
+One EC2 Image Builder component the deploy's image recipe runs, in order.
+
+<ResponseField name="name" type="string" required>
+  Component name. Keys `definition.component_parameters`.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="arn" type="string" required>
+  Image Builder component ARN.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="parameters" type="map<string,string> | null">
+  Default parameter values for this component. A deploy's `definition.component_parameters` overrides them key by key.
+
+  _(templateable)_
+</ResponseField>
+
+### AwsAmiParentImage
+
+The image the build starts from — an AMI id, or a lookup resolved at deploy time.
+
+One of: [AwsAmiParentImageById](#awsamiparentimagebyid), [AwsAmiParentImageLookup](#awsamiparentimagelookup).
+
+### AwsAmiRetentionConfig
+
+How many of a module instance's images each region keeps.
+
+<ResponseField name="published_image_count" type="integer | null">
+  Newest published images kept published per region. Older published
+  images are made private.
+  Default: 5 — the AWS quota for public AMIs per region.
+
+  _(format:int32,min:1; templateable)_
+</ResponseField>
+
+<ResponseField name="private_image_count" type="integer | null">
+  Private images kept past the published window per region. Older ones
+  are deregistered and their snapshots deleted.
+  Default: 10
+
+  _(format:int32,min:0; templateable)_
+</ResponseField>
+
 ### Ec2ContainerDeploymentDefinition
 
 Container-runtime EC2 deploy definition. The image must already exist
@@ -1089,6 +1337,28 @@ VPC configuration for a Lambda function.
   _(templateable)_
 </ResponseField>
 
+### AwsAmiParentImageById
+
+Parent image named by its AMI id.
+
+<ResponseField name="id" type="string" required>
+  AMI id of the parent image.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+### AwsAmiParentImageLookup
+
+Parent image found by name at deploy time, so each rebake picks up the newest base.
+
+<ResponseField name="lookup" type="AwsAmiParentImageLookupFilter" required>
+  Lookup filter. The newest matching AMI by creation date wins.
+
+  See: [AwsAmiParentImageLookupFilter](#awsamiparentimagelookupfilter)
+
+  _(templateable)_
+</ResponseField>
+
 ### HelmChartSource
 
 Where the Helm chart comes from — discriminated by `type`.
@@ -1100,6 +1370,22 @@ Discriminated union. The `type` field selects which schema applies.
 | `git`        | [HelmGitChartSource](#helmgitchartsource)   |
 | `http`       | [HelmHttpChartSource](#helmhttpchartsource) |
 | `oci`        | [HelmOciChartSource](#helmocichartsource)   |
+
+### AwsAmiParentImageLookupFilter
+
+Name filter and owners of the newest AMI to build on.
+
+<ResponseField name="name" type="string" required>
+  AMI name filter, as `ec2:DescribeImages` accepts it (`*` wildcards).
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="owners" type="string[]" required>
+  AMI owners (account numbers or aliases such as `amazon`).
+
+  _(minItems:1; templateable)_
+</ResponseField>
 
 ### HelmGitChartSource
 

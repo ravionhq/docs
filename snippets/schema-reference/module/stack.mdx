@@ -117,9 +117,11 @@ Pipeline trigger for generic webhooks.
   Unique identifier for this trigger
 </ResponseField>
 
-<ResponseField name="enabled" type="boolean" default="true">
+<ResponseField name="enabled" type="boolean | null" default="true">
   Whether this trigger is active. Disabled triggers are not registered.
   Default: true
+
+  _(templateable)_
 </ResponseField>
 
 <ResponseField name="repo" type="string" required>
@@ -163,9 +165,11 @@ Pipeline trigger for GitHub webhooks.
   Unique identifier for this trigger
 </ResponseField>
 
-<ResponseField name="enabled" type="boolean" default="true">
+<ResponseField name="enabled" type="boolean | null" default="true">
   Whether this trigger is active. Disabled triggers are not registered.
   Default: true
+
+  _(templateable)_
 </ResponseField>
 
 <ResponseField name="repo" type="string" required>
@@ -215,9 +219,11 @@ Pipeline trigger for GitLab webhooks.
   Unique identifier for this trigger
 </ResponseField>
 
-<ResponseField name="enabled" type="boolean" default="true">
+<ResponseField name="enabled" type="boolean | null" default="true">
   Whether this trigger is active. Disabled triggers are not registered.
   Default: true
+
+  _(templateable)_
 </ResponseField>
 
 <ResponseField name="repo" type="string" required>
@@ -267,9 +273,11 @@ Pipeline trigger that starts runs on a cron schedule.
   Unique identifier for this trigger
 </ResponseField>
 
-<ResponseField name="enabled" type="boolean" default="true">
+<ResponseField name="enabled" type="boolean | null" default="true">
   Whether this trigger is active. Disabled triggers are not registered.
   Default: true
+
+  _(templateable)_
 </ResponseField>
 
 <ResponseField name="type" type="enum" required>
