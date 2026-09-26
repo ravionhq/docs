@@ -1,0 +1,98 @@
+---
+title: "Reference outputs from other modules"
+sidebarTitle: "Output references"
+description: "Set a module input from another module's stack output with a << >> template, in the dashboard, in the project config file, or in a pipeline, across environments and projects."
+"og:image": "https://www.ravion.com/og/docs/modules/output-references.png"
+"twitter:image": "https://www.ravion.com/og/docs/modules/output-references.png"
+---
+
+Any module input can take its value from another module's [stack output](/modules/stack). Write a `<< … >>` template as the input's value; there is no separate field or wrapper. The same template works wherever the input is edited: the dashboard, the [project config file](/config-as-code/project-config-file), and [pipeline config](/pipelines/templating#module-outputs).
+
+```yaml
+vpc_id: << modules.vpc.output.vpc_id >>
+```
+
+## Addresses
+
+Address the producer relative to the module that consumes the value. Use the `givenId` of each project, environment, and module.
+
+| Address                                                                       | Producer                                            |
+| ----------------------------------------------------------------------------- | --------------------------------------------------- |
+| `modules.<module>.output.<key>`                                               | A module in the same environment                    |
+| `environments.<environment>.modules.<module>.output.<key>`                    | A module in another environment of the same project |
+| `projects.<project>.environments.<environment>.modules.<module>.output.<key>` | A module in another project of your organization    |
+
+Hyphenated IDs work with dot syntax: `<< modules.vpc-network.output.vpc_id >>`.
+
+Templates are expressions, so you can combine outputs with literals and functions:
+
+```yaml
+database_url: << "postgres://" + modules.db.output.host + ":" + string(modules.db.output.port) >>
+```
+
+When a template is embedded in surrounding text, arrays and objects are rendered as JSON (`["subnet-a","subnet-b"]`). A value that is exactly one template block keeps the output's real type, so a `string_array` input can take a whole array output. Inputs that are not strings — numbers, booleans, arrays, objects — must be a single template block; mixing text around the template is rejected.
+
+## In the dashboard
+
+Every module input has an **fx** button that appears when you hover the field.
+
+- On a text or number input, click **fx** to insert `<< >>` at the cursor. Templates inside the field are highlighted, including inside the YAML and JSON editors for object inputs.
+- On a Boolean or other non-text input, click **fx** to swap the control for a text field where you type the reference. Click it again to stop using a reference and return to the plain control.
+- Typing inside `<< >>` opens autocomplete for projects, environments, modules, and output keys. Output rows show the producer's current value from its last successful apply. Autocomplete also works inside expressions such as `<< string(modules.db.output.port) >>`.
+
+On the canvas, a reference draws a connection from the producer to the consumer. Hover a connection to see which output feeds which input and whether it crosses environments.
+
+## In the project config file
+
+```yaml
+moduleInstances:
+  - givenId: vpc
+    type: rvn-aws-network
+    version: 0.1.0
+    input:
+      # ...
+
+  - givenId: db
+    type: rvn-rds
+    version: 0.2.0
+    input:
+      vpc_id: << modules.vpc.output.vpc_id >>
+      subnet_ids: << modules.vpc.output.private_subnet_ids >>
+```
+
+The template text is what is stored and what `ravion project config pull` exports, so the file round-trips unchanged. `ravion project config apply` orders stack runs so producers run before the modules that reference them, and rejects reference cycles. In `--dry-run` output, a reference is shown together with its resolved value and type when the producer has been applied.
+
+## In pipelines
+
+Pipeline config can read module outputs with the environment-qualified forms (`environments.…` and `projects.…`). A bare `modules.<module>` address is rejected because a pipeline is not tied to one environment. See [module outputs in pipeline templating](/pipelines/templating#module-outputs).
+
+## How references behave
+
+- The value is resolved when the consumer's stack runs, from the producer's last successful apply.
+- If the producer has not been applied yet, the reference is accepted but stays pending. The input is validated against the resolved value once the producer's outputs exist, so apply the producer before running the consumer's stack.
+- Applying a change to a producer does not automatically re-run its consumers. The consumer is marked stale and its next run picks up the new output.
+- A reference binds to the module instance it first resolved to. If you rename a producer's `givenId` and reuse the old one for a different module, the reference keeps pointing at the original instance and a `PRODUCER_RENAMED` warning is recorded so you can update the template.
+- You cannot delete a module or environment while another module still references its outputs. Remove the reference first.
+- Sensitive outputs are never exposed through references. Reference a handle such as an ARN or secret name instead of the secret value.
+- To write a literal `<<` in a value, escape it as `\<<`. The escaped block is stored and passed through as plain text and never evaluated; `\\<<` is a live template preceded by a literal backslash.
+
+## For module authors
+
+By default every non-sensitive Terraform output of the stack is available to consumers. To give consumers a stable contract with labels, descriptions, and types for autocomplete and validation, declare outputs in the module definition:
+
+```yaml
+outputs:
+  - id: vpc_id
+    type: string
+    label: VPC ID
+  - id: private_subnet_ids
+    type: string_array
+    description: Subnets without a route to the internet.
+  - id: admin_password
+    type: string
+    sensitive: true
+```
+
+Declared types are checked against the consumer's input type at save time. Outputs marked `sensitive`, and Terraform outputs marked `sensitive`, cannot be referenced. See [`outputs`](/module-definitions/definition-schema/module) in the definition schema.
+
+Inside a module's own definition, `<< stack.output.<key> >>` (alias `<< module.output.<key> >>`) reads the module's own stack outputs, and `<< ref.stack.output.<key> >>` (alias `<< ref.output.<key> >>`) reads the outputs of a module wired through a `moduleGivenIdRef` input. See [template expressions](/module-definitions/definition-schema/template-expressions).

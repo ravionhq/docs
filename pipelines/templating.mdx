@@ -121,7 +121,7 @@ References the stack outputs of a module instance, as of its last successful app
       BUCKET: << projects.platform.environments.prod.modules.assets.output.bucket_name >>
 ```
 
-All module-output references are resolved once, before the first step starts. If a referenced module has never been applied, or the output key does not exist, the run fails during planning. Outputs a module declares as `sensitive` cannot be referenced; use a handle such as an ARN or secret name instead. These references do not order the pipeline after the module and do not appear as dependencies on the canvas — for module-to-module references, see [reference module outputs](/config-as-code/project-config-file#reference-module-outputs).
+All module-output references are resolved once, before the first step starts. If a referenced module has never been applied, or the output key does not exist, the run fails during planning. Outputs a module declares as `sensitive` cannot be referenced; use a handle such as an ARN or secret name instead. These references do not order the pipeline after the module and do not appear as dependencies on the canvas — for module-to-module references, see [output references](/modules/output-references).
 
 ### trigger.payload
 
