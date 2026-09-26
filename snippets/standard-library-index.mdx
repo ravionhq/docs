@@ -16,6 +16,11 @@
 
     Standalone Application Load Balancer (ALB) with HTTP/HTTPS listeners that multiple services can attach listener rules to.
   </Card>
+  <Card title="AMI" href="/module-definitions/catalog/rvn-aws-ami">
+    `rvn-aws-ami` · v0.1.0
+
+    Creates the EC2 Image Builder infrastructure an AMI is baked on. Each deploy builds an AMI from a parent image and ordered components, copies it to every region, publishes it when asked, and retires older images.
+  </Card>
   <Card title="AWS Compliance" href="/module-definitions/catalog/rvn-aws-compliance">
     `rvn-aws-compliance` · v0.1.0
 
@@ -40,6 +45,11 @@
     `rvn-aws-network` · v1.1.0
 
     Production-ready AWS VPC with public and private subnets, NAT gateways, and compliance-ready flow logs.
+  </Card>
+  <Card title="AWS Secret" href="/module-definitions/catalog/rvn-aws-secret">
+    `rvn-aws-secret` · v1.0.0
+
+    Generates a random value and stores it in SSM Parameter Store or Secrets Manager without it ever appearing in Terraform state.
   </Card>
   <Card title="Static Hosting" href="/module-definitions/catalog/rvn-aws-static">
     `rvn-aws-static` · v1.1.3
