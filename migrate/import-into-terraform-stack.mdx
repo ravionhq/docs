@@ -11,7 +11,7 @@ Use this guide to bring existing resources under the management of your own Terr
 Because you own the Terraform source, this is much simpler than importing into a standard module: add [import blocks](https://opentofu.org/docs/language/import/) to your configuration and let Ravion's normal plan → approval → apply pipeline perform the import. No CLI state surgery required.
 
 <Note>
-  Importing into a Ravion standard library module (`rvn-s3`, `rvn-rds`, and so on)? See [Import into a standard module](/migrate/import-into-standard-module) instead.
+  Importing into a Ravion standard library module (`rvn-s3`, `rvn-rds`, and so on)? See [Import into a standard module](/migrate/import-into-standard-module) instead. Not running your Terraform through Ravion yet? Start with [Run your existing Terraform with Ravion](/migrate/existing-terraform-stack).
 </Note>
 
 ## How it works

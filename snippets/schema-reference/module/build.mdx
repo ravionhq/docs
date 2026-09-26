@@ -364,7 +364,6 @@ Step infrastructure configuration
 
 Note: Additional validation via CEL:
 - exactly one target mode is required: execution_environment_id, or aws_account_id plus region
-- instance_size as array only valid when type == "ec2-spot"
 
 <ResponseField name="execution_environment_id" type="string | null">
   ID or given ID of a pre-configured execution environment
@@ -410,7 +409,7 @@ Note: Additional validation via CEL:
 </ResponseField>
 
 <ResponseField name="instance_size" type="string | string[]" required>
-  Instance size — a single size like "large" or an array like ["large", "xlarge"] for spot fallback
+  EC2 instance type — a single type like "t3.large" or an array like ["t3.large", "t3.xlarge"]; when an array is given the first entry is used
 
   _(templateable)_
 </ResponseField>

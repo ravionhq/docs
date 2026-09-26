@@ -176,13 +176,9 @@ Target groups and listeners are auto-looked-up from the cluster and services at 
 ### EcsDeploymentStrategyConfig
 
 Deployment strategy executed natively by the ECS deployment controller.
-Omit the block entirely for a plain rolling deploy.
-
-Non-rolling strategies require the ECS service to be provisioned with
-blue/green load-balancer wiring (two target groups, production listener
-rule, optional test listener rule, and the ECS infrastructure IAM role)
-— see the `compute/ecs_service` Terraform module's
-`load_balancers[].advanced_configuration`.
+Omit the block for rolling with 100% healthy / DEFERRED cleanup.
+Non-rolling strategies require blue/green load-balancer wiring (two target
+groups, production listener rule, and the ECS infrastructure IAM role).
 
 <ResponseField name="type" type="enum" required>
   Deployment strategy:
@@ -192,6 +188,22 @@ rule, optional test listener rule, and the ECS infrastructure IAM role)
   - canary      — `canary.canary_percent` first, bake, then the rest
 
   Allowed values: `rolling` | `blue_green` | `linear` | `canary`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="minimum_healthy_percent" type="integer | null">
+  Rolling availability floor across both revisions. Omit to preserve
+  the service's existing floor (normally 100).
+
+  _(format:int32,min:0,max:100; templateable)_
+</ResponseField>
+
+<ResponseField name="early_success_criteria" type="EcsDeploymentEarlySuccessCriteria">
+  Rolling success criteria. Always enabled; omitted values default to
+  100% healthy and DEFERRED cleanup. Rollback monitoring ends at success.
+
+  See: [EcsDeploymentEarlySuccessCriteria](#ecsdeploymentearlysuccesscriteria)
 
   _(templateable)_
 </ResponseField>
@@ -433,6 +445,28 @@ Maps to the ECS `deploymentConfiguration.canaryConfiguration` field.
   Default: 10 (AWS default).
 
   _(format:int32,min:0,max:1440; templateable)_
+</ResponseField>
+
+### EcsDeploymentEarlySuccessCriteria
+
+Rolling success overrides. Omitted values use 100% healthy / DEFERRED cleanup.
+
+<ResponseField name="healthy_percent" type="integer | null">
+  Percentage of desired tasks that must be healthy on the new revision.
+  Defaults to 100. Must be at least minimum_healthy_percent. ECS always
+  waits for at least one healthy task on nonzero services, even at 0%.
+
+  _(format:int32,min:0,max:100; templateable)_
+</ResponseField>
+
+<ResponseField name="source_service_revision_cleanup" type="enum | null">
+  Defaults to DEFERRED: old tasks drain after deployment success.
+  BLOCKING waits for old tasks to drain before success. Alarm bake time
+  still applies in both modes.
+
+  Allowed values: `BLOCKING` | `DEFERRED`
+
+  _(templateable)_
 </ResponseField>
 
 ### EcsLinearConfig

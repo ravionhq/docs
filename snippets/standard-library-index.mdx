@@ -7,14 +7,24 @@
     Requests an AWS Certificate Manager public certificate with DNS validation.
   </Card>
   <Card title="Aurora Database" href="/module-definitions/catalog/rvn-aurora">
-    `rvn-aurora` · v1.2.0
+    `rvn-aurora` · v1.3.0
 
     Creates and manages an Amazon Aurora cluster. Supports Aurora PostgreSQL and Aurora MySQL with provisioned or Serverless v2 capacity.
   </Card>
   <Card title="AWS Application Load Balancer" href="/module-definitions/catalog/rvn-aws-alb">
-    `rvn-aws-alb` · v1.0.1
+    `rvn-aws-alb` · v1.1.0
 
     Standalone Application Load Balancer (ALB) with HTTP/HTTPS listeners that multiple services can attach listener rules to.
+  </Card>
+  <Card title="AMI" href="/module-definitions/catalog/rvn-aws-ami">
+    `rvn-aws-ami` · v0.1.0
+
+    Creates the EC2 Image Builder infrastructure an AMI is baked on. Each deploy builds an AMI from a parent image and ordered components, copies it to every region, publishes it when asked, and retires older images.
+  </Card>
+  <Card title="AWS Compliance" href="/module-definitions/catalog/rvn-aws-compliance">
+    `rvn-aws-compliance` · v0.1.0
+
+    Manages an AWS compliance baseline with GuardDuty threat detection and registry-wide ECR image scanning across selected Regions.
   </Card>
   <Card title="AWS IAM Policy" href="/module-definitions/catalog/rvn-aws-iam-policy">
     `rvn-aws-iam-policy` · v1.0.1
@@ -36,38 +46,43 @@
 
     Production-ready AWS VPC with public and private subnets, NAT gateways, and compliance-ready flow logs.
   </Card>
+  <Card title="AWS Secret" href="/module-definitions/catalog/rvn-aws-secret">
+    `rvn-aws-secret` · v1.0.0
+
+    Generates a random value and stores it in SSM Parameter Store or Secrets Manager without it ever appearing in Terraform state.
+  </Card>
   <Card title="Static Hosting" href="/module-definitions/catalog/rvn-aws-static">
-    `rvn-aws-static` · v1.1.1
+    `rvn-aws-static` · v1.1.3
 
     Static file hosting for S3-backed sites and assets delivered through CloudFront.
   </Card>
   <Card title="CloudFront CDN" href="/module-definitions/catalog/rvn-cloudfront">
-    `rvn-cloudfront` · v1.3.0
+    `rvn-cloudfront` · v1.3.2
 
     CloudFront CDN distribution that serves web applications and private S3 buckets from ECS services, standalone ALBs, S3 origins, and other custom origins.
   </Card>
   <Card title="EC2 Service" href="/module-definitions/catalog/rvn-ec2-service">
-    `rvn-ec2-service` · v1.4.2
+    `rvn-ec2-service` · v1.6.1
 
     Runs supervised workloads on a stable EC2 Auto Scaling Group, with optional shared ALB routing and switchable container or manual in-place deploys.
   </Card>
   <Card title="ECS Cluster" href="/module-definitions/catalog/rvn-ecs-cluster">
-    `rvn-ecs-cluster` · v1.0.1
+    `rvn-ecs-cluster` · v1.1.0
 
     Production-ready AWS ECS cluster with Fargate, Fargate Spot, optional EC2 capacity, and shared load balancers.
   </Card>
   <Card title="ECS Network Service" href="/module-definitions/catalog/rvn-ecs-nlb">
-    `rvn-ecs-nlb` · v1.2.0
+    `rvn-ecs-nlb` · v1.6.0
 
     Network Load Balanced ECS service for exposing one to five TCP, UDP, or TLS ports through an ECS cluster Network Load Balancer.
   </Card>
   <Card title="ECS Web Service" href="/module-definitions/catalog/rvn-ecs-web">
-    `rvn-ecs-web` · v1.2.0
+    `rvn-ecs-web` · v1.6.0
 
     Web server ECS service for running an HTTP application behind an ECS cluster load balancer.
   </Card>
   <Card title="ECS Worker" href="/module-definitions/catalog/rvn-ecs-worker">
-    `rvn-ecs-worker` · v1.2.0
+    `rvn-ecs-worker` · v1.6.0
 
     Background worker ECS service for running private container workloads without exposed ports.
   </Card>
@@ -76,18 +91,38 @@
 
     Creates and manages an Amazon EFS file system with mount targets, security groups, automatic backups, and an optional access point.
   </Card>
+  <Card title="EKS Add-ons" href="/module-definitions/catalog/rvn-eks-addons">
+    `rvn-eks-addons` · v0.12.0
+
+    Selectable add-ons for an existing EKS cluster.
+  </Card>
+  <Card title="EKS Cluster" href="/module-definitions/catalog/rvn-eks-cluster">
+    `rvn-eks-cluster` · v0.3.1
+
+    Production-ready Amazon EKS cluster with default managed capacity, core add-ons, and optional Fargate compute. Extend with the EKS Add-ons module (Karpenter, load balancer controller, EBS CSI, Container Insights).
+  </Card>
+  <Card title="EKS Web Service" href="/module-definitions/catalog/rvn-eks-web">
+    `rvn-eks-web` · v1.3.1
+
+    Web server on EKS for running any HTTP application on your Kubernetes cluster behind a shared load balancer, with no Kubernetes manifests or Helm charts to write.
+  </Card>
+  <Card title="EKS Worker" href="/module-definitions/catalog/rvn-eks-worker">
+    `rvn-eks-worker` · v0.6.0
+
+    Background worker on EKS for running a long-lived private process with no exposed port, and no Kubernetes manifests or Helm charts to write.
+  </Card>
   <Card title="ElastiCache" href="/module-definitions/catalog/rvn-elasticache">
     `rvn-elasticache` · v1.0.1
 
     Creates and manages Amazon ElastiCache for Redis, Valkey, Memcached, or serverless Redis-compatible caches.
   </Card>
   <Card title="Lambda Function" href="/module-definitions/catalog/rvn-lambda">
-    `rvn-lambda` · v1.1.0
+    `rvn-lambda` · v1.1.2
 
     AWS Lambda function with zip or container image deployments, alias-based releases, IAM, logs, and optional function URLs.
   </Card>
   <Card title="RDS Database" href="/module-definitions/catalog/rvn-rds">
-    `rvn-rds` · v1.2.0
+    `rvn-rds` · v1.3.0
 
     Creates and manages an Amazon RDS database. Supports PostgreSQL, MySQL, MariaDB, Oracle, and SQL Server engines.
   </Card>
@@ -107,7 +142,7 @@
     S3 bucket with public access blocking, encryption, versioning, CORS, lifecycle rules, and configurable bucket policies.
   </Card>
   <Card title="Terraform Stack" href="/module-definitions/catalog/rvn-stack">
-    `rvn-stack` · v1.2.4
+    `rvn-stack` · v1.3.1
 
     Automate Terraform and OpenTofu workflows with git-driven deployments and managed state.
   </Card>

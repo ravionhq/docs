@@ -1,0 +1,109 @@
+---
+title: "Run Puppeteer or Playwright on ECS"
+description: "Configure headless Chromium for AWS Fargate or EC2 tasks: install the browser in the image, disable the sandbox, size the task, and isolate browser work in a worker service."
+"og:image": "https://www.ravion.com/og/docs/guides/puppeteer-on-ecs.png"
+"twitter:image": "https://www.ravion.com/og/docs/guides/puppeteer-on-ecs.png"
+---
+
+Headless browsers work well on ECS, but three things differ from a laptop: there is no display, the container runs as a process that Chromium's sandbox does not trust, and Chromium needs memory and shared-memory space that the defaults do not provide.
+
+## Install Chromium in the image
+
+Puppeteer and Playwright download a browser at install time, but that browser needs system libraries a plain Node image lacks. The simplest route is the image each project publishes, which ships the browser and its dependencies pre-installed. Both are based on Ubuntu 24.04 (`noble`).
+
+<Tabs>
+  <Tab title="Playwright">
+
+    ```dockerfile
+    FROM mcr.microsoft.com/playwright:v1.63.0-noble
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm ci
+    COPY . .
+    USER pwuser
+    CMD ["node", "server.js"]
+    ```
+
+    The image contains the browsers but not the `playwright` npm package — `npm ci` installs it.
+    Pin the image tag to the exact Playwright version in `package.json`; a mismatch fails at
+    launch because the package looks for a browser build the image does not have. See the
+    [Playwright Docker guide](https://playwright.dev/docs/docker).
+  </Tab>
+  <Tab title="Puppeteer">
+
+    ```dockerfile
+    FROM ghcr.io/puppeteer/puppeteer:25.10.0
+    WORKDIR /home/pptruser/app
+    COPY --chown=pptruser:pptruser package*.json ./
+    RUN npm ci
+    COPY --chown=pptruser:pptruser . .
+    CMD ["node", "server.js"]
+    ```
+
+    The image includes Chrome for Testing, the matching `puppeteer` version, and runs as
+    `pptruser`. Pin the tag to the Puppeteer version in `package.json`. See the
+    [Puppeteer Docker guide](https://pptr.dev/guides/docker).
+
+    If you build on a plain Node image instead, note that npm 11, pnpm, Yarn, and Bun block
+    dependency install scripts by default, so Puppeteer's browser download does not run on
+    `npm ci`. Run `npx puppeteer browsers install chrome` as an explicit build step, and install
+    the [system libraries Chrome needs](https://pptr.dev/troubleshooting#chrome-doesnt-launch-on-linux).
+  </Tab>
+  <Tab title="Distro Chromium">
+
+    ```dockerfile
+    FROM public.ecr.aws/docker/library/node:24-slim
+    RUN apt-get update && apt-get install -y --no-install-recommends \
+        chromium fonts-liberation \
+        && rm -rf /var/lib/apt/lists/*
+    ENV PUPPETEER_SKIP_DOWNLOAD=true \
+        PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm ci
+    COPY . .
+    USER node
+    CMD ["node", "server.js"]
+    ```
+
+    Use Debian's `chromium` package with `puppeteer-core` (or `puppeteer` with the download
+    skipped) when you need an `arm64` image or a smaller one. The package pulls in every library
+    Chromium needs, and there is no second browser download during the build. You get Debian's
+    Chromium release cadence rather than the version Puppeteer was tested against.
+  </Tab>
+</Tabs>
+
+## Launch options
+
+Chromium's sandbox relies on user namespaces that containers usually do not grant, and `/dev/shm` inside a Fargate task is 64 MB — too small for a real page. Disable both:
+
+```js
+const browser = await puppeteer.launch({
+  args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+})
+```
+
+Headless is the default in current Puppeteer and Playwright, so there is nothing to set for it. Playwright takes the same flags via `chromium.launch({ args: [...] })`; on ECS you cannot use the `--ipc=host` alternative the Playwright docs suggest for `/dev/shm`, because Fargate does not support host IPC mode.
+
+<Warning>
+  Only render content you trust with the sandbox disabled. A page that exploits Chromium gains the
+  permissions of the task role. If you render untrusted pages, keep the sandbox on: run as the
+  non-root user the official images provide (`pwuser`, `pptruser`) and give Chromium the
+  `SYS_ADMIN` capability or a seccomp profile that allows user namespaces. Fargate permits
+  neither, so put those tasks on EC2 capacity (`capacity_provider: ec2`).
+</Warning>
+
+## Task sizing
+
+- **Memory.** Budget at least 1 GB per concurrent browser page plus your app. The default `fargate_size` of 2 vCPU / 4 GB handles a couple of pages; raise it before scaling out.
+- **Ephemeral storage.** Chromium writes profiles and caches to disk. If you screenshot or download at volume, increase `task_ephemeral_storage_size_gib` above the 20 GiB Fargate default.
+- **Architecture.** Chrome for Testing, the build Puppeteer downloads, has no Linux `arm64` binaries, so a Puppeteer image built on it runs on `X86_64` only. For `cpu_architecture: ARM64` (Graviton) use the Playwright image, which is published for both architectures, or Debian's `chromium` package.
+
+## Isolate browser work in a worker
+
+Run the browser in a separate [`rvn-ecs-worker`](/module-definitions/catalog/rvn-ecs-worker) that pulls jobs from a queue, rather than in the web service. That keeps a crashed or leaked Chromium from taking down request handling, lets you scale renderers independently, and means the web service does not need the larger image or `--no-sandbox` at all.
+
+## Related pages
+
+- [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web)
+- [`rvn-ecs-worker`](/module-definitions/catalog/rvn-ecs-worker)
