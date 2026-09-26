@@ -34,10 +34,10 @@ When a template is embedded in surrounding text, arrays and objects are rendered
 
 ## In the dashboard
 
-Every module input has an **fx** button that appears when you hover the field.
+Every module input has an **f** button that appears when you hover the field.
 
-- On a text or number input, click **fx** to insert `<< >>` at the cursor. Templates inside the field are highlighted, including inside the YAML and JSON editors for object inputs.
-- On a Boolean or other non-text input, click **fx** to swap the control for a text field where you type the reference. Click it again to stop using a reference and return to the plain control.
+- On a text or number input, click **f** to insert `<< >>` at the cursor. Templates inside the field are highlighted, including inside the YAML and JSON editors for object inputs.
+- On a Boolean or other non-text input, click **f** to swap the control for a text field where you type the reference. Click it again to stop using a reference and return to the plain control.
 - Typing inside `<< >>` opens autocomplete for projects, environments, modules, and output keys. Output rows show the producer's current value from its last successful apply. Autocomplete also works inside expressions such as `<< string(modules.db.output.port) >>`.
 
 On the canvas, a reference draws a connection from the producer to the consumer. Hover a connection to see which output feeds which input and whether it crosses environments.
