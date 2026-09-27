@@ -12,7 +12,7 @@ The stack tracks:
 
 - **Resources** — every Terraform resource the module manages, with its type, address, and the change it went through in each run (create, update, delete, replace).
 - **Change history** — every plan and apply, with resource-change counts and full output.
-- **Outputs** — the stack's Terraform outputs. Other modules consume these through references like `<< ref.stack.output.vpc_id >>`, which is how a web service module finds its cluster and network.
+- **Outputs** — the stack's Terraform outputs. Other modules consume these through [output references](/modules/output-references) like `<< modules.vpc.output.vpc_id >>`, which is how a web service module finds its cluster and network.
 
 ## Stacks change through pipelines
 

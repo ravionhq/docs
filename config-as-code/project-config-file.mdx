@@ -166,6 +166,28 @@ Store the config file in your repository and manage it with the CLI.
   </Step>
 </Steps>
 
+## Reference module outputs
+
+Any module input can take its value from another module's stack output with the `<< … >>` template syntax. Write the template as the input's value; there is no separate field or wrapper.
+
+```yaml
+moduleInstances:
+  - givenId: vpc
+    type: rvn-aws-network
+    version: 0.1.0
+    input:
+      # ...
+
+  - givenId: db
+    type: rvn-rds
+    version: 0.2.0
+    input:
+      vpc_id: << modules.vpc.output.vpc_id >>
+      subnet_ids: << modules.vpc.output.private_subnet_ids >>
+```
+
+The template text is what is stored and what `ravion project config pull` exports, so the file round-trips unchanged. `ravion project config apply` orders stack runs so producers run first and rejects reference cycles. For addresses across environments and projects, expressions, and how references resolve, see [output references](/modules/output-references).
+
 ## Agent tips
 
 Use these rules when an agent edits a project config file.

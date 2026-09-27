@@ -72,6 +72,7 @@
             "pages": [
               "concepts/modules",
               "modules/stack",
+              "modules/output-references",
               "modules/build",
               "modules/deploy",
               "modules/metrics",
