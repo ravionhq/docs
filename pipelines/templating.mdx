@@ -52,14 +52,14 @@ A backslash that should itself stay literal is doubled: `\\<< pipeline.input.x >
 
 | Namespace             | Available in              | Description                                                    |
 | --------------------- | ------------------------- | -------------------------------------------------------------- |
-| `pipeline.input.*`    | steps, rollback, variants | Declared [pipeline inputs](/pipelines/config-reference#inputs) |
-| `pipeline.run.*`      | steps, rollback           | Run metadata: `id`, `description`                              |
-| `pipeline.variant.*`  | steps, rollback           | Current variant: `id`, `name`                                  |
-| `steps.{id}.output.*` | steps, rollback           | Outputs of a previous step                                     |
-| `steps.{id}.input.*`  | steps, rollback           | Inputs of a previous step                                      |
+| `pipeline.input.*`    | steps, variants           | Declared [pipeline inputs](/pipelines/config-reference#inputs) |
+| `pipeline.run.*`      | steps                     | Run metadata: `id`, `description`                              |
+| `pipeline.variant.*`  | steps                     | Current variant: `id`, `name`                                  |
+| `steps.{id}.output.*` | steps                     | Outputs of a previous step                                     |
+| `steps.{id}.input.*`  | steps                     | Inputs of a previous step                                      |
 | `step.input.*`        | current step only         | The current step's own input values                            |
-| `environments.{env}.modules.{module}.output.*` | steps, rollback, variants | Last-applied stack outputs of a [module](#module-outputs) in this project |
-| `projects.{project}.environments.{env}.modules.{module}.output.*` | steps, rollback, variants | Last-applied stack outputs of a module in another project |
+| `environments.{env}.modules.{module}.output.*` | steps, variants           | Last-applied stack outputs of a [module](#module-outputs) in this project |
+| `projects.{project}.environments.{env}.modules.{module}.output.*` | steps, variants           | Last-applied stack outputs of a module in another project |
 | `trigger.payload.*`   | `triggers[].run` only     | Trigger payload fields                                         |
 
 ### pipeline.input
