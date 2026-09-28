@@ -264,3 +264,98 @@ html:not([data-ravion-auth-state])
   ) {
   visibility: hidden;
 }
+
+/* Dark mode palette from the Ravion design system (flightcontrol packages/ui2/tailwind.css).
+   Mintlify derives its gray ramp from the primary colour and uses stock Tailwind hues for
+   callouts, so re-point both at the design-system anchors composited over the app base. */
+:root {
+  --rvn-base: #0f0004;
+  --rvn-anchor-neutral: #fdddc9;
+  --rvn-anchor-orange: #fe6104;
+  --rvn-anchor-purple: #b287ff;
+  --rvn-anchor-green: #88d18a;
+  --rvn-anchor-red: #ff4d61;
+}
+
+/* Mintlify reads these as space-separated RGB channels, so the neutral ramp
+   (anchor mixed over the base at the ui2 step opacities) is precomputed. */
+html.dark {
+  --gray-50: 253 221 201; /* neutral-12 */
+  --gray-100: 253 221 201; /* neutral-12 */
+  --gray-200: 253 221 201; /* neutral-12 */
+  --gray-300: 224 194 177; /* between neutral-11 and 12 */
+  --gray-400: 196 168 154; /* neutral-11 */
+  --gray-500: 136 113 104; /* neutral-10 */
+  --gray-600: 113 91 85; /* neutral-9 */
+  --gray-700: 86 66 63; /* neutral-8 */
+  --gray-800: 51 33 34; /* neutral-7 */
+  --gray-900: 39 22 24; /* neutral-6 */
+  --gray-950: 27 11 14;
+  --color-white: var(--rvn-anchor-neutral);
+}
+
+html.dark [data-component-part="code-block-root"],
+html.dark .dark\:bg-codeblock {
+  background-color: color-mix(in srgb, var(--rvn-anchor-neutral) 5%, var(--rvn-base)) !important;
+}
+
+/* Callouts follow the ui2 Alert: hue-8 border and hue-12 content, over a faint hue tint. */
+html.dark [data-callout-type] {
+  --rvn-callout: var(--rvn-anchor-purple);
+  background-color: color-mix(in srgb, var(--rvn-callout) 5%, var(--rvn-base)) !important;
+  border-color: color-mix(in srgb, var(--rvn-callout) 30%, var(--rvn-base)) !important;
+}
+
+html.dark [data-callout-type="warning"] {
+  --rvn-callout: var(--rvn-anchor-orange);
+}
+
+html.dark :is([data-callout-type="tip"], [data-callout-type="check"]) {
+  --rvn-callout: var(--rvn-anchor-green);
+}
+
+html.dark :is([data-callout-type="danger"], [data-callout-type="error"]) {
+  --rvn-callout: var(--rvn-anchor-red);
+}
+
+html.dark [data-callout-type] > *,
+html.dark [data-callout-type] svg {
+  color: var(--rvn-callout) !important;
+}
+
+/* Mermaid's built-in dark theme paints clusters, default nodes, edges, and edge
+   labels in cool grays. Its rules are ID-scoped, hence !important; classDef
+   rules are ID-scoped !important too, so authored node colours still win. */
+html.dark svg[id^="mermaid"] :is(.node rect, .node polygon, .node circle, .node path) {
+  fill: color-mix(in srgb, var(--rvn-anchor-neutral) 10%, var(--rvn-base)) !important;
+  stroke: color-mix(in srgb, var(--rvn-anchor-neutral) 30%, var(--rvn-base)) !important;
+}
+
+html.dark svg[id^="mermaid"] .cluster rect {
+  fill: color-mix(in srgb, var(--rvn-anchor-neutral) 5%, var(--rvn-base)) !important;
+  stroke: color-mix(in srgb, var(--rvn-anchor-neutral) 15%, var(--rvn-base)) !important;
+}
+
+html.dark svg[id^="mermaid"] :is(.cluster text, .cluster-label, .cluster-label *) {
+  fill: var(--rvn-anchor-neutral) !important;
+  color: var(--rvn-anchor-neutral) !important;
+}
+
+html.dark svg[id^="mermaid"] :is(.flowchart-link, .edgePath path, .transition) {
+  stroke: color-mix(in srgb, var(--rvn-anchor-neutral) 51%, var(--rvn-base)) !important;
+}
+
+html.dark svg[id^="mermaid"] :is(.arrowMarkerPath, marker path) {
+  fill: color-mix(in srgb, var(--rvn-anchor-neutral) 51%, var(--rvn-base)) !important;
+  stroke: color-mix(in srgb, var(--rvn-anchor-neutral) 51%, var(--rvn-base)) !important;
+}
+
+html.dark svg[id^="mermaid"] :is(.edgeLabel, .edgeLabel p, .edgeLabel span, .labelBkg) {
+  background-color: var(--rvn-base) !important;
+  color: color-mix(in srgb, var(--rvn-anchor-neutral) 76%, var(--rvn-base)) !important;
+}
+
+html.dark svg[id^="mermaid"] .edgeLabel rect {
+  fill: var(--rvn-base) !important;
+  opacity: 1 !important;
+}
