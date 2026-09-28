@@ -173,6 +173,20 @@ ravion billing plan list [flags]
 | `--limit <int>` |  | limit |
 | `-v, --verbose` |  | show full output |
 
+#### `ravion billing plan preview`
+
+Report what changing to a billing plan would do, without changing anything
+
+```bash
+ravion billing plan preview <planId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
 #### `ravion billing plan set`
 
 Change the organization's billing plan
@@ -203,6 +217,27 @@ ravion billing portal-session [flags]
 | --- | --- | --- |
 | `--return-url <string>` | yes | Where Stripe sends the user back to after they finish in the portal. Must be an app origin. |
 | `--json` |  | emit response as JSON |
+
+### `ravion billing set-address`
+
+Set the address invoices are issued to and the tax registration they carry
+
+```bash
+ravion billing set-address [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--city <string>` | yes | city |
+| `--country <string>` | yes | Two-letter ISO country code. |
+| `--line1 <string>` | yes | line1 |
+| `--name <string>` | yes | Name invoices are addressed to, usually the company. |
+| `--postal-code <string>` | yes | postalCode |
+| `--json` |  | emit response as JSON |
+| `--line2 <string>` |  | line2 |
+| `--tax-id <string>` |  | The tax registration number to charge invoices under, e.g. a VAT number or EIN; its Stripe type follows the address country. Omit to remove the registration on file. |
 
 ### `ravion billing usage-summary`
 
@@ -237,6 +272,7 @@ ravion billing usage-summary list [flags]
 | Flag | Required | Description |
 | --- | --- | --- |
 | `--cursor <string>` |  | cursor |
+| `--granularity <string>` |  | Bucket the usage by billing period (the default) or by UTC day. Available values: MONTH, DAY. |
 | `--json` |  | emit response as JSON |
 | `--limit <int>` |  | limit |
 | `--period <strings>` |  | period |

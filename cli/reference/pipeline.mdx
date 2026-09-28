@@ -394,6 +394,7 @@ ravion pipeline step-execution list [flags]
 | `--module-instance-ids <strings>` |  | Return step executions acting on any of these module instances, newest first. |
 | `--pipeline-run-id <string>` |  | pipelineRunId |
 | `--pipeline-run-ids <strings>` |  | Batch filter: return step executions for any of these run ids in one call. |
+| `--sandbox-host-id <string>` |  | Return the step executions that ran on this sandbox pool host, the EC2 instance id the host list names. |
 | `--step-type <build>` |  | Filter to step executions of any of these step types, such as build or `deploy`. |
 | `-v, --verbose` |  | show full output |
 
@@ -486,4 +487,18 @@ ravion pipeline version list [flags]
 | `--limit <int>` |  | limit |
 | `--pipeline-id <string>` |  | pipelineId |
 | `-v, --verbose` |  | show full output |
+
+#### `ravion pipeline version sandbox-plan`
+
+Get a pipeline version's sandbox host plan
+
+```bash
+ravion pipeline version sandbox-plan <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
 

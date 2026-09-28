@@ -58,7 +58,7 @@ ravion stack list [flags]
 | `--environment-id <string>` |  | environmentId |
 | `--json` |  | emit response as JSON |
 | `--limit <int>` |  | limit |
-| `--project-id <string>` |  | projectId |
+| `--project-id <strings>` |  | Projects to list stacks for. Repeat the parameter to ask about several. |
 | `-v, --verbose` |  | show full output |
 
 ### `ravion stack resource-count`
@@ -105,7 +105,8 @@ ravion stack unlock <id> [flags]
 
 | Flag | Required | Description |
 | --- | --- | --- |
-| `--force` |  | Release the lock while a run is still active on the stack. This covers a run that never completes and does not respond to cancellation, which is not expected behaviour. That run keeps going, and its state write is refused once the lock is gone, so the run fails and any cloud resources it already changed go unrecorded. State from completed operations is untouched. Cancel the run first whenever cancellation succeeds. |
+| `--force` |  | Release the lock while the run that took it is still active, or when the lock was taken outside a pipeline run. This covers a run that never completes and does not respond to cancellation, which is not expected behaviour. That run keeps going, and its state write is refused once the lock is gone, so the run fails and any cloud resources it already changed go unrecorded. State from completed operations is untouched. Cancel the run first whenever cancellation succeeds. |
 | `--json` |  | emit response as JSON |
+| `--lock-id <lockId>` |  | The lockId of the lock you reviewed, as returned by the lock endpoint. When the stack now holds a different lock, the request returns 409 and releases nothing, so a lock taken after you looked is never released in its place. An already-released lock still succeeds and changes nothing. |
 | `-y, --yes` |  | skip confirmation prompt |
 

@@ -73,6 +73,7 @@ ravion environment execution create [flags]
 | `--type <string>` | yes | type. Available values: AWS. |
 | `--vpc-id <string>` | yes | vpcId |
 | `--json` |  | emit response as JSON |
+| `--sandboxes <null>` |  | The microVM sandbox pool. Send null to remove it, which tears the pool's hosts, group and template down. Omitting the field on a patch leaves the pool as it is. |
 
 #### `ravion environment execution delete`
 
@@ -120,6 +121,21 @@ ravion environment execution list [flags]
 | `--limit <int>` |  | limit |
 | `-v, --verbose` |  | show full output |
 
+#### `ravion environment execution sandbox-hosts`
+
+List sandbox pool hosts
+
+```bash
+ravion environment execution sandbox-hosts <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `-v, --verbose` |  | show full output |
+
 #### `ravion environment execution update`
 
 Patch ExecutionEnvironment
@@ -137,6 +153,7 @@ ravion environment execution update <id> [flags]
 | `--json` |  | emit response as JSON |
 | `--name <string>` |  | name |
 | `--region <string>` |  | region |
+| `--sandboxes <null>` |  | The microVM sandbox pool. Send null to remove it, which tears the pool's hosts, group and template down. Omitting the field on a patch leaves the pool as it is. |
 | `--security-group-id <string>` |  | securityGroupId |
 | `--subnet-id <string>` |  | subnetId |
 | `--type <string>` |  | type. Available values: AWS. |

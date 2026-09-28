@@ -27,11 +27,11 @@ ravion logs cloudwatch [flags]
 | `--aws-account-id <string>` | yes | Database ID of the AwsAccount to use for credentials |
 | `--log-group-name <string>` | yes | CloudWatch log group name |
 | `--region <string>` | yes | AWS region where logs are stored |
+| `--log-stream-names <strings>` | one of | Explicit list of log stream names to filter by. Pass this or --log-stream-prefix, not both. |
+| `--log-stream-prefix <string>` | one of | Log stream prefix to filter by. Pass this or --log-stream-names, not both. |
 | `--end-time <string>` |  | End time for historical logs (ISO 8601) |
 | `--filter-pattern <string>` |  | Optional CloudWatch FilterPattern |
 | `--json` |  | emit response as JSON |
-| `--log-stream-names <strings>` |  | Explicit list of log stream names to filter by |
-| `--log-stream-prefix <string>` |  | Log stream prefix to filter by |
 | `--start-time <string>` |  | Start time for historical logs (ISO 8601) |
 | `--tail` |  | Switch to live tail mode after fetching historical logs |
 
@@ -47,10 +47,10 @@ ravion logs eks-loki [flags]
 
 | Flag | Required | Description |
 | --- | --- | --- |
-| `--deployment-resource-id <string>` |  | EKS workload deployment resource to tail. Mutually exclusive with --log-source-key. |
+| `--deployment-resource-id <string>` | one of | EKS workload deployment resource to tail. Mutually exclusive with --log-source-key. |
+| `--log-source-key <<moduleInstanceId>::<logSourceId>>` | one of | Composite &lt;moduleInstanceId&gt;::&lt;logSourceId&gt; key of the ui.logs source to tail. Mutually exclusive with --deployment-resource-id. |
 | `--end-time <string>` |  | Inclusive end of the historical phase (ISO 8601). Defaults to now. |
 | `--json` |  | emit response as JSON |
-| `--log-source-key <<moduleInstanceId>::<logSourceId>>` |  | Composite &lt;moduleInstanceId&gt;::&lt;logSourceId&gt; key of the ui.logs source to tail. Mutually exclusive with --deployment-resource-id. |
 | `--search <string>` |  | Case-sensitive substring the line must contain, compiled to a LogQL line filter. A plain string rather than the structured filter tree because a recursive model cannot ride a query param on an SSE GET. |
 | `--start-time <string>` |  | Inclusive start of the historical phase (ISO 8601). Defaults to fifteen minutes before now. |
 | `--tail` |  | Continue into a live tail after the historical phase. |
