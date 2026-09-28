@@ -35,16 +35,19 @@ rss: true
 <Update
   label="September 28, 2026"
   rss={{
-    title: "AMI deployments, new compliance and secret modules, clearer deployment status, and more reliable pipeline and resource recovery",
+    title: "Module output references, AMI deployments, new project navigation, and new compliance and secret modules",
   }}
 >
 
 ## Platform
+### Features
+- **Module output references:** Set any module input from another module's stack output with a `<< >>` template in the dashboard, the project config file, or a pipeline, including across environments and projects. See [output references](https://www.ravion.com/docs/modules/output-references).
+- **AMI deployments:** The new [AMI](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-ami) module releases an AMI with every deploy. Each deploy builds the image with EC2 Image Builder, copies it to every region, publishes it when requested, and retires older images. Redeploys and rollbacks release earlier images again without rebuilding.
+- **New project navigation:** A new project sidebar keeps environments and pipelines visible and easy to navigate. When viewing a module, a module sidebar lets you switch to another module.
 ### Improvements
 - Deployment logs now show that they are waiting when a running step has not produced logs yet.
 - The dashboard now uses a scaled desktop layout on phones so content fits the screen.
 - Projects pages now open the only project directly when you enter an organization with one project.
-- Module sidebars now prioritize module names, show the latest actionable stack status, and open directly to the stack when attention is needed.
 - Route loading now shows page-specific skeletons instead of a blank dashboard shell.
 - [`instance_size`](https://www.ravion.com/docs/pipelines/config-reference#ec2stepinfrastructure) arrays are now accepted for EC2 infrastructure configuration.
 ### Fixes
@@ -53,12 +56,9 @@ rss: true
 - Failed resource loads now show an error with a retry option instead of an endless loading state.
 - GitLab subgroup repository URLs now work in code-source lookups and no longer appear as unexpected server errors when unconnected.
 - Authenticated requests for Terraform resources with encoded slashes now remain authenticated.
-- Pipeline triggers now use the last known entitlement state when a billing provider read fails, so matching runs are not silently dropped.
 - EKS deployments now release abandoned targets and report blocked deployments instead of waiting indefinitely.
-- EKS deployments no longer roll back solely because the coordinator restarts while waiting for the deployment result.
 - Project configuration dry runs now fail clearly when a values input names no connected resource.
 - Failed requests now retry only transient network, timeout, gateway, and rate-limit errors, while deterministic errors are not resent.
-- Billing usage periods now follow the active contract dates after contract changes.
 ## AWS account IAM policy 1.0.47 → 1.0.48
 - **AMI deployments:** Ravion can build images with EC2 Image Builder, copy them to other regions, tag and publish them, retire older images, and manage its own image resources.
 
@@ -67,7 +67,7 @@ Update your AWS account connection in organization settings.
 ## Modules
 ### New modules
 - **[AMI](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-ami)** 0.1.0: Provision EC2 Image Builder infrastructure that builds AMIs, copies them to additional regions, publishes them when requested, and retires older images.
-- **[AWS Compliance](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-compliance)** 0.1.0: Enable GuardDuty and registry-wide ECR scan-on-push across selected AWS Regions.
+- **[AWS Compliance](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-compliance)** 0.1.0: Enable GuardDuty and registry-wide Basic ECR scan-on-push across selected AWS Regions. Applying replaces any existing ECR Enhanced scanning or custom filters, so review your current configuration first.
 - **[AWS Secret](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-secret)** 1.0.0: Generate random keys and passwords in Parameter Store or Secrets Manager without storing them in Terraform state or Ravion, with optional multi-Region replication.
 ### [Aurora Database](https://www.ravion.com/docs/module-definitions/catalog/rvn-aurora) [1.2.1](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%401.2.1) → [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%401.3.0)
 - Add storage capacity and read/write IOPS alarms for Aurora, including Serverless v2.
