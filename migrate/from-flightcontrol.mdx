@@ -223,16 +223,21 @@ Ravion's ECS cluster is now a standalone module that includes shared load balanc
 
 Flightcontrol's `fromService` reused one service's build for another, such as a Rails web service and its worker. In Ravion, each ECS module with `build_source: ecr` gets its own managed ECR repository, so the pipeline builds once, pushes the image to each repository, and deploys the same digest to both modules:
 
-```yaml pipeline.yaml highlight={13-19,28,33}
+```yaml pipeline.yaml highlight={19-28,39,44}
 inputs:
   - id: commit
     type: string
+variants:
+  - id: production
+    name: Production
 steps:
   - id: build_image
+    name: Build image
     type: build:image
     source:
       type: git
       repo: https://github.com/my-org/my-app
+      branch: main
       ref: << pipeline.input.commit >>
     builder:
       type: dockerfile
@@ -240,21 +245,27 @@ steps:
       - id: ecr_web
         type: ecr
         repository_arn: << environments.production.modules.web.output.ecr_repository_arn >>
+        tags:
+          - << pipeline.input.commit >>
       - id: ecr_worker
         type: ecr
         repository_arn: << environments.production.modules.worker.output.ecr_repository_arn >>
+        tags:
+          - << pipeline.input.commit >>
     infrastructure:
       type: ec2
       instance_size: c7a.2xlarge
+      aws_account_id: prod-aws
+      region: us-east-1
   - parallel:
       - id: deploy_web
         type: deploy
-        module_instance: production.web
+        module_instance: << pipeline.variant.id >>.web
         input:
           image_ref: << steps.build_image.output.image_digest >>
       - id: deploy_worker
         type: deploy
-        module_instance: production.worker
+        module_instance: << pipeline.variant.id >>.worker
         input:
           image_ref: << steps.build_image.output.image_digest >>
 ```
@@ -263,7 +274,14 @@ See [One image build, two deploys](/pipelines/examples#one-image-build-two-deplo
 
 ### `nixpacks` builds
 
-The ECS modules' `build_source` doesn't include `nixpacks`. Use `railpack` for new services — it's the maintained successor and auto-detects the same frameworks. If you need the image to match your Flightcontrol `nixpacks` build exactly during the migration, set `build_source: ecr` on the module and build in a pipeline with a `build:image` step using `builder: {type: nixpacks}`, as in the example above. The `nixpacks` builder is deprecated, so plan to move to `railpack` afterward.
+The ECS modules' `build_source` doesn't include `nixpacks`. Use `railpack` for new services — it's the maintained successor and auto-detects the same frameworks. If you want to keep building with `nixpacks` during the migration, set `build_source: ecr` on the module and use a pipeline like the one above, replacing its `builder` block:
+
+```yaml pipeline.yaml
+    builder:
+      type: nixpacks
+```
+
+This keeps the same builder as Flightcontrol, but the resulting image can still differ if Flightcontrol set `nixpacks` options or versions that you don't reproduce. The `nixpacks` builder is deprecated, so plan to move to `railpack` afterward.
 
 ### Static site
 
