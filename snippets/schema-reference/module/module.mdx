@@ -49,3 +49,10 @@ Defines the module input form configuration and related metadata.
   Human-readable module documentation in Markdown.
   Supports multiline content.
 </ResponseField>
+
+<ResponseField name="outputs" type="OutputProperty[]">
+  Declared stack outputs.
+  Optional: modules without this field fall back to apply-derived outputs.
+
+  See: [OutputProperty](/module-definitions/definition-schema/other-types#outputproperty)
+</ResponseField>

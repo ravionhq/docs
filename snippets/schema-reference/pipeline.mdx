@@ -2620,4 +2620,6 @@ Ternary: `<< condition ? trueVal : falseVal >>`. Default fallback: `<< input.x |
 
 Access: `array[0]`, `map["key"]`, `map.key`. Functions: `len()`, `upper()`, `lower()`.
 
-Available namespaces: `pipeline.input.*`, `pipeline.run.{id,description}`, `pipeline.variant.{id,name}`, `steps.{id}.{output,input}.*`, `step.input.*`, `trigger.payload.{branch,commit,ref,repository,event,tag}`.
+Escaping: write `\<<` to emit a literal `<<`; an escaped block is kept as text and never evaluated. A backslash that itself needs to be literal doubles (`\\<<` is a live template preceded by a backslash).
+
+Available namespaces: `pipeline.input.*`, `pipeline.run.{id,description}`, `pipeline.variant.{id,name}`, `steps.{id}.{output,input}.*`, `step.input.*`, `environments.{env}.modules.{module}.output.*` and `projects.{project}.environments.{env}.modules.{module}.output.*` (last-applied stack outputs of a module; steps, rollback, variants only — bare `modules.*` is not allowed in pipeline configs), `trigger.payload.{branch,commit,ref,repository,event,tag}`.

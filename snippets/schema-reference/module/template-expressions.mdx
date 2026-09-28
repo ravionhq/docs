@@ -32,7 +32,9 @@ Ternary: `<< condition ? trueVal : falseVal >>`. Default fallback: `<< input.x |
 
 Access: `array[0]`, `map["key"]`, `map.key`. Functions: `len()`, `upper()`, `lower()`.
 
-Available namespaces: `module.input.*`, `stack.id`, `trigger.payload.{branch,commit,ref,repository,event,tag}`.
+Escaping: write `\<<` to emit a literal `<<`; an escaped block is kept as text and never evaluated. A backslash that itself needs to be literal doubles (`\\<<` is a live template preceded by a backslash).
+
+Available namespaces: `module.input.*`, `stack.output.*` (own stack outputs; `module.output.*` is an accepted alias), `stack.id`, `trigger.payload.{branch,commit,ref,repository,event,tag}`.
 
 Array spreads can insert an array expression into an array field:
 

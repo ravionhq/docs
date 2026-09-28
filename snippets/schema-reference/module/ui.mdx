@@ -114,7 +114,8 @@ individual fields) from stack outputs.
 A metric displayed in the module UI.
 Used to show CloudWatch metrics or other time-series data. Every field is
 templateable so module authors can pass an entire metric definition as a
-stack output (e.g. `<< stack.output.cpu_metric >>`) or template individual
+module output (e.g. `<< module.output.cpu_metric >>`; legacy
+`<< stack.output.cpu_metric >>` remains supported) or template individual
 fields piecemeal.
 
 <ResponseField name="id" type="string" required>
@@ -416,7 +417,8 @@ instance).
 ### CloudWatchMetricSource
 
 CloudWatch-backed metric source. Module authors fill this in with literal
-values or templated references (e.g. `<< stack.output.* >>`). The server
+values or templated references (e.g. `<< module.output.* >>`; legacy
+`<< stack.output.* >>` remains supported). The server
 uses `aws_account_id` to look up credentials and `region` to scope the
 CloudWatch call — no ARN parsing required. Every field is templateable
 so the entire source can be wired from a stack output map.
