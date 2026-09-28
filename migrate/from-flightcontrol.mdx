@@ -130,7 +130,7 @@ Your organization has a module catalog that has our standard library of modules 
 | **RDS database**<br />`rds`                               | `rvn-rds`                                            | PostgreSQL, MySQL, MariaDB, Oracle, or SQL Server.                                                                                 |
 | **ElastiCache**<br />`elasticache`                        | `rvn-elasticache`                                    | Redis, Valkey, Memcached, or serverless Redis-compatible caches.                                                                   |
 | **S3 bucket**<br />`s3`                                   | `rvn-s3`                                             | Buckets with policies, encryption, versioning, and lifecycle rules.                                                                |
-| **Shared image**<br />`fromService`                        | `build:image` pipeline step + `build_source: ecr` on each module | Build the image once, push it to every module's managed ECR repository, then deploy the same digest to each module. See [Services that share an image](#services-that-share-an-image-fromservice). |
+| **Shared image**<br />`fromService`                        | `build` step on the owning module + `build_source: image_registry` on the others | Build the owning service once, point the other services' `image_repository` at its ECR repository, and deploy the same digest to each. See [Services that share an image](#services-that-share-an-image-fromservice). |
 | **`nixpacks` builds**<br />`buildType: nixpacks`          | `build_source: railpack`, or a `build:image` step with the `nixpacks` builder | Module `build_source` has no `nixpacks` option. Switch to `railpack`, or keep exact image parity with a pipeline build. See [`nixpacks` builds](#nixpacks-builds). |
 | **Job Scheduler**<br />`scheduler` or `fargate-scheduler` | Not available yet                                    | Job scheduler support is still coming.                                                                                             |
 
@@ -221,60 +221,61 @@ Ravion's ECS cluster is now a standalone module that includes shared load balanc
 
 ### Services that share an image (`fromService`)
 
-Flightcontrol's `fromService` reused one service's build for another, such as a Rails web service and its worker. In Ravion, each ECS module with `build_source: ecr` gets its own managed ECR repository, so the pipeline builds once, pushes the image to each repository, and deploys the same digest to both modules:
+Flightcontrol's `fromService` reused one service's build for another, such as a Rails web service and its worker. In Ravion, keep the normal build settings on the service that owns the image, and point the other service at that image with `build_source: image_registry`:
 
-```yaml pipeline.yaml highlight={19-28,39,44}
+```yaml ravion.yaml highlight={13-14}
+- givenId: web
+  type: rvn-ecs-web
+  version: 1.0.0
+  input:
+    build_source: dockerfile
+    source_repo: https://github.com/my-org/my-app
+    # ...
+
+- givenId: worker
+  type: rvn-ecs-worker
+  version: 1.0.0
+  input:
+    build_source: image_registry
+    image_repository: << modules.web.output.ecr_repository_url >>
+    image_start_command: ["bundle", "exec", "sidekiq"]
+    # ...
+```
+
+Then the pipeline builds `web` once with a `build` step and deploys the result to both services:
+
+```yaml pipeline.yaml highlight={9-13,19,24}
 inputs:
-  - id: commit
+  - id: branch
     type: string
+    default: main
 variants:
   - id: production
     name: Production
 steps:
-  - id: build_image
-    name: Build image
-    type: build:image
-    source:
-      type: git
-      repo: https://github.com/my-org/my-app
-      branch: main
-      ref: << pipeline.input.commit >>
-    builder:
-      type: dockerfile
-    destinations:
-      - id: ecr_web
-        type: ecr
-        repository_arn: << environments.production.modules.web.output.ecr_repository_arn >>
-        tags:
-          - << pipeline.input.commit >>
-      - id: ecr_worker
-        type: ecr
-        repository_arn: << environments.production.modules.worker.output.ecr_repository_arn >>
-        tags:
-          - << pipeline.input.commit >>
-    infrastructure:
-      type: ec2
-      instance_size: c7a.2xlarge
-      aws_account_id: prod-aws
-      region: us-east-1
+  - id: build_web
+    type: build
+    module_instance: << pipeline.variant.id >>.web
+    input:
+      branch: << pipeline.input.branch >>
   - parallel:
       - id: deploy_web
         type: deploy
         module_instance: << pipeline.variant.id >>.web
         input:
-          image_ref: << steps.build_image.output.image_digest >>
+          image_ref: << steps.build_web.output.image_digest >>
       - id: deploy_worker
         type: deploy
         module_instance: << pipeline.variant.id >>.worker
         input:
-          image_ref: << steps.build_image.output.image_digest >>
+          image_ref: << steps.build_web.output.image_digest >>
 ```
 
-See [One image build, two deploys](/pipelines/examples#one-image-build-two-deploys) and [module output references](/pipelines/templating#module-outputs).
+The worker's `image_repository` has no tag, so pass the digest (`image_digest`) as `image_ref`, not the full digest-pinned `build_ref` URI. See [Parallel builds, then parallel deploys](/pipelines/examples#parallel-builds-then-parallel-deploys) and [output references](/modules/output-references).
 
 ### `nixpacks` builds
 
-The ECS modules' `build_source` doesn't include `nixpacks`. Use `railpack` for new services — it's the maintained successor and auto-detects the same frameworks. If you want to keep building with `nixpacks` during the migration, set `build_source: ecr` on the module and use a pipeline like the one above, replacing its `builder` block:
+The ECS modules' `build_source` doesn't include `nixpacks`. Use `railpack` for new services — it's the maintained successor and auto-detects the same frameworks. If you want to keep building with `nixpacks` during the migration, set `build_source: ecr` on the module and build it in a pipeline with a [`build:image` step](/pipelines/step-types#build%3Aimage) that pushes to the module's `ecr_repository_arn` output, using this `builder` block:
 
 ```yaml pipeline.yaml
     builder:
