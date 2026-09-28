@@ -188,6 +188,28 @@ moduleInstances:
 
 The template text is what is stored and what `ravion project config pull` exports, so the file round-trips unchanged. `ravion project config apply` orders stack runs so producers run first and rejects reference cycles. For addresses across environments and projects, expressions, and how references resolve, see [output references](/modules/output-references).
 
+## Use existing infrastructure instead of a module reference
+
+Every dependency input (`network`, `cluster`, and other inputs typed `$ref:<module-type>`) is backed by a set of **mapped inputs** — the account, region, VPC, subnet, listener, and other values the module normally copies from the referenced module. To point a module at infrastructure Ravion doesn't manage, set the dependency input to `null` and set those mapped inputs directly as sibling keys:
+
+```yaml ravion.yaml highlight={6-13}
+- givenId: cache
+  name: Cache
+  type: rvn-elasticache
+  version: 1.0.1
+  input:
+    network: null # no rvn-aws-network module; values below are entered manually
+    aws_account_id: <awsact-id>
+    aws_region: us-east-1
+    vpc_id: vpc-0f1e2d3c4b5a69788
+    subnet_ids:
+      - subnet-0aca23ae260d07a18
+      - subnet-05fa9ed3367b958af
+    # ...remaining cache inputs
+```
+
+The mapped input keys for each dependency are listed under that input in the module's [catalog page](/module-definitions/standard-library) and in `ravion module schema <module-type>`. For a full example with an imported database, see [Import into a standard module](/migrate/import-into-standard-module#manual-walkthrough).
+
 ## Agent tips
 
 Use these rules when an agent edits a project config file.

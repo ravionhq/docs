@@ -41,7 +41,7 @@ The Route 53 records are the same in every topology — only the record name cha
 
 Add one copy of your network, certificate, cluster, and web service per region. Use region-suffixed `givenId`s and set `aws_region` on the modules that take it. Give each web service `build_source: ecr` so Ravion manages an ECR repository in that region without a per-region build; the pipeline in the next section pushes the image to all of them.
 
-```yaml ravion.yaml highlight={8,18,46,56,66,94}
+```yaml ravion.yaml highlight={8,18,47,57,67,96}
 modules:
   # ---------- us-east-2 ----------
   - givenId: vpc-use2
@@ -60,7 +60,8 @@ modules:
     input:
       aws_account_id: my-aws-account
       aws_region: us-east-2
-      domain_name: "*.example.com"
+      domains:
+        - "*.example.com"
       route53_validation_records_creation_enabled: true
       route53_zone_id: Z1234567890ABC
       certificate_validation_wait_enabled: true
@@ -108,7 +109,8 @@ modules:
     input:
       aws_account_id: my-aws-account
       aws_region: eu-west-1
-      domain_name: "*.example.com"
+      domains:
+        - "*.example.com"
       route53_validation_records_creation_enabled: true
       route53_zone_id: Z1234567890ABC
       certificate_validation_wait_enabled: true
@@ -274,7 +276,7 @@ Keep the latency records from Step 3 but rename them to an **origin hostname**, 
     Point `origin_domain_name` at the latency-routed hostname. CloudFront needs its own certificate
     in `us-east-1`:
 
-    ```yaml ravion.yaml highlight={7,19-20,24-25}
+    ```yaml ravion.yaml highlight={7,20-21,25-26}
     - givenId: api-cert-use1
       name: API certificate us-east-1 (CloudFront)
       type: rvn-acm-certificate
@@ -282,7 +284,8 @@ Keep the latency records from Step 3 but rename them to an **origin hostname**, 
       input:
         aws_account_id: my-aws-account
         aws_region: us-east-1 # CloudFront certificates must be in us-east-1
-        domain_name: "*.example.com"
+        domains:
+          - "*.example.com"
         route53_validation_records_creation_enabled: true
         route53_zone_id: Z1234567890ABC
         certificate_validation_wait_enabled: true

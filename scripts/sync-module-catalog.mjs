@@ -323,7 +323,7 @@ function renderRelationsSection(definition, graph) {
     "",
     rendered.diagram,
     "",
-    "_Every dependency input can be specified manually to reference existing external infrastructure rather than a Ravion module._",
+    "_Every dependency input can be specified manually to reference existing external infrastructure rather than a Ravion module. Set the dependency input to `null` and set its mapped inputs directly; see [Use existing infrastructure instead of a module reference](/config-as-code/project-config-file#use-existing-infrastructure-instead-of-a-module-reference)._",
   ].join("\n");
 }
 
