@@ -72,15 +72,16 @@ ACM public certificates use DNS validation: ACM gives you one CNAME record per d
 
 If the domain already has a Route 53 public hosted zone in the same AWS account, let the certificate stack create the validation records and wait for issuance in a single apply:
 
-```yaml ravion.yaml highlight={9-11}
+```yaml ravion.yaml highlight={10-12}
 - givenId: app-cert
   name: App certificate
   type: rvn-acm-certificate
-  version: 0.3.1
+  version: 1.0.1
   input:
     aws_account_id: my-aws-account
     aws_region: us-east-2 # us-east-1 for CloudFront or static sites
-    domain_name: app.example.com
+    domains:
+      - app.example.com
     route53_validation_records_creation_enabled: true
     route53_zone_id: Z1234567890ABC
     certificate_validation_wait_enabled: true
@@ -97,11 +98,12 @@ If DNS is managed in Cloudflare, your registrar, or any other provider, use the 
 - givenId: app-cert
   name: App certificate
   type: rvn-acm-certificate
-  version: 0.3.1
+  version: 1.0.1
   input:
     aws_account_id: my-aws-account
     aws_region: us-east-2 # us-east-1 for CloudFront or static sites
-    domain_name: app.example.com
+    domains:
+      - app.example.com
 ```
 
 In this mode the module is non-blocking: the apply requests the certificate and finishes while it's still **Pending validation**, and outputs the validation records for you to create in [Step 2](#step-2-validate-the-certificate-with-dns).
@@ -111,7 +113,7 @@ In this mode the module is non-blocking: the apply requests the certificate and 
 
 Keep these rules in mind when filling in the certificate fields:
 
-- **`domain_name`** is the primary fully qualified domain name, such as `app.example.com`, or a wildcard like `*.example.com`. It's immutable after creation — to change it, create a new certificate module.
+- **`domains`** is a list of fully qualified domain names, such as `app.example.com`, or wildcards like `*.example.com`. The first entry is the primary domain and the rest become subject alternative names. It's immutable after creation — to change it, create a new certificate module. (Versions before 0.4.0 used separate `domain_name` and `subject_alternative_names` inputs.)
 - **`aws_region`** must match where the certificate is consumed: the ECS cluster's region, or `us-east-1` for CloudFront.
 
 Apply the change to run the stack pipeline:
@@ -405,7 +407,7 @@ Because of this, never delete the validation CNAME records after issuance — re
 
 | Symptom                                                             | Likely cause                                                                  | Fix                                                                                                                  |
 | ------------------------------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Certificate stuck in **Pending validation**                         | Validation CNAMEs missing, mistyped, or proxied                               | Recheck record name/value against the stack outputs; in Cloudflare, set the record to DNS only                       |
+| Certificate stuck in **Pending validation**                         | Validation CNAMEs missing, mistyped, or behind the Cloudflare proxy                                     | Recheck record name/value against the stack outputs; in Cloudflare, set the record to DNS only                       |
 | Validation never completes despite correct CNAMEs                   | A `CAA` record on the domain blocks Amazon                                    | Add `example.com. CAA 0 issue "amazon.com"` or remove the restrictive CAA record                                     |
 | Apply fails attaching the certificate to a listener or distribution | Certificate not yet issued, or wrong region                                   | Finish DNS validation first; recreate the certificate in the ECS cluster's region or `us-east-1` for CloudFront      |
 | HTTP 421 or wrong service responds                                  | Domain doesn't match any host rule or alias                                   | Add the domain to the service's `host_header_values` and, for CloudFront, to `distribution_aliases`                  |
