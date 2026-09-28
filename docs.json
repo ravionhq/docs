@@ -4,7 +4,7 @@
   "name": "Ravion Docs",
   "colors": {
     "primary": "#FE6104",
-    "light": "#BD4406",
+    "light": "#FE6104",
     "dark": "#F6DDCE"
   },
   "fonts": {
@@ -19,6 +19,11 @@
       "source": "/docs/fonts/PPFragment-GlareRegular.woff2",
       "format": "woff2",
       "weight": 400
+    }
+  },
+  "background": {
+    "color": {
+      "dark": "#0F0004"
     }
   },
   "favicon": "/favicon.png",
