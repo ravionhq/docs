@@ -341,8 +341,13 @@ html.dark svg[id^="mermaid"] :is(.cluster text, .cluster-label, .cluster-label *
   color: var(--rvn-anchor-neutral) !important;
 }
 
-html.dark svg[id^="mermaid"] :is(.flowchart-link, .edgePath path, .transition) {
+html.dark svg[id^="mermaid"] :is(.flowchart-link, .edgePath path, .transition):not([style*="stroke"]) {
   stroke: color-mix(in srgb, var(--rvn-anchor-neutral) 51%, var(--rvn-base)) !important;
+}
+
+/* Faded edges from the generated module catalog (linkStyle stroke:#CBD5E1). */
+html.dark svg[id^="mermaid"] :is(.flowchart-link, .edgePath path)[style*="CBD5E1" i] {
+  stroke: color-mix(in srgb, var(--rvn-anchor-neutral) 20%, var(--rvn-base)) !important;
 }
 
 html.dark svg[id^="mermaid"] :is(.arrowMarkerPath, marker path) {
