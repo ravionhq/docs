@@ -223,7 +223,7 @@ Ravion's ECS cluster is now a standalone module that includes shared load balanc
 
 Flightcontrol's `fromService` reused one service's build for another, such as a Rails web service and its worker. In Ravion, each ECS module with `build_source: ecr` gets its own managed ECR repository, so the pipeline builds once, pushes the image to each repository, and deploys the same digest to both modules:
 
-```yaml pipeline.yaml highlight={13-19,24,29}
+```yaml pipeline.yaml highlight={13-19,28,33}
 inputs:
   - id: commit
     type: string
