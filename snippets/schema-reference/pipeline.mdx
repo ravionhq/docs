@@ -42,12 +42,6 @@ Pipeline configuration - the top-level schema
   _(minItems:1)_
 </ResponseField>
 
-<ResponseField name="rollback" type="Step[]">
-  Steps to execute if the pipeline fails — runs in order after a failure is detected
-
-  See: [Step](#step)
-</ResponseField>
-
 ## Triggers
 
 Webhook triggers that automatically start pipeline runs on events like git push
@@ -1880,81 +1874,19 @@ Discriminated union. The `type` field selects which schema applies.
 
 ### StepInfrastructure
 
-Step infrastructure configuration
+Step infrastructure configuration, discriminated by `type`
 
 Note: Additional validation via CEL:
-- exactly one target mode is required: execution_environment_id, or aws_account_id plus region
+- ec2 and ec2-spot need exactly one target mode: execution_environment_id, or aws_account_id plus region
+- an instance_size list must not mix x86_64 and ARM64 (Graviton) types
 
-<ResponseField name="execution_environment_id" type="string | null">
-  ID or given ID of a pre-configured execution environment
+Discriminated union. The `type` field selects which schema applies.
 
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="execution_environment_overrides" type="ExecutionEnvironmentOverrides">
-  Overrides for individual attributes of the resolved execution environment.
-  Valid with or without `execution_environment_id` — without one, they apply
-  on top of the default environment or the auto-selected network.
-  The whole block and each field inside it accept template tokens.
-
-  See: [ExecutionEnvironmentOverrides](#executionenvironmentoverrides)
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="aws_account_id" type="string | null">
-  AWS account reference for automatic network selection.
-
-  Accepts either the Ravion AWS account database ID (e.g.
-  `awsact_123`) or the user-provided `givenId` configured on the AWS
-  account. The resolver normalizes the value to the DB id before any
-  downstream use; the `givenId` form is an input alias only and is never
-  persisted as the canonical reference.
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="region" type="string | null">
-  AWS region for automatic network selection
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="type" type="enum" required>
-  Instance type — "ec2" for on-demand or "ec2-spot" for cheaper spot instances
-
-  Allowed values: `ec2` | `ec2-spot`
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="instance_size" type="string | string[]" required>
-  EC2 instance type — a single type like "t3.large" or an array like ["t3.large", "t3.xlarge"]; when an array is given the first entry is used
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="ami" type="string | null">
-  AMI ID for the runner instance
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="permissions" type="AwsPermissions">
-  IAM permissions for the runner role — "attach" to add policies or "replace" to override step defaults
-
-  See: [AwsPermissions](#awspermissions)
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="storage" type="StorageConfig">
-  Root volume storage configuration
-
-  See: [StorageConfig](#storageconfig)
-
-  _(templateable)_
-</ResponseField>
+| `type` value | Schema                                                  |
+| ------------ | ------------------------------------------------------- |
+| `ec2`        | [Ec2StepInfrastructure](#ec2stepinfrastructure)         |
+| `ec2-spot`   | [Ec2SpotStepInfrastructure](#ec2spotstepinfrastructure) |
+| `sandbox`    | [SandboxStepInfrastructure](#sandboxstepinfrastructure) |
 
 ### S3Destination
 
@@ -2270,56 +2202,212 @@ Railpack configuration for image builds
   _(templateable)_
 </ResponseField>
 
-### AwsPermissions
+### Ec2SpotStepInfrastructure
 
-IAM policies configuration for runner roles
-Used by EC2-backed steps to specify additional permissions
+Spot EC2 instance infrastructure
 
-One of: [AwsPermissionsAttach](#awspermissionsattach), [AwsPermissionsReplace](#awspermissionsreplace).
+<ResponseField name="type" type="enum" required>
+  Infrastructure type — a spot EC2 instance
 
-### InfrastructureType
-
-Execution environment type
-
-Allowed values:
-
-- `ec2`
-- `ec2-spot`
-
-### InstanceSize
-
-Instance size can be a single string or array of strings
-
-One of: string, string[].
-
-### StorageConfig
-
-Root volume storage configuration
-
-<ResponseField name="type" type="enum">
-  Volume type
-
-  Allowed values: `gp3` | `gp2` | `io2` | `io1`
+  Allowed values: `ec2-spot`
 
   _(templateable)_
 </ResponseField>
 
-<ResponseField name="size" type="integer | null">
-  Volume size in GiB
+<ResponseField name="execution_environment_overrides" type="ExecutionEnvironmentOverrides">
+  Overrides for individual attributes of the resolved execution environment.
+  Valid with or without `execution_environment_id` — without one, they apply
+  on top of the default environment or the auto-selected network.
+  The whole block and each field inside it accept template tokens.
 
-  _(format:int32; templateable)_
+  See: [ExecutionEnvironmentOverrides](#executionenvironmentoverrides)
+
+  _(templateable)_
 </ResponseField>
 
-<ResponseField name="iops" type="integer | null">
-  Provisioned IOPS
+<ResponseField name="permissions" type="AwsPermissions">
+  IAM permissions for the runner role — "attach" to add policies or "replace" to override step defaults
 
-  _(format:int32; templateable)_
+  See: [AwsPermissions](#awspermissions)
+
+  _(templateable)_
 </ResponseField>
 
-<ResponseField name="throughput" type="integer | null">
-  Provisioned throughput in MiB/s
+<ResponseField name="execution_environment_id" type="string | null">
+  ID or given ID of a pre-configured execution environment
 
-  _(format:int32; templateable)_
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="aws_account_id" type="string | null">
+  AWS account reference for automatic network selection.
+
+  Accepts either the Ravion AWS account database ID (e.g.
+  `awsact_123`) or the user-provided `givenId` configured on the AWS
+  account. The resolver normalizes the value to the DB id before any
+  downstream use; the `givenId` form is an input alias only and is never
+  persisted as the canonical reference.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="region" type="string | null">
+  AWS region for automatic network selection
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="ami" type="string | null">
+  AMI ID for the runner instance
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="storage" type="StorageConfig">
+  Root volume storage configuration
+
+  See: [StorageConfig](#storageconfig)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="instance_size" type="string | string[]" required>
+  One EC2 instance type, or a list tried in order when spot capacity is short
+
+  _(templateable)_
+</ResponseField>
+
+### Ec2StepInfrastructure
+
+On-demand EC2 instance infrastructure
+
+<ResponseField name="type" type="enum" required>
+  Infrastructure type — an on-demand EC2 instance
+
+  Allowed values: `ec2`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="execution_environment_overrides" type="ExecutionEnvironmentOverrides">
+  Overrides for individual attributes of the resolved execution environment.
+  Valid with or without `execution_environment_id` — without one, they apply
+  on top of the default environment or the auto-selected network.
+  The whole block and each field inside it accept template tokens.
+
+  See: [ExecutionEnvironmentOverrides](#executionenvironmentoverrides)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="permissions" type="AwsPermissions">
+  IAM permissions for the runner role — "attach" to add policies or "replace" to override step defaults
+
+  See: [AwsPermissions](#awspermissions)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="execution_environment_id" type="string | null">
+  ID or given ID of a pre-configured execution environment
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="aws_account_id" type="string | null">
+  AWS account reference for automatic network selection.
+
+  Accepts either the Ravion AWS account database ID (e.g.
+  `awsact_123`) or the user-provided `givenId` configured on the AWS
+  account. The resolver normalizes the value to the DB id before any
+  downstream use; the `givenId` form is an input alias only and is never
+  persisted as the canonical reference.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="region" type="string | null">
+  AWS region for automatic network selection
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="ami" type="string | null">
+  AMI ID for the runner instance
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="storage" type="StorageConfig">
+  Root volume storage configuration
+
+  See: [StorageConfig](#storageconfig)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="instance_size" type="string | string[]" required>
+  EC2 instance type — a single type like "t3.large" or an array like ["t3.large", "t3.xlarge"]; when an array is given the first entry is used
+
+  _(templateable)_
+</ResponseField>
+
+### SandboxStepInfrastructure
+
+Firecracker microVM infrastructure on an execution environment's sandbox host pool
+
+<ResponseField name="type" type="enum" required>
+  Infrastructure type — a Firecracker microVM on the execution environment's sandbox host pool
+
+  Allowed values: `sandbox`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="execution_environment_overrides" type="ExecutionEnvironmentOverrides">
+  Overrides for individual attributes of the resolved execution environment.
+  Valid with or without `execution_environment_id` — without one, they apply
+  on top of the default environment or the auto-selected network.
+  The whole block and each field inside it accept template tokens.
+
+  See: [ExecutionEnvironmentOverrides](#executionenvironmentoverrides)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="permissions" type="AwsPermissions">
+  IAM permissions for the runner role — "attach" to add policies or "replace" to override step defaults
+
+  See: [AwsPermissions](#awspermissions)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="execution_environment_id" type="string" required>
+  ID or given ID of the execution environment whose sandbox host pool runs the step
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="cpu" type="integer" required>
+  vCPUs given to the sandbox microVM
+
+  _(format:int32,min:1; templateable)_
+</ResponseField>
+
+<ResponseField name="memory" type="integer" required>
+  Memory in GiB given to the sandbox microVM
+
+  _(format:int32,min:1; templateable)_
+</ResponseField>
+
+<ResponseField name="disk" type="integer | null">
+  GiB of host disk reserved for the sandbox microVM's writes — the restored
+  lineage overlay plus everything the step builds before it is frozen. A host
+  takes the sandbox only when it has this much free, so a step that writes
+  more than the default should say so.
+
+  _(format:int32,min:1; templateable)_
 </ResponseField>
 
 ### StaticDockerfileBuildConfig
@@ -2511,6 +2599,61 @@ Configuration for Docker layer cache source from ECR
   _(templateable)_
 </ResponseField>
 
+### AwsPermissions
+
+IAM policies configuration for runner roles
+Used by EC2-backed steps to specify additional permissions
+
+One of: [AwsPermissionsAttach](#awspermissionsattach), [AwsPermissionsReplace](#awspermissionsreplace).
+
+### InstanceSize
+
+Instance size can be a single string or array of strings
+
+One of: string, string[].
+
+### StorageConfig
+
+Root volume storage configuration
+
+<ResponseField name="type" type="enum">
+  Volume type
+
+  Allowed values: `gp3` | `gp2` | `io2` | `io1`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="size" type="integer | null">
+  Volume size in GiB
+
+  _(format:int32; templateable)_
+</ResponseField>
+
+<ResponseField name="iops" type="integer | null">
+  Provisioned IOPS
+
+  _(format:int32; templateable)_
+</ResponseField>
+
+<ResponseField name="throughput" type="integer | null">
+  Provisioned throughput in MiB/s
+
+  _(format:int32; templateable)_
+</ResponseField>
+
+### ParameterStoreReferenceValue
+
+Parameter Store reference — shorthand string or object with optional version metadata
+
+One of: string, [ParameterStoreReference](#parameterstorereference).
+
+### SecretsManagerReferenceValue
+
+Secrets Manager reference — shorthand string or object with optional JSON key/version metadata
+
+One of: string, [SecretsManagerReference](#secretsmanagerreference).
+
 ### AwsPermissionsAttach
 
 IAM policies to attach alongside step default policies
@@ -2541,18 +2684,6 @@ Allowed values:
 - `gp2`
 - `io2`
 - `io1`
-
-### ParameterStoreReferenceValue
-
-Parameter Store reference — shorthand string or object with optional version metadata
-
-One of: string, [ParameterStoreReference](#parameterstorereference).
-
-### SecretsManagerReferenceValue
-
-Secrets Manager reference — shorthand string or object with optional JSON key/version metadata
-
-One of: string, [SecretsManagerReference](#secretsmanagerreference).
 
 ### ParameterStoreReference
 
@@ -2592,12 +2723,6 @@ Secrets Manager reference with optional JSON key and version metadata
   _(templateable)_
 </ResponseField>
 
-## Rollback
-
-Steps to execute if the pipeline fails — runs in order after a failure is detected
-
-Uses the same types as [Steps](#steps).
-
 ## Template expressions
 
 Fields marked _templateable_ accept `<< expression >>` template tokens.
@@ -2622,4 +2747,4 @@ Access: `array[0]`, `map["key"]`, `map.key`. Functions: `len()`, `upper()`, `low
 
 Escaping: write `\<<` to emit a literal `<<`; an escaped block is kept as text and never evaluated. A backslash that itself needs to be literal doubles (`\\<<` is a live template preceded by a backslash).
 
-Available namespaces: `pipeline.input.*`, `pipeline.run.{id,description}`, `pipeline.variant.{id,name}`, `steps.{id}.{output,input}.*`, `step.input.*`, `environments.{env}.modules.{module}.output.*` and `projects.{project}.environments.{env}.modules.{module}.output.*` (last-applied stack outputs of a module; steps, rollback, variants only — bare `modules.*` is not allowed in pipeline configs), `trigger.payload.{branch,commit,ref,repository,event,tag}`.
+Available namespaces: `pipeline.input.*`, `pipeline.run.{id,description}`, `pipeline.variant.{id,name}`, `steps.{id}.{output,input}.*`, `step.input.*`, `environments.{env}.modules.{module}.output.*` and `projects.{project}.environments.{env}.modules.{module}.output.*` (last-applied stack outputs of a module; steps and variants only — bare `modules.*` is not allowed in pipeline configs), `trigger.payload.{branch,commit,ref,repository,event,tag}`.
