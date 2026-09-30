@@ -275,6 +275,10 @@ ravion pipeline run list [flags]
 
 Retry a pipeline run
 
+Flags depend on --retry-scope:
+  FAILED_STEPS: no other flags
+  FULL_RUN: accepts --use-latest-version
+
 ```bash
 ravion pipeline run retry <id> [flags]
 ```
@@ -283,7 +287,7 @@ ravion pipeline run retry <id> [flags]
 
 | Flag | Required | Description |
 | --- | --- | --- |
-| `--retry-scope <string>` | yes | Which portion of the same pipeline run should be retried. Available values: FULL_RUN. |
+| `--retry-scope <string>` | yes | Which portion of the same pipeline run should be retried. Available values: FAILED_STEPS, FULL_RUN. |
 | `--json` |  | emit response as JSON |
 | `--use-latest-version` |  | When true, a full-run retry should use the latest pipeline version. |
 

@@ -33,6 +33,11 @@ ravion code-source branches <id> [flags]
 
 Create CodeSource
 
+Flags depend on --type:
+  GITHUB: requires --github-installation-id, --repo-url
+  GITLAB: requires --gitlab-third-party-account-id, --repo-url
+  GITLAB_SELF_HOSTED: requires --git-self-hosted-server-id, --gitlab-third-party-account-id, --repo-url
+
 ```bash
 ravion code-source create [flags]
 ```
@@ -41,11 +46,11 @@ ravion code-source create [flags]
 
 | Flag | Required | Description |
 | --- | --- | --- |
-| `--git-self-hosted-server-id <string>` | yes | Git self-hosted server ID |
-| `--github-installation-id <string>` | yes | GitHub installation ID |
-| `--gitlab-third-party-account-id <string>` | yes | GitLab third-party account ID for OAuth |
 | `--repo-url <string>` | yes | Git repository URL |
-| `--type <string>` | yes | type. Available values: GITLAB_SELF_HOSTED. |
+| `--type <string>` | yes | type. Available values: GITHUB, GITLAB, GITLAB_SELF_HOSTED. |
+| `--git-self-hosted-server-id <string>` |  | Git self-hosted server ID |
+| `--github-installation-id <string>` |  | GitHub installation ID |
+| `--gitlab-third-party-account-id <string>` |  | GitLab third-party account ID for OAuth |
 | `--json` |  | emit response as JSON |
 
 ### `ravion code-source delete`
