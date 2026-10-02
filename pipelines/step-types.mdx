@@ -277,7 +277,7 @@ When you use `replace` on a Terraform step, your policies must cover:
 - Every resource your configuration creates, updates, or deletes. Apply also refreshes state, so it needs read access to those resources.
 - Your own state backend, if you keep one — for example, the S3 state bucket, the DynamoDB lock table or S3 lock file, and `kms:Decrypt` and `kms:GenerateDataKey` on the state bucket's KMS key.
 - Any other AWS services your configuration's data sources read.
-- The S3 bucket that holds plan files. `terraform:plan` uploads the plan and `terraform:apply` downloads it from `plan_file_uri`. By default this is `ravion-terraform-plans-<account-id>` under `terraform-plans/`, unless you set `plan_file_directory_uri`. Grant `s3:PutObject`, `s3:GetObject`, and `s3:ListBucket` on it.
+- The S3 bucket that holds plan files. `terraform:plan` uploads the plan and `terraform:apply` downloads it from `plan_file_uri`. By default this is `ravion-terraform-plans-<aws-account-number>` in the step's AWS account (us-east-1), under `terraform-plans/`, unless you set `plan_file_directory_uri`. Grant `s3:PutObject`, `s3:GetObject`, and `s3:ListBucket` on it, plus `s3:CreateBucket` if the bucket doesn't exist yet. The runner creates it on first use.
 
 Some access stays in place whichever form you use. On `ec2` and `ec2-spot` runners, the role always has `AmazonSSMManagedInstanceCore` and `CloudWatchAgentServerPolicy`, which Ravion uses to run the step and stream its logs. When a step reads environment variables from Secrets Manager, Ravion also grants `secretsmanager:GetSecretValue` on those secrets.
 
