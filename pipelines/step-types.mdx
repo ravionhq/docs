@@ -217,6 +217,68 @@ Applies a plan file produced by a preceding `terraform:plan` step. Reference the
 
 See [TerraformApplyCiStep schema](/pipelines/config-reference#terraformapplycistep).
 
+### Runner permissions
+
+Each CI step runs with an IAM role Ravion creates in the step's AWS account. By default, the role gets these managed policies for its step type:
+
+| Step type | Default policies |
+| --- | --- |
+| `terraform:plan` | `ReadOnlyAccess`, `AmazonBedrockReadOnly`, `AmazonS3FullAccess`, `AmazonDynamoDBFullAccess`, `SecretsManagerReadWrite`, `CloudWatchAgentServerPolicy` |
+| `terraform:apply` | `AdministratorAccess`, `CloudWatchAgentServerPolicy` |
+| `custom` | `CloudWatchAgentServerPolicy` |
+| `build:image` | `AmazonEC2ContainerRegistryPowerUser`, `CloudWatchAgentServerPolicy` |
+| `build:static` | `AmazonS3FullAccess`, `CloudWatchAgentServerPolicy` |
+
+Change them with `infrastructure.permissions`. Both forms take IAM managed policy ARNs: AWS managed policies (`arn:aws:iam::aws:policy/<name>`) or customer managed policies in the step's AWS account (`arn:aws:iam::<account-id>:policy/<name>`).
+
+- `attach` keeps the defaults and adds your policies.
+- `replace` drops every default for the step, including `AdministratorAccess` on `terraform:apply`, and uses only your policies.
+
+For example, a `custom` step that only updates a Lambda function's code needs one customer managed policy that grants `lambda:UpdateFunctionCode` on that function:
+
+```yaml
+- id: deploy_function
+  name: Deploy function code
+  type: custom
+  commands:
+    - aws lambda update-function-code --function-name my-function --zip-file fileb://function.zip
+  infrastructure:
+    type: ec2
+    instance_size: t3.small
+    permissions:
+      attach:
+        - arn:aws:iam::123456789012:policy/update-my-function-code
+```
+
+To run Terraform or OpenTofu with less than `AdministratorAccess`, use `replace` on the `terraform:apply` step with a policy you scope yourself:
+
+```yaml
+- id: tf_apply
+  name: Apply
+  type: terraform:apply
+  tool: opentofu
+  version: 1.7.0
+  plan_file_uri: << steps.tf_plan.output.plan_file_uri >>
+  infrastructure:
+    type: ec2
+    instance_size: t3.small
+    permissions:
+      replace:
+        - arn:aws:iam::123456789012:policy/terraform-apply
+```
+
+When you use `replace` on a Terraform step, your policies must cover:
+
+- Every resource your configuration creates, updates, or deletes. Apply also refreshes state, so it needs read access to those resources.
+- Your own state backend, if you keep one — for example, the S3 state bucket, the DynamoDB lock table or S3 lock file, and `kms:Decrypt` and `kms:GenerateDataKey` on the state bucket's KMS key.
+- Any other AWS services your configuration's data sources read.
+
+Some access stays in place whichever form you use. On `ec2` and `ec2-spot` runners, the role always has `AmazonSSMManagedInstanceCore` and `CloudWatchAgentServerPolicy`, which Ravion uses to run the step and stream its logs. When a step reads environment variables from Secrets Manager, Ravion also grants `secretsmanager:GetSecretValue` on those secrets.
+
+For stacks, put these overrides in a custom pipeline and point the stack at it with `change_pipeline_id` and `destroy_pipeline_id`. See [System pipelines and customization](/modules/stack#system-pipelines-and-customization).
+
+See [AwsPermissions schema](/pipelines/config-reference#awspermissions).
+
 ## Control-flow steps
 
 ### approval
