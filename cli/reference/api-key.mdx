@@ -61,9 +61,26 @@ ravion api-key list [flags]
 | `--owner-type <string>` |  | Optional owner type filter. Must be provided with ownerId. Available values: MEMBERSHIP, SERVICE_ACCOUNT. |
 | `-v, --verbose` |  | show full output |
 
+### `ravion api-key permissions`
+
+List the permissions a key can have
+
+```bash
+ravion api-key permissions [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--owner-id <string>` | yes | ID of the membership or service account the key authenticates as. |
+| `--owner-type <string>` | yes | Type of principal the key authenticates as. Available values: MEMBERSHIP, SERVICE_ACCOUNT. |
+| `--json` |  | emit response as JSON |
+| `-v, --verbose` |  | include display labels |
+
 ### `ravion api-key update`
 
-Patch ApiKey
+Update an API key, including setting or clearing its permission limit
 
 ```bash
 ravion api-key update <id> [flags]
@@ -73,7 +90,9 @@ ravion api-key update <id> [flags]
 
 | Flag | Required | Description |
 | --- | --- | --- |
+| `--clear-permissions` |  | Remove the key's limit and inherit all of its owner's permissions |
 | `--description <string>` |  | Optional context for where or why this API key is used. |
 | `--json` |  | emit response as JSON |
 | `--name <string>` |  | User-facing label for the API key. |
+| `--permissions <kind:action>` |  | The most the key may do, as kind:action pairs from the authorization catalog, for example `project:read` or `pipelineRun:create`. The key may do something only when its owner may too, so it can narrow its owner's permissions but never widen them. Null means everything its owner may do. Omitting this field on create uses the owner's permissions; omitting it on update preserves the current limit. Limits apply only in organizations with authorization enforcement enabled. Limited keys cannot access the Terraform Cloud API or personal-account operations, and cannot select another organization. Only a member signed in to the dashboard or the CLI can change it, never an API key. |
 
