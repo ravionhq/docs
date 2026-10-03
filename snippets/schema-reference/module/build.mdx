@@ -635,7 +635,7 @@ Spot EC2 instance infrastructure
 </ResponseField>
 
 <ResponseField name="permissions" type="Pipeline.AwsPermissions">
-  IAM permissions for the runner role — "attach" to add policies or "replace" to override step defaults
+  IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. EC2 runners always keep AmazonSSMManagedInstanceCore, CloudWatchAgentServerPolicy, and any inline policies Ravion adds (such as access to referenced secrets).
 
   See: [Pipeline.AwsPermissions](#pipeline-awspermissions)
 
@@ -710,7 +710,7 @@ On-demand EC2 instance infrastructure
 </ResponseField>
 
 <ResponseField name="permissions" type="Pipeline.AwsPermissions">
-  IAM permissions for the runner role — "attach" to add policies or "replace" to override step defaults
+  IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. EC2 runners always keep AmazonSSMManagedInstanceCore, CloudWatchAgentServerPolicy, and any inline policies Ravion adds (such as access to referenced secrets).
 
   See: [Pipeline.AwsPermissions](#pipeline-awspermissions)
 
@@ -785,7 +785,7 @@ Firecracker microVM infrastructure on an execution environment's sandbox host po
 </ResponseField>
 
 <ResponseField name="permissions" type="Pipeline.AwsPermissions">
-  IAM permissions for the runner role — "attach" to add policies or "replace" to override step defaults
+  IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. EC2 runners always keep AmazonSSMManagedInstanceCore, CloudWatchAgentServerPolicy, and any inline policies Ravion adds (such as access to referenced secrets).
 
   See: [Pipeline.AwsPermissions](#pipeline-awspermissions)
 
@@ -1205,7 +1205,7 @@ One of: string, [Pipeline.SecretsManagerReference](#pipeline-secretsmanagerrefer
 IAM policies to attach alongside step default policies
 
 <ResponseField name="attach" type="string[]" required>
-  AWS managed policy ARNs to attach alongside step default policies
+  IAM managed policy ARNs to attach alongside step default policies — AWS managed policies or customer managed policies in the runner's AWS account
 
   _(templateable)_
 </ResponseField>
@@ -1215,7 +1215,7 @@ IAM policies to attach alongside step default policies
 IAM policies to replace step default policies entirely
 
 <ResponseField name="replace" type="string[]" required>
-  AWS managed policy ARNs to use instead of step default policies
+  IAM managed policy ARNs to use instead of step default policies — AWS managed policies or customer managed policies in the runner's AWS account. Removes every step default policy, including AdministratorAccess on terraform:apply; EC2 runner baseline policies still apply.
 
   _(templateable)_
 </ResponseField>
