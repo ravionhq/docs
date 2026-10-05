@@ -358,7 +358,7 @@ See [ParallelStep schema](/pipelines/config-reference#parallelstep).
 
 ### group
 
-Runs its `steps` sequentially, exactly as they would run at the top level, and shows them under one label in the UI. A `group` adds no scheduling behavior to its children; its optional `concurrency` config controls how competing executions of the whole group block are admitted across runs (by `key` and `scope`), not how the steps inside one run are throttled. A run takes the group's slot when the group's first step starts and keeps it until every step in the group has finished, so another run's steps can't run between them. The same applies to a `parallel` block's `concurrency`. Its main job is to put a multi-step sequence inside a `parallel` block, whose children are otherwise single steps:
+Runs its `steps` sequentially, exactly as they would run at the top level, and shows them under one label in the UI. A `group` adds no scheduling behavior to its children; its optional `concurrency` config controls how competing executions of the whole group block are admitted across runs (by `key` and `scope`), not how the steps inside one run are throttled. A run takes the group's slot when the group's first step starts and keeps it until every step in the group has finished. With `value: 1`, another run's execution of the group can't start until this one's last step is done. The same applies to a `parallel` block's `concurrency`. Its main job is to put a multi-step sequence inside a `parallel` block, whose children are otherwise single steps:
 
 ```yaml
 - parallel:
