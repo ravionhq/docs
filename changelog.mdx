@@ -36,7 +36,7 @@ rss: true
 <Update
   label="October 5, 2026"
   rss={{
-    title: "Sandbox pipelines, clearer deployment status, richer billing details, and broader IAM controls",
+    title: "Templated infrastructure types, input reference status, billing details, and broader IAM controls",
   }}
 >
 
@@ -44,23 +44,21 @@ rss: true
 
 ### Breaking changes
 
-- **Removed top-level pipeline rollback:** Remove the unsupported `rollback` key from pipeline configurations before applying them.
+- **Removed top-level pipeline rollback:** Remove the unsupported `rollback` key from pipeline configurations before applying them. Pipeline rollback is a planned future feature.
 
 ### Features
 
-- **Billing account alerts:** See when a paid account has no payment method or has a past-due invoice.
 - **Templated infrastructure types:** Use templates that resolve to different infrastructure types when a pipeline step runs.
 
 ### Improvements
 
-- EKS deployment details now show pods and cluster lifecycle events.
-- Module graph connections now use clearer orthogonal routes, including parallel connections.
 - Billing plan cards now make the whole card the change-plan action when a payment method is missing.
 - Trial notices now reserve urgent styling for the final three days.
 - Module reference fields now offer reference suggestions when values are entered manually.
 - Key-value fields now edit existing pairs in place, use the available width, and accept pasted JSON pairs.
 - Project breadcrumbs now link to the project from module pages without sending users back to the current page.
 - Default Terraform pipelines now pass execution environment overrides to their plan and apply steps.
+- Module status now reports `STACK_DESTROYED` after a successful stack destroy and excludes Terraform data sources from resource counts.
 
 ### Fixes
 
@@ -72,7 +70,6 @@ rss: true
 - Transient binary download failures now retry with backoff before reporting an error.
 - EC2 deployments now use the repository's default branch when no source branch is supplied.
 - Missing applied-module outputs now produce a specific validation error at the affected field.
-- Sandbox instance-type settings now submit when customers press Enter.
 
 ## AWS account IAM policy 1.0.48 → 1.0.50
 
@@ -221,18 +218,12 @@ Update your AWS account connection in organization settings.
 
 ### Features
 
-- **Sandbox pipeline steps:** Run pipeline steps as microVMs and configure, inspect, and size their sandbox host pools using the [pipeline configuration](https://www.ravion.com/docs/pipelines/config-reference).
 - **Input reference status:** See whether each module input reference is up to date, stale, or unknown, and review [module output references](https://www.ravion.com/docs/modules/output-references).
 - **Billing details:** View past-due status and invoice collection method with [`ravion billing get`](https://www.ravion.com/docs/cli/reference/billing).
-
-### Improvements
-
-- **Sandbox host retention:** Set how long stopped sandbox hosts remain available with `unusedTerminateMinutes`.
 
 ### Fixes
 
 - **CloudWatch Logs queries:** AWS access denials now return a typed permission error instead of a generic server error.
-- **EKS deployment responses:** Deployment responses now identify blocked synchronization and unknown Helm chart sources.
 - **Code source creation:** [`ravion code-source create`](https://www.ravion.com/docs/cli/reference/code-source) now accepts a GitHub repository with the required type, installation, and repository flags.
 - **Type-specific command flags:** Commands now validate flags for the selected request type before calling the API.
 - **Module status:** Module status now reports `STACK_DESTROYED` after a successful stack destroy and excludes Terraform data sources from resource counts; see [`ravion module`](https://www.ravion.com/docs/cli/reference/module).
