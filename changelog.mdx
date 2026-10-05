@@ -32,6 +32,204 @@ rss: true
 {/* ravion-changelog:september-14-2026 */}
 {/* ravion-changelog:september-21-2026 */}
 {/* ravion-changelog:september-28-2026 */}
+{/* ravion-changelog:october-5-2026 */}
+<Update
+  label="October 5, 2026"
+  rss={{
+    title: "Templated infrastructure types, input reference status, billing details, and broader IAM controls",
+  }}
+>
+
+## Platform
+
+### Breaking changes
+
+- **Removed top-level pipeline rollback:** Remove the unsupported `rollback` key from pipeline configurations before applying them. Pipeline rollback is a planned future feature.
+
+### Features
+
+- **Templated infrastructure types:** Use templates that resolve to different infrastructure types when a pipeline step runs.
+
+### Improvements
+
+- Billing plan cards now make the whole card the change-plan action when a payment method is missing.
+- Trial notices now reserve urgent styling for the final three days.
+- Module reference fields now offer reference suggestions when values are entered manually.
+- Key-value fields now edit existing pairs in place, use the available width, and accept pasted JSON pairs.
+- Project breadcrumbs now link to the project from module pages without sending users back to the current page.
+- Default Terraform pipelines now pass execution environment overrides to their plan and apply steps.
+- Module status now reports `STACK_DESTROYED` after a successful stack destroy and excludes Terraform data sources from resource counts.
+
+### Fixes
+
+- Reapplying configuration with omitted immutable inputs now keeps their stored values.
+- Environment Logs now identifies AWS access denials and guides customers to update account permissions.
+- Applying project configuration now resolves system pipeline defaults for environments that do not yet exist.
+- Listing a stack's current Terraform state now works when large state values would otherwise exhaust database sort memory.
+- ECS deployments now preserve the service's existing tag propagation setting.
+- Transient binary download failures now retry with backoff before reporting an error.
+- EC2 deployments now use the repository's default branch when no source branch is supplied.
+- Missing applied-module outputs now produce a specific validation error at the affected field.
+
+## AWS account IAM policy 1.0.48 → 1.0.50
+
+- **AMI deployment permissions:** The first AMI build in an account can create EC2 Image Builder's service-linked role.
+
+Update your AWS account connection in organization settings.
+
+## Modules
+
+### [ACM Certificate](https://www.ravion.com/docs/module-definitions/catalog/rvn-acm-certificate) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-acm-certificate%401.0.1) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-acm-certificate%401.1.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [AMI](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-ami) [0.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-ami%400.1.0) → [0.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-ami%400.3.0)
+
+- Configure whether AMIs remain private or can be published publicly across the build and additional regions.
+- Reference the module instance ID in templates and other module inputs.
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [Aurora Database](https://www.ravion.com/docs/module-definitions/catalog/rvn-aurora) [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%401.3.0) → [1.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%401.4.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [AWS Application Load Balancer](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-alb) [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-alb%401.1.0) → [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-alb%401.2.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [AWS Compliance](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-compliance) [0.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-compliance%400.1.0) → [0.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-compliance%400.2.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [AWS IAM Policy](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-iam-policy) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-iam-policy%401.0.1) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-iam-policy%401.1.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [AWS IAM Role](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-iam-role) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-iam-role%401.0.1) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-iam-role%401.1.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [AWS KMS Key](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-kms) [0.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-kms%400.1.0) → [0.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-kms%400.2.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [AWS Secret](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-secret) [1.0.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-secret%401.0.0) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-secret%401.1.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [CloudFront CDN](https://www.ravion.com/docs/module-definitions/catalog/rvn-cloudfront) [1.3.2](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%401.3.2) → [1.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%401.4.0)
+
+- Private origins now recover from in-use errors when moving to another load balancer or changing settings.
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [EC2 Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ec2-service) [1.6.1](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%401.6.1) → [2.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%402.1.0)
+
+- Run builds in sandbox microVMs on the execution environment's host pool.
+- Configure runtime secret keys explicitly with `name` and `value_from`.
+- Avoid build environment variables being mistaken for runtime variables.
+- Avoid group name collisions for advanced EC2 services without changing existing groups on upgrade.
+- Reference supported Secrets Manager and Parameter Store keys for build environment variables.
+- BREAKING: replace the former scaling inputs with `min_instances` and `max_instances` before upgrading.
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [ECS Cluster](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-cluster) [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%401.1.0) → [2.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%402.1.0)
+
+- BREAKING: rename EC2 capacity inputs to `ec2_min_instances` and `ec2_max_instances` before upgrading.
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [1.6.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%401.6.0) → [2.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%402.1.0)
+
+- Run builds in sandbox microVMs on the execution environment's host pool.
+- Configure runtime and FireLens secret keys explicitly with `name` and `value_from`.
+- Avoid build environment variables being mistaken for runtime variables.
+- Reference supported Secrets Manager and Parameter Store keys for build environment variables.
+- Configure the application container's stop timeout instead of using a fixed grace period.
+- BREAKING: rename scaling inputs to `min_tasks`, `max_tasks`, and `desired_tasks`, and re-enter saved CPU and memory values in task units before upgrading.
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [1.6.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%401.6.0) → [2.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%402.1.0)
+
+- Run builds in sandbox microVMs on the execution environment's host pool.
+- Configure runtime and FireLens secret keys explicitly with `name` and `value_from`.
+- Avoid build environment variables being mistaken for runtime variables.
+- Reference supported Secrets Manager and Parameter Store keys for build environment variables.
+- Configure request-based autoscaling and the application container's stop timeout.
+- BREAKING: rename scaling inputs to `min_tasks`, `max_tasks`, and `desired_tasks`, and re-enter saved CPU and memory values in task units before upgrading.
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [ECS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-worker) [1.6.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%401.6.0) → [2.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%402.1.0)
+
+- Run builds in sandbox microVMs on the execution environment's host pool.
+- Configure runtime and FireLens secret keys explicitly with `name` and `value_from`.
+- Avoid build environment variables being mistaken for runtime variables.
+- Reference supported Secrets Manager and Parameter Store keys for build environment variables.
+- Configure the application container's stop timeout instead of using a fixed grace period.
+- BREAKING: rename scaling inputs to `min_tasks`, `max_tasks`, and `desired_tasks`, and re-enter saved CPU and memory values in task units before upgrading.
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [EFS File System](https://www.ravion.com/docs/module-definitions/catalog/rvn-efs) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-efs%401.0.1) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-efs%401.1.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [ElastiCache](https://www.ravion.com/docs/module-definitions/catalog/rvn-elasticache) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-elasticache%401.0.1) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-elasticache%401.1.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [Lambda Function](https://www.ravion.com/docs/module-definitions/catalog/rvn-lambda) [1.1.2](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%401.1.2) → [1.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%401.4.0)
+
+- Run builds in sandbox microVMs on the execution environment's host pool.
+- Choose Node.js 24.x for zip package functions.
+- Avoid build environment variables being mistaken for runtime variables.
+- Reference supported Secrets Manager and Parameter Store keys for build environment variables.
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [RDS Database](https://www.ravion.com/docs/module-definitions/catalog/rvn-rds) [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-rds%401.3.0) → [1.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-rds%401.4.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [RDS Proxy](https://www.ravion.com/docs/module-definitions/catalog/rvn-rds-proxy) [0.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-rds-proxy%400.1.0) → [0.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-rds-proxy%400.2.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [Route 53 DNS](https://www.ravion.com/docs/module-definitions/catalog/rvn-route53) [1.0.3](https://github.com/ravionhq/modules/releases/tag/rvn-route53%401.0.3) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-route53%401.1.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [S3 Bucket](https://www.ravion.com/docs/module-definitions/catalog/rvn-s3) [1.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-s3%401.0.1) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-s3%401.1.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [Static Hosting](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-static) [1.1.3](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%401.1.3) → [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%401.3.0)
+
+- Run builds in sandbox microVMs on the execution environment's host pool.
+- Avoid build environment variables being mistaken for runtime variables.
+- Reference supported Secrets Manager and Parameter Store keys for build environment variables.
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [Terraform Stack](https://www.ravion.com/docs/module-definitions/catalog/rvn-stack) [1.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-stack%401.3.1) → [1.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-stack%401.4.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+### [VPC Network](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-network) [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-network%401.1.0) → [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-network%401.2.0)
+
+- Add Terraform plan and apply IAM policy inputs to scope stack runner permissions.
+
+## CLI [1.4.0](https://github.com/ravionhq/cli/releases/tag/v1.4.0) → [1.10.1](https://github.com/ravionhq/cli/releases/tag/v1.10.1)
+
+### Features
+
+- **Input reference status:** See whether each module input reference is up to date, stale, or unknown, and review [module output references](https://www.ravion.com/docs/modules/output-references).
+- **Billing details:** View past-due status and invoice collection method with [`ravion billing get`](https://www.ravion.com/docs/cli/reference/billing).
+
+### Fixes
+
+- **CloudWatch Logs queries:** AWS access denials now return a typed permission error instead of a generic server error.
+- **Code source creation:** [`ravion code-source create`](https://www.ravion.com/docs/cli/reference/code-source) now accepts a GitHub repository with the required type, installation, and repository flags.
+- **Type-specific command flags:** Commands now validate flags for the selected request type before calling the API.
+- **Module status:** Module status now reports `STACK_DESTROYED` after a successful stack destroy and excludes Terraform data sources from resource counts; see [`ravion module`](https://www.ravion.com/docs/cli/reference/module).
+
+</Update>
+
 <Update
   label="September 28, 2026"
   rss={{
