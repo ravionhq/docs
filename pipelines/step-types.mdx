@@ -6,7 +6,7 @@ description: "Catalog of Ravion pipeline step types, including module actions, C
 "twitter:image": "https://www.ravion.com/og/docs/pipelines/step-types.png"
 ---
 
-A step is the smallest unit of work in a pipeline. Every action step shares a common shape — `id`, optional `name`, `timeout`, and `if` condition — and adds fields specific to its `type`. Wrap steps in `parallel` or `group` blocks to control how they run. See [Pipelines overview](/pipelines/overview).
+A step is the smallest unit of work in a pipeline. Every action step shares a common shape — `id`, optional `name`, `timeout`, `if` condition, and [`idempotent`](#idempotent-steps) flag — and adds fields specific to its `type`. Wrap steps in `parallel` or `group` blocks to control how they run. See [Pipelines overview](/pipelines/overview).
 
 Steps fall into three categories:
 
@@ -257,3 +257,28 @@ Starts another pipeline run and passes `inputs` to it. Optionally pin a `pipelin
 ```
 
 See [TriggerPipelineStep schema](/pipelines/config-reference#triggerpipelinestep).
+
+## Idempotent steps
+
+Set `idempotent: true` on a step that can run again from the start after being cut off partway, such as a build, a test run, or a lint. Every action step accepts `idempotent`, and it defaults to `false`.
+
+Sandbox steps use it to choose a host. An idempotent sandbox step can run on a spot host on a pool that allows spot hosts, and runs again on another host when AWS reclaims its host. A step that is not idempotent runs only on on-demand hosts. Leave `idempotent` unset on a step that must not run twice, such as a database migration. See [Spot hosts](/guides/sandbox-pools#spot-hosts).
+
+```yaml
+- id: run_tests
+  name: Run tests
+  type: custom
+  idempotent: true
+  source:
+    type: git
+    repo: https://github.com/my-org/my-repo
+    branch: main
+  commands:
+    - npm ci
+    - npm test
+  infrastructure:
+    type: sandbox
+    execution_environment_id: build-runners
+    cpu: 4
+    memory: 8
+```

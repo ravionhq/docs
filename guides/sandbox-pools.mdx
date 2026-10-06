@@ -1,7 +1,7 @@
 ---
 title: "Configuring sandbox pools"
 sidebarTitle: "Sandbox pools"
-description: "Configure the pool of hosts an execution environment keeps for sandbox pipeline steps: instance types, idle shutdown, unused-host termination, and the reserve policy."
+description: "Configure the pool of hosts an execution environment keeps for sandbox pipeline steps: instance types, host storage, spot hosts, idle shutdown, unused-host termination, the reserve policy, and how steps are placed."
 "og:image": "https://www.ravion.com/og/docs/guides/sandbox-pools.png"
 "twitter:image": "https://www.ravion.com/og/docs/guides/sandbox-pools.png"
 ---
@@ -12,17 +12,50 @@ A sandbox pipeline step runs your commands inside an isolated microVM on a host 
 
 An execution environment's sandbox pool is a set of instance type cards. Each card names one EC2 instance type and the EBS volume every host of that type launches with: disk size in GiB, provisioned IOPS, and provisioned throughput in MB/s. The disk defaults to 60 GiB and can go down to 30. After 10 GiB for the system and a free-space floor, a third of the volume caches snapshot chunks and the rest holds the running sandboxes' working space, so a 60 GiB host holds four sandboxes of the default size beside a 16 GiB cache.
 
-The pool exists once it has at least one instance type card. Removing the last card removes the pool: its Auto Scaling group, launch templates, and running hosts are torn down. There is no separate enable switch, and no minimum or maximum host count to set — the pool grows and shrinks from demand, and a system-wide ceiling on host count protects the account without needing a value from you.
+An instance type with instance store, such as `c8id` or `m8id`, runs its sandboxes on the instance store: local NVMe disks that come with the instance. Its card shows **Instance store**. The instance store is erased each time a host stops, so a pool with persistent [host storage](#host-storage) keeps the snapshot cache on the EBS volume. A pool with ephemeral host storage keeps the cache on the instance store too, which leaves the EBS volume only the system. The card then calls that volume the **OS disk**, and a new card for an instance-store type starts at 30 GiB.
 
-Add a card for every instance type you want sandbox steps to run on. A step is placed on the cheapest card whose CPU and memory fit the step's request, so listing more than one size lets small and large steps share a pool efficiently.
+The pool exists once it has at least one instance type card. The pool launches each host itself with EC2 `RunInstances` from its launch template, choosing on-demand or spot for each launch, and parks, wakes, and terminates its hosts directly. Removing the last card removes the pool: its hosts are terminated and its launch template is deleted. There is no separate enable switch, and no minimum or maximum host count to set — the pool grows and shrinks from demand, and a system-wide ceiling on host count protects the account without needing a value from you.
+
+Add a card for every instance type you want sandbox steps to run on. Listing more than one size lets small and large steps share a pool efficiently; [How steps are placed](#how-steps-are-placed) covers which type a new host gets.
+
+## Host storage
+
+**Host storage** (`hostStorage` in the API) decides what happens to an idle on-demand host and its disks:
+
+- **Persistent**, the default, stops the host and keeps its EBS volume. The snapshot chunks cached on the volume are still there when a step wakes the host, which takes seconds.
+- **Ephemeral** terminates the host and deletes its volume. The pool's chunk store in S3 is all that outlives a host, and the next host restores from it.
+
+An ephemeral pool keeps no parked hosts, so it has no unused-hosts terminate window and no reserve policy. The environment page hides both settings and keeps their values for a return to persistent.
+
+Spot hosts are always terminated when idle, whatever the host storage.
+
+## Spot hosts
+
+Turn on **Launch spot hosts for idempotent steps** to let the pool buy hosts at the EC2 Spot price. In the API, this adds `SPOT` to the pool's `capacityTypes`. `ON_DEMAND` is always in the list, because steps that are not idempotent run only on on-demand hosts.
+
+A spot host runs only idempotent steps: steps that set [`idempotent: true`](/pipelines/step-types#idempotent-steps) because they can run again from the start after being cut off partway, such as a build, a test run, or a lint.
+
+AWS can reclaim a spot host with two minutes' notice. Ravion then stops the sandboxes on that host and runs each of their steps again from the start on another host. A step gets up to three attempts, and its last attempt runs on an on-demand host.
+
+## How steps are placed
+
+Ravion decides where each sandbox step runs by the same rule every time.
+
+A step that is not idempotent runs only on on-demand hosts. It takes room on a running on-demand host first. With no room there, Ravion wakes a parked host, preferring the one that last ran the step, or launches a new on-demand host.
+
+An idempotent step on a pool with spot hosts takes room on a running host first, preferring on-demand hosts to spot hosts. With no room on a running host, Ravion launches a spot host for it. EC2 sometimes has no spot capacity for the pool's instance types, and Ravion then launches an on-demand host in the same request.
+
+On a pool without spot hosts, every step follows the on-demand rule.
+
+A new host's instance type is chosen for all the steps waiting for one in the same market. Ravion picks the type that holds those steps on the fewest hosts, then the one with the least spare vCPU, then the least spare memory, then the lower on-demand price, and then the type listed first on the pool. Steps that type cannot hold get a launch of their own by the same rule.
 
 ## Idle shutdown timer
 
-Each execution environment has one idle shutdown timer, in minutes. A host parks itself once it has run zero sandboxes for that long, and starting a new sandbox on a host cancels its timer immediately. A parked host stops billing compute; its volume keeps billing until the host is terminated.
+Each execution environment has one idle shutdown timer, in minutes. Once an on-demand host has run zero sandboxes for that long, a persistent pool parks it and an ephemeral pool terminates it. An idle spot host is terminated on either. Starting a new sandbox on a host cancels its timer immediately. A parked host stops billing compute; its volume keeps billing until the host is terminated.
 
 ## Unused hosts terminate window
 
-The unused-hosts terminate window, in hours, is how long a parked host is kept before it is terminated. A pool keeps enough of its most recently parked hosts to satisfy the reserve policy below, regardless of the window, so the window only removes hosts above that reserve.
+The unused-hosts terminate window, in hours, is how long a parked host is kept before it is terminated. A pool keeps enough of its most recently parked hosts to satisfy the reserve policy below, regardless of the window, so the window only removes hosts above that reserve. An ephemeral pool parks no hosts and has no window.
 
 ## Reserve policy
 
@@ -33,7 +66,7 @@ The reserve policy decides how many parked hosts the pool keeps ready rather tha
 - **Fixed** keeps a number you set, independent of usage.
 - **None** keeps no reserve — every parked host is eligible for termination once the unused-hosts window passes.
 
-The environment page shows the reserve as both a host count and its monthly cost, computed from the reserved hosts' disk size, IOPS, and throughput.
+The environment page shows the reserve as both a host count and its monthly cost, computed from the reserved hosts' disk size, IOPS, and throughput. An ephemeral pool keeps no reserve.
 
 ## Sizing a sandbox step
 
@@ -41,6 +74,6 @@ A sandbox step declares `cpu` and `memory`, the same as any other resource reque
 
 ## Live hosts
 
-The execution environment page lists its sandbox pool's live hosts: state, instance type, availability zone, slots in use, uptime, and when each was last used. Each host has a **View in AWS** action that opens it in the EC2 console.
+The execution environment page lists its sandbox pool's live hosts: state, instance type, market (on-demand or spot), availability zone, slots in use, uptime, and when each was last used. **Disk free** is the space left on the disk the host's sandboxes write to: the instance store on a type that has one, and the EBS volume on every other type. Each host has a **View in AWS** action that opens it in the EC2 console.
 
 A pipeline version's page lists the hosts that version needs to run: the instance types and counts its sandbox steps require, computed from how many of them can run at once.
