@@ -28,6 +28,23 @@ ravion membership accept <id> [flags]
 | --- | --- | --- |
 | `--json` |  | emit response as JSON |
 
+### `ravion membership assignable-roles`
+
+List Assignable Member Roles
+
+```bash
+ravion membership assignable-roles [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--action <string>` |  | Create is the default. Update requires the member being edited. Available values: create, update. |
+| `--json` |  | emit response as JSON |
+| `--target-id <string>` |  | Existing membership ID; valid only for update. |
+| `-v, --verbose` |  | show full output |
+
 ### `ravion membership create`
 
 Create Membership
@@ -41,8 +58,9 @@ ravion membership create [flags]
 | Flag | Required | Description |
 | --- | --- | --- |
 | `--email <string>` | yes | email |
-| `--role <string>` | yes | role. Available values: OWNER. |
 | `--json` |  | emit response as JSON |
+| `--role <roles>` |  | Deprecated: use roles. Writing it sets `roles` to this one role; it cannot be sent with `roles`. `OWNER` is accepted as `owner`. Reads return the member's role with the most access, or its first custom role. |
+| `--roles <owner>` |  | The roles the member holds across the organization, each a system-managed role key (owner, `admin`, `member`, `viewer` or `billing`) or a custom role ID. A member holds at least one. Reads list system-managed roles from least to most access, then Billing, then custom roles by name. Setting `roles` replaces the whole set. Roles other than `owner` require policy administration to be enabled for the organization, and the caller can add or remove only roles whose permissions it already holds. |
 
 ### `ravion membership delete`
 
@@ -116,5 +134,6 @@ ravion membership update <id> [flags]
 | Flag | Required | Description |
 | --- | --- | --- |
 | `--json` |  | emit response as JSON |
-| `--role <string>` |  | role. Available values: OWNER. |
+| `--role <roles>` |  | Deprecated: use roles. Writing it sets `roles` to this one role; it cannot be sent with `roles`. `OWNER` is accepted as `owner`. Reads return the member's role with the most access, or its first custom role. |
+| `--roles <owner>` |  | The roles the member holds across the organization, each a system-managed role key (owner, `admin`, `member`, `viewer` or `billing`) or a custom role ID. A member holds at least one. Reads list system-managed roles from least to most access, then Billing, then custom roles by name. Setting `roles` replaces the whole set. Roles other than `owner` require policy administration to be enabled for the organization, and the caller can add or remove only roles whose permissions it already holds. |
 
