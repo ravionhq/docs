@@ -921,6 +921,11 @@ Group step - contains nested steps
   Human-readable group label shown in pipeline UI
 </ResponseField>
 
+<ResponseField name="purpose" type="string">
+  What this group is for, in plain language, shown in the pipeline UI
+  Not used when running the pipeline
+</ResponseField>
+
 <ResponseField name="steps" type="Step[]" required>
   See: [Step](#step)
 
@@ -941,6 +946,11 @@ Parallel step - executes children concurrently
   See: [ParallelChild](#parallelchild)
 
   _(minItems:1)_
+</ResponseField>
+
+<ResponseField name="purpose" type="string">
+  What this parallel block is for, in plain language, shown in the pipeline UI
+  Not used when running the pipeline
 </ResponseField>
 
 <ResponseField name="concurrency" type="ConcurrencyConfig">
@@ -968,6 +978,11 @@ Approval action step — pauses pipeline execution until a user explicitly appro
 
 <ResponseField name="name" type="string">
   Human-readable step name shown in the pipeline UI
+</ResponseField>
+
+<ResponseField name="purpose" type="string">
+  Why this step exists and what it does, in plain language, shown in the pipeline UI
+  Not used when running the step
 </ResponseField>
 
 <ResponseField name="timeout" type="integer | null">
@@ -1005,6 +1020,11 @@ Build image CI action step
 
 <ResponseField name="name" type="string">
   Human-readable step name shown in the pipeline UI
+</ResponseField>
+
+<ResponseField name="purpose" type="string">
+  Why this step exists and what it does, in plain language, shown in the pipeline UI
+  Not used when running the step
 </ResponseField>
 
 <ResponseField name="timeout" type="integer | null">
@@ -1100,6 +1120,11 @@ Build static CI action step
   Human-readable step name shown in the pipeline UI
 </ResponseField>
 
+<ResponseField name="purpose" type="string">
+  Why this step exists and what it does, in plain language, shown in the pipeline UI
+  Not used when running the step
+</ResponseField>
+
 <ResponseField name="timeout" type="integer | null">
   Maximum execution time in seconds before the step is killed
 
@@ -1190,6 +1215,11 @@ builds. An explicit `concurrency` block opts out of this default entirely.
   Human-readable step name shown in the pipeline UI
 </ResponseField>
 
+<ResponseField name="purpose" type="string">
+  Why this step exists and what it does, in plain language, shown in the pipeline UI
+  Not used when running the step
+</ResponseField>
+
 <ResponseField name="timeout" type="integer | null">
   Maximum execution time in seconds before the step is killed
 
@@ -1248,6 +1278,11 @@ Custom command CI action step
 
 <ResponseField name="name" type="string">
   Human-readable step name shown in the pipeline UI
+</ResponseField>
+
+<ResponseField name="purpose" type="string">
+  Why this step exists and what it does, in plain language, shown in the pipeline UI
+  Not used when running the step
 </ResponseField>
 
 <ResponseField name="timeout" type="integer | null">
@@ -1350,6 +1385,11 @@ This serialization is independent of trigger/step/block concurrency:
   Human-readable step name shown in the pipeline UI
 </ResponseField>
 
+<ResponseField name="purpose" type="string">
+  Why this step exists and what it does, in plain language, shown in the pipeline UI
+  Not used when running the step
+</ResponseField>
+
 <ResponseField name="timeout" type="integer | null">
   Maximum execution time in seconds before the step is killed
 
@@ -1427,6 +1467,11 @@ Rollback action step — reverts a module to a specific previous deployment.
   Human-readable step name shown in the pipeline UI
 </ResponseField>
 
+<ResponseField name="purpose" type="string">
+  Why this step exists and what it does, in plain language, shown in the pipeline UI
+  Not used when running the step
+</ResponseField>
+
 <ResponseField name="timeout" type="integer | null">
   Maximum execution time in seconds before the step is killed
 
@@ -1470,6 +1515,11 @@ Sleep action step — pauses pipeline execution for testing and debugging
   Human-readable step name shown in the pipeline UI
 </ResponseField>
 
+<ResponseField name="purpose" type="string">
+  Why this step exists and what it does, in plain language, shown in the pipeline UI
+  Not used when running the step
+</ResponseField>
+
 <ResponseField name="timeout" type="integer | null">
   Maximum execution time in seconds before the step is killed
 
@@ -1511,6 +1561,11 @@ Terraform apply CI action step
 
 <ResponseField name="name" type="string">
   Human-readable step name shown in the pipeline UI
+</ResponseField>
+
+<ResponseField name="purpose" type="string">
+  Why this step exists and what it does, in plain language, shown in the pipeline UI
+  Not used when running the step
 </ResponseField>
 
 <ResponseField name="timeout" type="integer | null">
@@ -1599,6 +1654,11 @@ Terraform plan CI action step
 
 <ResponseField name="name" type="string">
   Human-readable step name shown in the pipeline UI
+</ResponseField>
+
+<ResponseField name="purpose" type="string">
+  Why this step exists and what it does, in plain language, shown in the pipeline UI
+  Not used when running the step
 </ResponseField>
 
 <ResponseField name="timeout" type="integer | null">
@@ -1710,6 +1770,11 @@ Trigger pipeline action step
 
 <ResponseField name="name" type="string">
   Human-readable step name shown in the pipeline UI
+</ResponseField>
+
+<ResponseField name="purpose" type="string">
+  Why this step exists and what it does, in plain language, shown in the pipeline UI
+  Not used when running the step
 </ResponseField>
 
 <ResponseField name="timeout" type="integer | null">
