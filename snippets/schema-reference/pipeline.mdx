@@ -998,6 +998,13 @@ Approval action step — pauses pipeline execution until a user explicitly appro
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="idempotent" type="boolean">
+  The step can be run again from the start after being cut off partway: a build, a test run, a lint.
+  An idempotent step can run on a spot host in a sandbox pool that allows spot, and runs again on
+  another host when AWS reclaims its host. Steps that must not run twice, such as database
+  migrations and deploys, leave it unset and run only on on-demand hosts.
+</ResponseField>
+
 <ResponseField name="concurrency" type="ConcurrencyConfig">
   Concurrency configuration for controlling step execution across variants
 
@@ -1038,6 +1045,13 @@ Build image CI action step
   Accepts either a boolean literal or a full template token that resolves to a boolean
 
   _(templateable)_
+</ResponseField>
+
+<ResponseField name="idempotent" type="boolean">
+  The step can be run again from the start after being cut off partway: a build, a test run, a lint.
+  An idempotent step can run on a spot host in a sandbox pool that allows spot, and runs again on
+  another host when AWS reclaims its host. Steps that must not run twice, such as database
+  migrations and deploys, leave it unset and run only on on-demand hosts.
 </ResponseField>
 
 <ResponseField name="concurrency" type="ConcurrencyConfig">
@@ -1138,6 +1152,13 @@ Build static CI action step
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="idempotent" type="boolean">
+  The step can be run again from the start after being cut off partway: a build, a test run, a lint.
+  An idempotent step can run on a spot host in a sandbox pool that allows spot, and runs again on
+  another host when AWS reclaims its host. Steps that must not run twice, such as database
+  migrations and deploys, leave it unset and run only on on-demand hosts.
+</ResponseField>
+
 <ResponseField name="concurrency" type="ConcurrencyConfig">
   Concurrency configuration for controlling step execution across variants
 
@@ -1233,6 +1254,13 @@ builds. An explicit `concurrency` block opts out of this default entirely.
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="idempotent" type="boolean">
+  The step can be run again from the start after being cut off partway: a build, a test run, a lint.
+  An idempotent step can run on a spot host in a sandbox pool that allows spot, and runs again on
+  another host when AWS reclaims its host. Steps that must not run twice, such as database
+  migrations and deploys, leave it unset and run only on on-demand hosts.
+</ResponseField>
+
 <ResponseField name="concurrency" type="ConcurrencyConfig">
   Concurrency configuration for controlling step execution across variants
 
@@ -1296,6 +1324,13 @@ Custom command CI action step
   Accepts either a boolean literal or a full template token that resolves to a boolean
 
   _(templateable)_
+</ResponseField>
+
+<ResponseField name="idempotent" type="boolean">
+  The step can be run again from the start after being cut off partway: a build, a test run, a lint.
+  An idempotent step can run on a spot host in a sandbox pool that allows spot, and runs again on
+  another host when AWS reclaims its host. Steps that must not run twice, such as database
+  migrations and deploys, leave it unset and run only on on-demand hosts.
 </ResponseField>
 
 <ResponseField name="setup" type="SetupAction[] | null">
@@ -1403,6 +1438,13 @@ This serialization is independent of trigger/step/block concurrency:
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="idempotent" type="boolean">
+  The step can be run again from the start after being cut off partway: a build, a test run, a lint.
+  An idempotent step can run on a spot host in a sandbox pool that allows spot, and runs again on
+  another host when AWS reclaims its host. Steps that must not run twice, such as database
+  migrations and deploys, leave it unset and run only on on-demand hosts.
+</ResponseField>
+
 <ResponseField name="concurrency" type="ConcurrencyConfig">
   Concurrency configuration for controlling step execution across variants
 
@@ -1485,6 +1527,13 @@ Rollback action step — reverts a module to a specific previous deployment.
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="idempotent" type="boolean">
+  The step can be run again from the start after being cut off partway: a build, a test run, a lint.
+  An idempotent step can run on a spot host in a sandbox pool that allows spot, and runs again on
+  another host when AWS reclaims its host. Steps that must not run twice, such as database
+  migrations and deploys, leave it unset and run only on on-demand hosts.
+</ResponseField>
+
 <ResponseField name="concurrency" type="ConcurrencyConfig">
   Concurrency configuration for controlling step execution across variants
 
@@ -1533,6 +1582,13 @@ Sleep action step — pauses pipeline execution for testing and debugging
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="idempotent" type="boolean">
+  The step can be run again from the start after being cut off partway: a build, a test run, a lint.
+  An idempotent step can run on a spot host in a sandbox pool that allows spot, and runs again on
+  another host when AWS reclaims its host. Steps that must not run twice, such as database
+  migrations and deploys, leave it unset and run only on on-demand hosts.
+</ResponseField>
+
 <ResponseField name="concurrency" type="ConcurrencyConfig">
   Concurrency configuration for controlling step execution across variants
 
@@ -1579,6 +1635,13 @@ Terraform apply CI action step
   Accepts either a boolean literal or a full template token that resolves to a boolean
 
   _(templateable)_
+</ResponseField>
+
+<ResponseField name="idempotent" type="boolean">
+  The step can be run again from the start after being cut off partway: a build, a test run, a lint.
+  An idempotent step can run on a spot host in a sandbox pool that allows spot, and runs again on
+  another host when AWS reclaims its host. Steps that must not run twice, such as database
+  migrations and deploys, leave it unset and run only on on-demand hosts.
 </ResponseField>
 
 <ResponseField name="concurrency" type="ConcurrencyConfig">
@@ -1672,6 +1735,13 @@ Terraform plan CI action step
   Accepts either a boolean literal or a full template token that resolves to a boolean
 
   _(templateable)_
+</ResponseField>
+
+<ResponseField name="idempotent" type="boolean">
+  The step can be run again from the start after being cut off partway: a build, a test run, a lint.
+  An idempotent step can run on a spot host in a sandbox pool that allows spot, and runs again on
+  another host when AWS reclaims its host. Steps that must not run twice, such as database
+  migrations and deploys, leave it unset and run only on on-demand hosts.
 </ResponseField>
 
 <ResponseField name="concurrency" type="ConcurrencyConfig">
@@ -1788,6 +1858,13 @@ Trigger pipeline action step
   Accepts either a boolean literal or a full template token that resolves to a boolean
 
   _(templateable)_
+</ResponseField>
+
+<ResponseField name="idempotent" type="boolean">
+  The step can be run again from the start after being cut off partway: a build, a test run, a lint.
+  An idempotent step can run on a spot host in a sandbox pool that allows spot, and runs again on
+  another host when AWS reclaims its host. Steps that must not run twice, such as database
+  migrations and deploys, leave it unset and run only on on-demand hosts.
 </ResponseField>
 
 <ResponseField name="concurrency" type="ConcurrencyConfig">
@@ -1942,7 +2019,7 @@ Discriminated union. The `type` field selects which schema applies.
 Step infrastructure configuration, discriminated by `type`
 
 Note: Additional validation via CEL:
-- ec2 and ec2-spot need exactly one target mode: execution_environment_id, or aws_account_id plus region
+- every infrastructure type needs exactly one target mode: execution_environment_id, or aws_account_id plus region
 - an instance_size list must not mix x86_64 and ARM64 (Graviton) types
 
 Discriminated union. The `type` field selects which schema applies.
@@ -2419,10 +2496,13 @@ On-demand EC2 instance infrastructure
 
 ### SandboxStepInfrastructure
 
-Firecracker microVM infrastructure on an execution environment's sandbox host pool
+Firecracker microVM infrastructure on the sandbox host pool of the resolved
+execution environment. With an AWS account and region target, the matching
+environment is created on first use if needed. A newly created environment
+has no sandbox pool, so the step fails until a pool is enabled on it.
 
 <ResponseField name="type" type="enum" required>
-  Infrastructure type — a Firecracker microVM on the execution environment's sandbox host pool
+  Infrastructure type — a Firecracker microVM on the resolved execution environment's sandbox host pool
 
   Allowed values: `sandbox`
 
@@ -2448,8 +2528,26 @@ Firecracker microVM infrastructure on an execution environment's sandbox host po
   _(templateable)_
 </ResponseField>
 
-<ResponseField name="execution_environment_id" type="string" required>
-  ID or given ID of the execution environment whose sandbox host pool runs the step
+<ResponseField name="execution_environment_id" type="string | null">
+  ID or given ID of a pre-configured execution environment
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="aws_account_id" type="string | null">
+  AWS account reference for automatic network selection.
+
+  Accepts either the Ravion AWS account database ID (e.g.
+  `awsact_123`) or the user-provided `givenId` configured on the AWS
+  account. The resolver normalizes the value to the DB id before any
+  downstream use; the `givenId` form is an input alias only and is never
+  persisted as the canonical reference.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="region" type="string | null">
+  AWS region for automatic network selection
 
   _(templateable)_
 </ResponseField>

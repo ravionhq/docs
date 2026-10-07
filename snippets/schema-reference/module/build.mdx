@@ -363,7 +363,7 @@ Discriminated union. The `type` field selects which schema applies.
 Step infrastructure configuration, discriminated by `type`
 
 Note: Additional validation via CEL:
-- ec2 and ec2-spot need exactly one target mode: execution_environment_id, or aws_account_id plus region
+- every infrastructure type needs exactly one target mode: execution_environment_id, or aws_account_id plus region
 - an instance_size list must not mix x86_64 and ARM64 (Graviton) types
 
 Discriminated union. The `type` field selects which schema applies.
@@ -763,10 +763,13 @@ On-demand EC2 instance infrastructure
 
 ### Pipeline.SandboxStepInfrastructure
 
-Firecracker microVM infrastructure on an execution environment's sandbox host pool
+Firecracker microVM infrastructure on the sandbox host pool of the resolved
+execution environment. With an AWS account and region target, the matching
+environment is created on first use if needed. A newly created environment
+has no sandbox pool, so the step fails until a pool is enabled on it.
 
 <ResponseField name="type" type="enum" required>
-  Infrastructure type — a Firecracker microVM on the execution environment's sandbox host pool
+  Infrastructure type — a Firecracker microVM on the resolved execution environment's sandbox host pool
 
   Allowed values: `sandbox`
 
@@ -792,8 +795,26 @@ Firecracker microVM infrastructure on an execution environment's sandbox host po
   _(templateable)_
 </ResponseField>
 
-<ResponseField name="execution_environment_id" type="string" required>
-  ID or given ID of the execution environment whose sandbox host pool runs the step
+<ResponseField name="execution_environment_id" type="string | null">
+  ID or given ID of a pre-configured execution environment
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="aws_account_id" type="string | null">
+  AWS account reference for automatic network selection.
+
+  Accepts either the Ravion AWS account database ID (e.g.
+  `awsact_123`) or the user-provided `givenId` configured on the AWS
+  account. The resolver normalizes the value to the DB id before any
+  downstream use; the `givenId` form is an input alias only and is never
+  persisted as the canonical reference.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="region" type="string | null">
+  AWS region for automatic network selection
 
   _(templateable)_
 </ResponseField>
