@@ -67,7 +67,7 @@ See [RollbackStep schema](/pipelines/config-reference#rollbackstep).
 
 ## CI steps
 
-CI steps run on compute you provision through an `infrastructure` block, which selects an execution environment or an AWS account, region, instance type, and size. See [StepInfrastructure](/pipelines/config-reference#stepinfrastructure).
+CI steps run on compute you provision through an `infrastructure` block, which selects an execution environment or an AWS account, region, instance type, and size. See [StepInfrastructure](/pipelines/config-reference#stepinfrastructure). To start steps in seconds on warm hosts instead of a new EC2 instance, use `type: sandbox`. See [Sandboxes](/concepts/sandboxes).
 
 <Note>
   The `nixpacks` builder is deprecated for pipeline CI steps. Use `railpack` for automatic framework detection.

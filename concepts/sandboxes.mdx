@@ -1,0 +1,171 @@
+---
+title: "Sandboxes"
+sidebarTitle: "Sandboxes"
+description: "Run pipeline steps and module builds as Firecracker microVMs on warm EC2 hosts in your AWS account, so they start in seconds."
+"og:image": "https://www.ravion.com/og/docs/concepts/sandboxes.png"
+"twitter:image": "https://www.ravion.com/og/docs/concepts/sandboxes.png"
+---
+
+<Note>
+  Sandboxes are in preview. [Contact Ravion support](/contact-support) to turn them on for your
+  organization. Until then, a step with `type: sandbox` fails with "Sandboxes are not enabled for
+  this organization", and the **Sandboxes** settings don't appear.
+</Note>
+
+A sandbox runs a pipeline step or a module build as a [Firecracker](https://firecracker-microvm.github.io/) microVM. The microVM runs on a pool of EC2 hosts in your AWS account. Ravion keeps those hosts warm, so a step starts in seconds instead of waiting for a new EC2 instance to boot.
+
+Each [execution environment](#turn-on-a-sandbox-pool) can have one sandbox pool. Any step that targets that execution environment with `type: sandbox` runs on its hosts. Several sandboxes can share one host.
+
+## When to use sandboxes
+
+Use sandboxes for steps you run often and that spend a lot of their time waiting for a machine: builds, tests, lint and other CI steps.
+
+Use `ec2` or `ec2-spot` [infrastructure](/pipelines/config-reference#stepinfrastructure) instead when a step needs a custom AMI, its own EC2 instance, or a machine type your pool doesn't have.
+
+## What runs inside a sandbox
+
+Every sandbox boots the same x86_64 Ubuntu 24.04 image, with git, GitHub CLI (`gh`), build-essential, Node.js 24, Docker, the AWS CLI, `jq`, `curl` and `zstd`. Install anything else with the step's `setup` actions or commands.
+
+Docker starts in the background when the sandbox boots. The first `docker` command waits for it. Tools that talk to Docker another way, such as Testcontainers or a Docker SDK, must wait for the daemon themselves.
+
+## Get started
+
+<Steps>
+  <Step title="Ask support to turn on sandboxes">
+    [Contact Ravion support](/contact-support) and ask for sandboxes on your organization.
+  </Step>
+  <Step title="Update your AWS permissions">
+    Sandboxes need AWS account role policy version 1.0.49 or later. Update to the latest version.
+
+    1. Go to **Settings → AWS accounts** and open the account.
+    2. Click **Update AWS Permissions** and follow the steps to update the CloudFormation stack.
+
+    From the CLI, run `ravion aws account policy-diff <aws-account-id>` to review the change, then apply it with `aws cloudformation update-stack` and a fresh template URL from `ravion aws account cloudformation-template-url <aws-account-id>`.
+
+    With an older policy, the pool can't launch hosts, and its error names the permission AWS denied.
+  </Step>
+  <Step title="Turn on a sandbox pool">
+    1. Go to **Settings → Execution environments** and open the environment your steps use, or create one.
+    2. On the **Config** tab, find the **Sandboxes** section.
+    3. Click **Add machine type**, choose an instance type and save it.
+
+    Adding the first machine type turns the pool on. See [Pool settings](#pool-settings) for the other options.
+  </Step>
+  <Step title="Run pipeline steps or module builds in sandboxes">
+    Switch [pipeline steps](#pipeline-steps) and [module builds](#module-builds) to sandbox, as shown below.
+  </Step>
+</Steps>
+
+## Pipeline steps
+
+Set the step's `infrastructure.type` to `sandbox`. Any step with an `infrastructure` block can run in a sandbox, such as `custom`, `build:image` and `build:static`.
+
+```yaml
+- id: run_tests
+  name: Run tests
+  type: custom
+  source:
+    type: git
+    repo: https://github.com/my-org/my-repo
+    branch: << pipeline.input.branch >>
+  commands:
+    - npm ci
+    - npm test
+  infrastructure:
+    type: sandbox
+    execution_environment_id: ci-builders
+    cpu: 4
+    memory: 16
+    disk: 40
+    disk_cache: auto
+    interruptible: true
+```
+
+| Field | Required | Default | What it does |
+| --- | --- | --- | --- |
+| `execution_environment_id` | One target | None | ID or given ID of the execution environment whose pool runs the step. |
+| `aws_account_id` + `region` | One target | None | Use the execution environment for this account and region instead. See [Limits](#limits-and-caveats). |
+| `cpu` | Yes | None | vCPUs for the sandbox. |
+| `memory` | Yes | None | Memory in GiB. |
+| `disk` | No | 8 | GiB of host disk the sandbox reserves for what it writes. A host takes the step only when it has this much free. |
+| `disk_cache` | No | `off` | Keep the sandbox's disk between runs. See [Disk cache](#disk-cache). |
+| `interruptible` | No | `false` | Let the step run on spot hosts and rerun from the start if its host is lost. See [Interruptible steps](#interruptible-steps-and-spot-hosts). |
+
+Sandboxes don't take `instance_size`, `ami` or `storage`. The full schema is in [SandboxStepInfrastructure](/pipelines/config-reference#sandboxstepinfrastructure).
+
+## Module builds
+
+These modules can build in a sandbox: [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web), [`rvn-ecs-worker`](/module-definitions/catalog/rvn-ecs-worker), [`rvn-ecs-nlb`](/module-definitions/catalog/rvn-ecs-nlb), [`rvn-ec2-service`](/module-definitions/catalog/rvn-ec2-service), [`rvn-eks-web`](/module-definitions/catalog/rvn-eks-web), [`rvn-eks-worker`](/module-definitions/catalog/rvn-eks-worker), [`rvn-lambda`](/module-definitions/catalog/rvn-lambda) and [`rvn-aws-static`](/module-definitions/catalog/rvn-aws-static).
+
+In the module's **Builder config**, set **Builder capacity type** to **Sandbox (preview)**, then set:
+
+| Input | ID | Default |
+| --- | --- | --- |
+| **Builder vCPUs** | `build_cpu` | 4 |
+| **Builder memory (GiB)** | `build_memory` | 8 |
+| **Builder disk (GiB)** | `build_disk` | 30 |
+| **Interruptible build** | `build_interruptible_enabled` | On |
+| **Builder execution environment** | `build_execution_environment_id` | The module's Terraform execution environment |
+
+The build runs on the pool of the **Builder execution environment**, or the module's Terraform execution environment when that's empty. That environment needs its pool turned on.
+
+In a [project config file](/config-as-code/project-config-file):
+
+```yaml ravion.yaml
+- givenId: web-app
+  type: rvn-ecs-web
+  input:
+    build_source: dockerfile
+    build_capacity_type: sandbox
+    build_cpu: 4
+    build_memory: 8
+    build_execution_environment_id: ci-builders
+    # ...
+```
+
+Module builds in a sandbox always keep their disk between runs (`disk_cache: auto`). Turn off **Interruptible build** if your build commands change anything outside the build, such as running [database migrations](/guides/database-migrations).
+
+## Pool settings
+
+The **Sandboxes** section of an execution environment's **Config** tab sets up its pool. Only **Machine types** shows until you add one.
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| **Machine types** | None | The EC2 instance types the pool can launch. Only types that can run a microVM are listed. Each type also sets the host's disk size (default 60 GiB, enough for four sandboxes of the default size), IOPS (3000) and throughput (125 MB/s). IOPS and throughput above those defaults are billed even while a host is stopped. |
+| **Host storage** | Persistent | **Persistent** stops idle hosts and keeps their disk, so they wake in seconds. **Ephemeral** terminates idle hosts. On an ephemeral pool, instance types with an instance store keep sandboxes and cache on the instance store. |
+| **Use spot hosts for interruptible steps** | Off | Lets the pool launch spot hosts for [interruptible steps](#interruptible-steps-and-spot-hosts). |
+| **Stop idle hosts after (seconds)** | 10 | How long a host waits with nothing to run before it stops. On an ephemeral pool, this is **Terminate idle hosts after (seconds)**. |
+| **Delete stopped hosts after (minutes)** | 1440 | How long a stopped host is kept before it's deleted. Persistent pools only. |
+| **Hosts kept ready** | Peak, 7 days | How many hosts the pool keeps ready for the next step. **Peak** matches your busiest minute and **Rolling average** your average daily peak, over the last N days. **Fixed** keeps a set number. **None** keeps none. Persistent pools only. |
+
+To turn a pool off, remove all of its machine types. This deletes the pool's hosts.
+
+## Interruptible steps and spot hosts
+
+`interruptible: true` says a step can be stopped partway and started over. Builds, tests and lint usually can.
+
+- Only interruptible steps run on spot hosts, and only in a pool with **Use spot hosts for interruptible steps** turned on. Other steps run on on-demand hosts.
+- If an interruptible step's host is lost or AWS reclaims it, Ravion reruns the step from the start on another host. The last retry always runs on an on-demand host.
+- If a step that isn't interruptible loses its host, the step fails.
+
+Leave `interruptible` off for steps that change things outside the sandbox and can't safely be cut off and rerun, such as database migrations or deploys.
+
+## Disk cache
+
+`disk_cache` controls whether a sandbox keeps its disk, with your dependencies, build output and Docker layers, between runs.
+
+| Value | What it does |
+| --- | --- |
+| `off` | Boot the base image every run and keep nothing. This is the default. |
+| `auto` | Keep this step's own disk, named by its git source and step. Needs a git `source`. |
+| A key, such as `web-deps` | Every step in the repository that uses the same key shares one disk. The last successful run to finish saves it. Keys are up to 64 lowercase letters, digits, `.`, `_` or `-`. |
+
+A run restores the disk saved for its branch. If there's none, it uses the disk from the branch's pull request base, then the repository's default branch. A run saves its disk back to its own branch only when it succeeds.
+
+## Limits and caveats
+
+- **No pool on the environment.** A sandbox step fails if its execution environment has no pool turned on.
+- **Account and region targets.** With `aws_account_id` and `region`, Ravion uses that account and region's execution environment, and creates one from the default VPC if none exists. A new environment has no pool, so the step fails until you turn one on. Prefer `execution_environment_id`.
+- **Size must fit a machine type.** If no machine type in the pool can hold the step's `cpu` and `memory`, the step fails with "No configured instance type can host this sandbox". Add a larger machine type or make the step smaller.
+- **Cold starts.** When no host is ready, the step waits while the pool wakes or launches one. Raise **Hosts kept ready** if this happens often.
+- **Sandboxes turned off.** If support turns sandboxes off for your organization, sandbox steps fail at run start and you can't turn a pool on. Hosts that are already running still stop and are deleted on their normal timers.

@@ -49,7 +49,7 @@ Add a `build` step to your pipeline and point it at the module instance:
 - `module_instance` accepts a unique ID (`mi_…`), `environment.module`, or `project.environment.module`.
 - `input` passes build-time values the module accepts, such as a tag, branch, or commit. Check the module's docs or schema (`ravion module schema <module-type>`) for what it takes.
 
-Builds run on temporary EC2 instances in your cloud account, so your source code never enters the Ravion control plane. Image builds reuse [Docker layer cache](#docker-layer-cache) from the destination registry, so repeat builds are fast.
+Builds run on temporary EC2 instances in your cloud account, or in [sandboxes](/concepts/sandboxes) on warm hosts, so your source code never enters the Ravion control plane. Image builds reuse [Docker layer cache](#docker-layer-cache) from the destination registry, so repeat builds are fast.
 
 <Note>
   Building something that isn't a module? Use the standalone `build:image` or `build:static` [CI
