@@ -26,7 +26,7 @@ Docker starts in the background when the sandbox boots. The first `docker` comma
 
 <Steps>
   <Step title="Update your AWS permissions">
-    Update to the latest AWS account role policy.
+    Sandboxes require AWS account role policy **1.0.52 or later**. Upgrade to the latest version if yours is older.
 
     1. Go to [**Settings / AWS accounts**](https://app.ravion.com/org/settings/aws-accounts) and open the account.
     2. Click **Update AWS Permissions** and follow the steps to update the CloudFormation stack.
@@ -34,11 +34,6 @@ Docker starts in the background when the sandbox boots. The first `docker` comma
     From the CLI, run `ravion aws account policy-diff <aws-account-id>` to review the change, then apply it with `aws cloudformation update-stack` and a fresh template URL from `ravion aws account cloudformation-template-url <aws-account-id>`.
 
     Missing permissions can prevent the pool from launching hosts. Check the reported AWS permission error if a launch fails.
-  </Step>
-  <Step title="Choose an execution environment">
-    Use an existing execution environment, or create one under **Settings / Execution environments**. Use its ID or given ID in your step or builder configuration.
-
-    You don't need to add machine types or turn on a pool. Your first sandbox step creates it. To customize the defaults, open the environment's **Config** tab and **Sandboxes** section. See [Pool settings](#pool-settings).
   </Step>
   <Step title="Run pipeline steps or module builds in sandboxes">
     Set [pipeline steps](#pipeline-steps) to `type: sandbox`. New [module builds](#module-builds) use sandboxes by default; switch existing modules if they still use EC2.
@@ -48,6 +43,8 @@ Docker starts in the background when the sandbox boots. The first `docker` comma
 ## Pipeline steps
 
 Set the step's `infrastructure.type` to `sandbox`. Any step with an `infrastructure` block can run in a sandbox, such as `custom`, `build:image` and `build:static`.
+
+Use your existing execution environment's ID or given ID in place of `ci-builders` below. If you need a new environment, create one in [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments). You don't need to configure a pool; your first sandbox step creates it automatically.
 
 ```yaml
 - id: run_tests
@@ -84,54 +81,11 @@ Sandboxes don't take `instance_size`, `ami` or `storage`. The full schema is in 
 
 ## Module builds
 
-New module instances default to sandbox builds starting with these versions:
-
-| Module | Sandbox default from |
-| --- | --- |
-| [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web) | 2.2.0 |
-| [`rvn-ecs-worker`](/module-definitions/catalog/rvn-ecs-worker) | 2.2.0 |
-| [`rvn-ecs-nlb`](/module-definitions/catalog/rvn-ecs-nlb) | 2.3.0 |
-| [`rvn-ec2-service`](/module-definitions/catalog/rvn-ec2-service) | 2.2.0 |
-| [`rvn-eks-web`](/module-definitions/catalog/rvn-eks-web) | 1.7.0 |
-| [`rvn-eks-worker`](/module-definitions/catalog/rvn-eks-worker) | 0.10.0 |
-| [`rvn-lambda`](/module-definitions/catalog/rvn-lambda) | 2.1.0 |
-| [`rvn-aws-static`](/module-definitions/catalog/rvn-aws-static) | 1.4.0 |
-
-Existing instances keep their saved builder settings when you upgrade. To switch one, open **Builder config**, set **Builder capacity type** to **Sandbox**, and choose the CPU and memory. Choose **EC2** or **EC2 spot** only if your build needs a custom AMI or direct access to a dedicated EC2 instance.
-
-New instances use these defaults:
-
-| Input | ID | Default |
-| --- | --- | --- |
-| **Builder capacity type** | `build_capacity_type` | Sandbox |
-| **Builder vCPUs** | `build_cpu` | 14 |
-| **Builder memory (GiB)** | `build_memory` | 28 |
-| **Builder disk (GiB)** | `build_disk` | 30 |
-| **Interruptible build** | `build_interruptible_enabled` | On |
-| **Builder execution environment** | `build_execution_environment_id` | The module's Terraform execution environment |
-
-The build runs on the pool of the **Builder execution environment**, or the module's Terraform execution environment when that's empty. Its first sandbox build creates the pool if needed.
-
-In a [project config file](/config-as-code/project-config-file):
-
-```yaml ravion.yaml
-- givenId: web-app
-  type: rvn-ecs-web
-  version: 2.2.0
-  input:
-    build_source: dockerfile
-    build_capacity_type: sandbox
-    build_cpu: 14
-    build_memory: 28
-    build_execution_environment_id: ci-builders
-    # ...
-```
-
-Module builds in a sandbox always keep their disk between runs (`disk_cache: auto`). Turn off **Interruptible build** if your build commands change anything outside the build, such as running [database migrations](/guides/database-migrations).
+New module builds use sandboxes by default. See [Build infrastructure](/modules/build#build-infrastructure) to configure builds or switch an existing module from EC2.
 
 ## Pool settings
 
-Open **Settings / Execution environments**, choose the environment, then open **Config / Sandboxes**. These are the defaults for a new pool. Existing pools keep their saved settings.
+Open [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments), choose the environment, then open **Config / Sandboxes**. These are the defaults for a new pool. Existing pools keep their saved settings.
 
 | Setting | Default | What it does |
 | --- | --- | --- |
