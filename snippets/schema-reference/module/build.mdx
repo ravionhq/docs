@@ -55,13 +55,6 @@ Image build configuration for a module.
   _(format:int32,min:1; templateable)_
 </ResponseField>
 
-<ResponseField name="interruptible" type="boolean">
-  The step can be stopped partway and started over: a build, a test run, a lint.
-  An interruptible step can run on a spot host in a sandbox pool that allows spot, and runs again on
-  another host when AWS reclaims its host. Steps that must not be stopped partway, such as database
-  migrations and deploys, leave it unset and run only on on-demand hosts.
-</ResponseField>
-
 <ResponseField name="inputs" type="InputProperty[]" required>
   Build-specific inputs shown when running a module build.
   Same types as module inputs — reuses the InputProperty union.
@@ -147,13 +140,6 @@ step.
   _(format:int32,min:1; templateable)_
 </ResponseField>
 
-<ResponseField name="interruptible" type="boolean">
-  The step can be stopped partway and started over: a build, a test run, a lint.
-  An interruptible step can run on a spot host in a sandbox pool that allows spot, and runs again on
-  another host when AWS reclaims its host. Steps that must not be stopped partway, such as database
-  migrations and deploys, leave it unset and run only on on-demand hosts.
-</ResponseField>
-
 <ResponseField name="inputs" type="InputProperty[]" required>
   Build-specific inputs shown when running a module build.
   Same types as module inputs — reuses the InputProperty union.
@@ -228,13 +214,6 @@ Static build configuration for a module.
   Maximum execution time in seconds before the step is killed
 
   _(format:int32,min:1; templateable)_
-</ResponseField>
-
-<ResponseField name="interruptible" type="boolean">
-  The step can be stopped partway and started over: a build, a test run, a lint.
-  An interruptible step can run on a spot host in a sandbox pool that allows spot, and runs again on
-  another host when AWS reclaims its host. Steps that must not be stopped partway, such as database
-  migrations and deploys, leave it unset and run only on on-demand hosts.
 </ResponseField>
 
 <ResponseField name="inputs" type="InputProperty[]" required>
@@ -875,6 +854,16 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
   "_" or "-".
 
   _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="interruptible" type="boolean | null">
+  Whether the step can be stopped partway and started over. Only an
+  interruptible step can be placed on a spot host, and it is run again on
+  another host if its host is lost or reclaimed. Leave it off for steps that
+  change things outside the sandbox and can't safely be cut off and repeated,
+  such as database migrations.
+
+  _(templateable)_
 </ResponseField>
 
 ### Pipeline.LambdaDockerfileBuildConfig
