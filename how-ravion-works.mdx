@@ -18,9 +18,11 @@ Choose from our [**standard library of production-ready modules**](/module-defin
 
 **Or bring your own Terraform**. You can use Ravion like Terraform Cloud, or package your Terraform into a reusable Ravion module for your company.
 
-## 3. Ravion spins up temporary EC2 instances in your cloud to execute the Terraform plan and apply steps
+## 3. Ravion executes Terraform plan and apply in your cloud account
 
 The Terraform executes securely in your account so your source code and other secrets never live in the Ravion control plane.
+
+Use [sandboxes](/concepts/sandboxes) for these pipeline steps unless you need native EC2 features, such as a custom AMI. Your organization's change and destroy pipelines determine which infrastructure runs them.
 
 You get full visibility into every Terraform resource, planned changes, and versioned state changes over time.
 
@@ -34,7 +36,7 @@ This makes compliance much easier than on PaaS and scales to enterprise platform
 
 Ravion has a full-featured CI/CD pipeline system to orchestrate builds, deploys, and any other code execution or tasks.
 
-Ravion pipelines run on temporary EC2 instances in your account, so you can securely access your private network without keys in or public access to GitHub Actions.
+Use [sandboxes](/concepts/sandboxes) for pipeline steps and module builds by default. They run in your account, so you can securely access your private network without exposing it to GitHub Actions.
 
 When using external pipelines, you trigger deploys through Ravion using our CLI or API.
 

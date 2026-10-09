@@ -28,7 +28,7 @@ Set `NODE_OPTIONS` so Node is allowed to use the memory you already pay for. The
       NODE_OPTIONS: "--max-old-space-size=8192"
     ```
 
-    Builds run on the `build_instance_type` (default `c7a.4xlarge`, 32 GB), so there is usually plenty of room — the heap cap, not the machine, is the constraint.
+    New instances of the [supported module versions](/concepts/sandboxes#module-builds) use sandbox builds with 28 GiB memory by default. Existing instances keep their saved settings. Check **Builder memory (GiB)** (`build_memory`) and keep the heap limit below it. For native EC2 builds, available memory depends on `build_instance_type` instead.
 
     For `dockerfile` builds, build environment variables only reach `docker build` as build args when `dockerfile_environment_variable_injection_enabled: true` is set and the Dockerfile declares `ARG NODE_OPTIONS`. Simpler: put `ENV NODE_OPTIONS=--max-old-space-size=8192` in the Dockerfile before the build step.
   </Tab>
