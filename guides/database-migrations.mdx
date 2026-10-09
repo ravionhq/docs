@@ -15,15 +15,15 @@ Ravion gives you three places that satisfy both. Which one to pick depends mostl
 | | Build step | Pre-deploy hook | Pipeline step |
 | --- | --- | --- | --- |
 | Best for | Ravion builds the image (Railpack or Dockerfile) | Prebuilt images (`ecr`, `image_registry`) | Several services share one schema, or you want a gate |
-| Extra time per deploy | None — reuses the build runner | Starts and stops a one-off ECS task | Provisions an EC2 runner |
-| Database access | Build runner needs `DATABASE_URL` and network access to the database | Inherits the service's secrets, subnets, and security groups | Runner needs `DATABASE_URL` and network access |
+| Extra time per deploy | None — reuses the build runner | Starts and stops a one-off ECS task | Starts a sandbox |
+| Database access | Build runner needs `DATABASE_URL` and network access to the database | Inherits the service's secrets, subnets, and security groups | Sandbox needs `DATABASE_URL` and network access |
 | Runs before | The image exists | The service rolls out | Any downstream deploy |
 
 ## Option 1: At the end of the build (recommended when Ravion builds your image)
 
 If Ravion builds your image with Railpack or a Dockerfile, run the migration as the last build command. The build runner is already running, so the migration adds only its own execution time to the deploy — no container to schedule, pull, and tear down.
 
-Builds run on EC2 in your AWS account, inside the module's builder execution environment (see [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web); by default, the same network placement as the ECS cluster). That is what lets the runner reach a private RDS instance. You need to give it two things it does not get by default:
+Builds run in your AWS account, inside the module's builder execution environment (see [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web); by default, the same network placement as the ECS cluster). That is what lets the runner reach a private RDS instance. New instances of the [supported module versions](/concepts/sandboxes#module-builds) use sandbox builds by default; use sandboxes for migrations too. Turn off **Interruptible build** so host loss fails the build instead of restarting the migration. You need to give the runner two things it does not get by default:
 
 1. **The connection string.** Add `DATABASE_URL` to `build_environment_variables`, referenced from Secrets Manager rather than pasted in. Build variables are separate from runtime variables, so the value has to be declared in both places.
 2. **Network access to the database.** Allow the build runner's security group or subnet CIDR in the RDS module's `allowed_security_group_ids` or `allowed_cidr_blocks`. If the runner is in the same VPC, the VPC CIDR is the simplest rule.
@@ -33,6 +33,7 @@ Builds run on EC2 in your AWS account, inside the module's builder execution env
   type: rvn-ecs-web
   input:
     build_source: railpack
+    build_interruptible_enabled: false
     # Migrate after the app build so a failing migration fails the build.
     railpack_build_cmd: "bundle exec rails assets:precompile && bundle exec rails db:migrate"
     build_environment_variables:
@@ -98,8 +99,10 @@ steps:
       DATABASE_URL:
         from_secrets_manager: "arn:aws:secretsmanager:us-east-2:111122223333:secret:prod/myapp-AbCdEf:DATABASE_URL::"
     infrastructure:
-      type: ec2
-      instance_size: t3.medium
+      type: sandbox
+      cpu: 2
+      memory: 4
+      interruptible: false
       aws_account_id: awsacct_123
       region: us-east-2
   - parallel:
@@ -115,7 +118,7 @@ steps:
           image_ref: << steps.build_web.output.image_digest >>
 ```
 
-Pipeline steps run on temporary EC2 instances in your account, so they can reach a private RDS instance without exposing it — with the same database access requirements as option 1. Reference the database URL from Secrets Manager rather than pasting it into the pipeline file — see [Managing secrets](/guides/managing-secrets). Like the pre-deploy hook, this adds runner startup time to every deploy; its advantage is that the migration is visible as its own step and shared by every deploy after it.
+The sandbox runs in your AWS account, so it can reach a private RDS instance without exposing it — with the same database access requirements as option 1. If no host has capacity, the step may wait while Ravion starts one. Reference the database URL from Secrets Manager rather than pasting it into the pipeline file — see [Managing secrets](/guides/managing-secrets). This can add host startup time when capacity is unavailable; the migration remains visible as its own step and is shared by every deploy after it.
 
 ## Where not to run migrations
 

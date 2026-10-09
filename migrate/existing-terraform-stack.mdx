@@ -16,7 +16,7 @@ Nothing is imported or recreated. An [`rvn-stack` module](/module-definitions/ca
 
 ## What you get
 
-Every `rvn-stack` module runs your organization's [change pipeline](/modules/stack#stacks-change-through-pipelines) — `terraform:plan` → `approval` → `terraform:apply` — on temporary EC2 runners in your AWS account. Your code, variables, and credentials never enter the Ravion control plane.
+Every `rvn-stack` module runs your organization's [change pipeline](/modules/stack#stacks-change-through-pipelines) — `terraform:plan` → `approval` → `terraform:apply` — in your AWS account. Use [sandbox infrastructure](/concepts/sandboxes#pipeline-steps) for its plan and apply steps unless you need native EC2 features. Existing pipelines keep their configured infrastructure. Your code, variables, and credentials never enter the Ravion control plane.
 
 Two independent inputs decide what each git event runs. Each accepts `none`, `plan`, or `plan_and_apply`:
 
@@ -73,7 +73,7 @@ Manual runs (`ravion stack trigger-pipeline`, or **Plan** / **Apply** / **Destro
   </Accordion>
 
   <Accordion title="Let the runner authenticate with its own role">
-    Plan and apply run on an EC2 instance in the AWS account you choose for the module, with an IAM role Ravion creates for the run. Plan steps get a read-only policy set (plus S3, DynamoDB, and Secrets Manager access for backends and data sources); apply steps get `AdministratorAccess`.
+    Plan and apply run in the AWS account you choose for the module, with an IAM role Ravion creates for the run. The pipeline's infrastructure settings select the sandbox or native EC2 runner. Plan steps get a read-only policy set (plus S3, DynamoDB, and Secrets Manager access for backends and data sources); apply steps get `AdministratorAccess`.
 
     To scope this down, create a [custom change pipeline](/modules/stack#system-pipelines-and-customization) and set `infrastructure.permissions.replace` on its `terraform:plan` and `terraform:apply` steps to your own customer managed policies, then point the stack at it with `change_pipeline_id`. Do the same for destroys with a custom pipeline set as `destroy_pipeline_id`. See [Runner permissions](/pipelines/step-types#runner-permissions).
 

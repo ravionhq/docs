@@ -65,13 +65,18 @@ variants:
 steps:
   - id: test
     type: custom
+    source:
+      type: git
+      repo: https://github.com/my-org/my-repo
+      branch: main
+    commands:
+      - npm ci
+      - npm test
     infrastructure:
       execution_environment_id: << pipeline.input.execution_environment_id >>
-      type: ec2
-      instance_size: t3.large
-    input:
-      commands:
-        - npm test
+      type: sandbox
+      cpu: 2
+      memory: 8
 ```
 
 Use this to guarantee environment-specific settings — the production variant always runs CI steps in the `prod-builders` execution environment, no matter how the run is started.

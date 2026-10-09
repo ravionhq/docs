@@ -92,7 +92,7 @@ steps:
 
 ## Build and test in parallel, then deploy
 
-Run the module build and a [`custom` CI step](/pipelines/step-types#custom) side by side, then deploy only after both succeed. The test step runs your commands on provisioned compute selected by the `infrastructure` block — reference a pre-configured execution environment with `execution_environment_id`, or an AWS account and region as shown here. The runner starts as a bare instance, so use `setup` actions to install tools like Node.js before your commands run.
+Run the module build and a [`custom` CI step](/pipelines/step-types#custom) side by side, then deploy only after both succeed. Use a [sandbox](/concepts/sandboxes) for CI steps by default. The test step runs in the AWS account and region selected by `infrastructure`; sandboxes include Node.js 24, and `setup` can install other tools or select a different version.
 
 ```yaml pipeline.yaml
 inputs:
@@ -125,8 +125,9 @@ steps:
           - npm ci
           - npm test
         infrastructure:
-          type: ec2
-          instance_size: t3.medium
+          type: sandbox
+          cpu: 2
+          memory: 4
           aws_account_id: awsacct_123
           region: us-east-1
   - id: deploy_web_app
@@ -165,8 +166,10 @@ steps:
         tags:
           - << pipeline.input.commit >>
     infrastructure:
-      type: ec2
-      instance_size: c7a.4xlarge
+      type: sandbox
+      cpu: 14
+      memory: 28
+      disk: 30
       aws_account_id: prod-aws
       region: us-east-1
   - parallel:

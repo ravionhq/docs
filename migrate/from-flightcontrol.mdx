@@ -34,7 +34,9 @@ Flightcontrol's logs and metrics were extremely limited. Ravion adds many more m
 
 ### 6. No ARM or Spot instance support
 
-You can now enable Fargate, Fargate Spot, and EC2 capacity providers on the ECS cluster module and choose ARM Graviton instance types — for services and for builders — to bring down your AWS costs significantly. EC2 Spot builders are supported too.
+You can enable Fargate, Fargate Spot, and EC2 capacity providers on the ECS cluster module and choose ARM Graviton instance types for services to reduce AWS costs.
+
+New module builds use [sandboxes](/concepts/sandboxes#module-builds) by default. Use native EC2 builders only for requirements such as an ARM build environment or a custom AMI. Existing module instances keep their saved builder settings.
 
 ### 7. A load balancer and cluster for every single service
 

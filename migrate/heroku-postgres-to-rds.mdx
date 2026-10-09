@@ -50,7 +50,7 @@ Apply the config. The module generates the master password into Secrets Manager;
 
 The RDS instance is in a private subnet, so `pg_restore` has to run from inside the VPC or over a tunnel. Options, from simplest:
 
-- **A pipeline step.** Run the dump and restore from a [`custom` step](/pipelines/step-types#custom) — it runs on an EC2 instance in your VPC with no extra setup. Install `postgresql-client` in a `setup` action, pull the Heroku dump URL and the RDS credentials from Secrets Manager, and run the commands below.
+- **A pipeline step.** Run the dump and restore from a [`custom` step](/pipelines/step-types#custom) using [sandbox infrastructure](/concepts/sandboxes#pipeline-steps) in an execution environment that can reach your RDS instance. Set `interruptible: false` so host loss fails the step instead of restarting the restore. Install `postgresql-client` in a `setup` action, pull the Heroku dump URL and the RDS credentials from Secrets Manager, and run the commands below.
 - **A bastion or SSM tunnel** from your laptop to a small EC2 instance in the VPC.
 - **Temporary public access.** Set `public_access_enabled: true` and add your IP to `allowed_cidr_blocks` on the module, apply, migrate, then revert. Fine for a one-off; do not leave it on.
 

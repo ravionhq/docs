@@ -50,6 +50,7 @@
               "concepts/projects-and-environments",
               "concepts/modules",
               "concepts/pipelines",
+              "concepts/sandboxes",
               "concepts/infrastructure-as-code"
             ]
           },
@@ -125,6 +126,7 @@
             "group": "Pipelines",
             "pages": [
               "concepts/pipelines",
+              "concepts/sandboxes",
               "pipelines/examples",
               "pipelines/config-reference",
               "pipelines/step-types",

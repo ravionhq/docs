@@ -44,7 +44,7 @@ flowchart LR
   classDef gate fill:#FE6104,stroke:#BD4406,color:#fff
 ```
 
-- The plan and apply steps run on temporary EC2 instances in your cloud account, so your Terraform code and secrets never enter the Ravion control plane. The plan file is uploaded to S3 and the apply consumes exactly that plan.
+- The plan and apply steps run in your cloud account, so your Terraform code and secrets never enter the Ravion control plane. Use [sandbox infrastructure](/concepts/sandboxes#pipeline-steps) in your organization's change and destroy pipelines unless you need native EC2 features. Existing pipelines keep their configured infrastructure. The plan file is uploaded to S3 and the apply consumes exactly that plan.
 - The approval step is skipped when the plan has no changes, or when the run was started with **autoapprove** (for example `--autoapprove` on `ravion project config apply` or `ravion stack trigger-pipeline`). Autoapprove applies to change runs only — destroy runs always require manual approval.
 - Runs are locked per stack, so two runs can't apply to the same state concurrently.
 

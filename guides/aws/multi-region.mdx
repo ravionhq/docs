@@ -157,7 +157,9 @@ ravion project config apply <project-id> --file ravion.yaml --autoapprove
 
 Use a single [pipeline](/concepts/pipelines): one `build:image` step pushes the same image to every region's ECR repository, then a `deploy` step per region releases that one digest. Each service's repository ARN is the `ecr_repository_arn` output of its stack.
 
-```yaml pipeline.yaml highlight={13-19,28,33}
+This example uses `ci-builders` as an execution environment given ID; replace it with yours.
+
+```yaml pipeline.yaml highlight={13-19,31,36}
 inputs:
   - id: commit
     type: string
@@ -178,8 +180,11 @@ steps:
         type: ecr
         repository_arn: arn:aws:ecr:eu-west-1:123456789012:repository/api-production-euw1 # ecr_repository_arn from api-euw1
     infrastructure:
-      type: ec2
-      instance_size: t3.medium
+      type: sandbox
+      cpu: 14
+      memory: 28
+      disk: 30
+      execution_environment_id: ci-builders
   - parallel:
       - id: deploy_use2
         type: deploy

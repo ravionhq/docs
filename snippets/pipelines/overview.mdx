@@ -1,5 +1,7 @@
 Ravion Pipelines are a full-featured CI/CD system that runs in your cloud account.
 
+Use [sandboxes](/concepts/sandboxes) for pipeline steps and module builds by default. Choose native EC2 only when you need features such as a custom AMI.
+
 They are _optional_ for you instead of using GitHub Actions or CircleCI.
 
 Regardless, you will need to have a pipeline _somewhere_ to build your code, upload the artifacts to a store, and trigger a deployment of that in Ravion.
@@ -111,7 +113,7 @@ flowchart LR
 
   subgraph CustomerCloud[Your cloud account]
     subgraph VPC[Your VPC]
-      Runner[EC2 runner]
+      Runner[Sandbox]
       PrivateResources[Private resources]
     end
   end
