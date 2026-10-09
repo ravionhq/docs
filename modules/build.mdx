@@ -49,7 +49,7 @@ Add a `build` step to your pipeline and point it at the module instance:
 - `module_instance` accepts a unique ID (`mi_…`), `environment.module`, or `project.environment.module`.
 - `input` passes build-time values the module accepts, such as a tag, branch, or commit. Check the module's docs or schema (`ravion module schema <module-type>`) for what it takes.
 
-Builds run in your AWS account, so your source code never enters the Ravion control plane. Image builds reuse [Docker layer cache](#docker-layer-cache) from the destination registry, so repeat builds are fast.
+Builds run in your AWS account, so your source code never enters the Ravion control plane. Sandbox builds keep [Docker layer cache](#docker-layer-cache) on disk between successful runs.
 
 <Note>
   Building something that isn't a module? Use the standalone `build:image` or `build:static` [CI
@@ -72,19 +72,20 @@ See [Sandboxes](/concepts/sandboxes) for pool settings, disk cache and cold-star
 
 ## Docker layer cache
 
-Container image builds reuse Docker layer cache from the module's ECR repo, so repeat builds only rebuild the layers that changed. There is nothing to configure: the module definition points the build at a stable cache image in that repo, and every build also writes a dedicated `buildcache` image holding the layers of each build stage.
+Sandbox module builds keep Docker's build cache on the sandbox disk. With `disk_cache: auto`, Ravion saves the disk after a successful run and restores it for later runs. Dependencies, build output and Docker layers remain available without configuring a separate cache. See [Disk cache](/concepts/sandboxes#disk-cache) for branch restore rules.
 
-Static asset builds and Lambda builds — zip package or container image — don't use registry layer cache.
+Disk caching also benefits static asset and Lambda builds.
 
 To get the most out of the cache:
 
 - **Order your `Dockerfile` from least- to most-frequently-changed.** Copy manifest files (`package.json`, `go.mod`, `requirements.txt`) and install dependencies *before* copying the rest of the source. That way a source change doesn't invalidate the dependency layer.
 - **Pin base images by digest** (or a specific tag) so the base layer is stable across builds.
-- **Keep the build in one ECR repo.** Cache comes from the repo the build pushes to, so a module that pushes elsewhere between builds loses reuse.
+
+`build:image` builds also use layer cache from ECR, alongside the local disk cache. Ravion imports cache from an image in the destination repository and its dedicated `buildcache` tag. This can help when a saved disk has no matching layers. On sandboxes, Ravion exports registry cache when a build pushes a new image digest, rather than on every unchanged build.
 
 ### Choosing the cache source yourself
 
-Module builds pin the cache source for you and expose no input for changing it. If you need control over it, use a standalone [`build:image` step](/pipelines/step-types#build%3Aimage) and set `cache_from` on its `builder` block:
+You don't need to choose a registry cache source for sandbox disk caching. For image builds that import ECR cache, module definitions select that source for you. To choose it yourself, use a standalone [`build:image` step](/pipelines/step-types#build%3Aimage) and set `cache_from` on its `builder` block:
 
 This example uses `ci-builders` as an execution environment given ID; replace it with yours.
 
@@ -109,6 +110,7 @@ This example uses `ci-builders` as an execution environment given ID; replace it
     cpu: 2
     memory: 4
     disk: 30
+    disk_cache: auto
     execution_environment_id: ci-builders
 ```
 
