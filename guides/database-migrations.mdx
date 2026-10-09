@@ -23,7 +23,7 @@ Ravion gives you three places that satisfy both. Which one to pick depends mostl
 
 If Ravion builds your image with Railpack or a Dockerfile, run the migration as the last build command. The build runner is already running, so the migration adds only its own execution time to the deploy — no container to schedule, pull, and tear down.
 
-Builds run on EC2 in your AWS account, inside the module's builder execution environment (see [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web); by default, the same network placement as the ECS cluster). That is what lets the runner reach a private RDS instance. If you set **Builder capacity type** to **Sandbox (preview)**, turn off **Interruptible build** so a lost host never reruns a migration. See [Sandboxes](/concepts/sandboxes#interruptible-steps-and-spot-hosts). You need to give the runner two things it does not get by default:
+Builds run in your AWS account, inside the module's builder execution environment (see [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web); by default, the same network placement as the ECS cluster). That is what lets the runner reach a private RDS instance. New instances of the [supported module versions](/concepts/sandboxes#module-builds) use sandbox builds by default. For sandbox builds that run migrations, turn off **Interruptible build** so host loss fails the build instead of restarting the migration. You need to give the runner two things it does not get by default:
 
 1. **The connection string.** Add `DATABASE_URL` to `build_environment_variables`, referenced from Secrets Manager rather than pasted in. Build variables are separate from runtime variables, so the value has to be declared in both places.
 2. **Network access to the database.** Allow the build runner's security group or subnet CIDR in the RDS module's `allowed_security_group_ids` or `allowed_cidr_blocks`. If the runner is in the same VPC, the VPC CIDR is the simplest rule.
@@ -33,6 +33,7 @@ Builds run on EC2 in your AWS account, inside the module's builder execution env
   type: rvn-ecs-web
   input:
     build_source: railpack
+    build_interruptible_enabled: false
     # Migrate after the app build so a failing migration fails the build.
     railpack_build_cmd: "bundle exec rails assets:precompile && bundle exec rails db:migrate"
     build_environment_variables:

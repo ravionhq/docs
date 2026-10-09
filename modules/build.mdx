@@ -23,7 +23,7 @@ You configure a module's build the same way you configure everything else about 
 ```yaml
 - givenId: web-app
   type: rvn-ecs-web
-  version: 0.5.0
+  version: 2.2.0
   input:
     # build config
     build_source: dockerfile
@@ -49,12 +49,24 @@ Add a `build` step to your pipeline and point it at the module instance:
 - `module_instance` accepts a unique ID (`mi_…`), `environment.module`, or `project.environment.module`.
 - `input` passes build-time values the module accepts, such as a tag, branch, or commit. Check the module's docs or schema (`ravion module schema <module-type>`) for what it takes.
 
-Builds run on temporary EC2 instances in your cloud account, or in [sandboxes](/concepts/sandboxes) on warm hosts, so your source code never enters the Ravion control plane. Image builds reuse [Docker layer cache](#docker-layer-cache) from the destination registry, so repeat builds are fast.
+Builds run in your AWS account, so your source code never enters the Ravion control plane. Image builds reuse [Docker layer cache](#docker-layer-cache) from the destination registry, so repeat builds are fast.
 
 <Note>
   Building something that isn't a module? Use the standalone `build:image` or `build:static` [CI
   steps](/pipelines/step-types#ci-steps), which take the full build config inline.
 </Note>
+
+## Build infrastructure
+
+New instances of the [supported module versions](/concepts/sandboxes#module-builds) default to **Sandbox** builds: Firecracker microVMs with **14 vCPUs**, **28 GiB memory** and **30 GiB disk**. The first build creates the host pool automatically. You don't need to choose EC2 machine types. Before your first sandbox build, [update your AWS permissions](/concepts/sandboxes#get-started).
+
+The build uses the module's Terraform execution environment unless you set **Builder execution environment**. In **Builder config**, you can adjust **Builder vCPUs**, **Builder memory (GiB)** and **Builder disk (GiB)**, or change **Builder capacity type** to **EC2** or **EC2 spot**.
+
+Existing module instances keep their saved builder settings when upgraded. To move an existing EC2 build to a sandbox, select **Sandbox** and set its CPU and memory. Older module versions may still label this option **Sandbox (preview)**.
+
+Sandbox builds use `disk_cache: auto` to keep dependencies, build output and Docker layers between successful runs. **Interruptible build** is on by default, allowing spot hosts and a restart from the beginning if the host is lost. Turn it off if your build changes external state, such as running [database migrations](/guides/database-migrations).
+
+See [Sandboxes](/concepts/sandboxes) for pool settings, disk cache and cold-start behavior.
 
 ## Docker layer cache
 
