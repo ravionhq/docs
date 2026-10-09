@@ -107,6 +107,51 @@ ravion aws account policy-diff <id> [flags]
 | --- | --- | --- |
 | `--json` |  | emit response as JSON |
 
+#### `ravion aws account quota-issues`
+
+List AWS account quota issues
+
+```bash
+ravion aws account quota-issues <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `-v, --verbose` |  | show full output |
+
+#### `ravion aws account refresh-quota-issue`
+
+Refresh an AWS quota limit and request status
+
+```bash
+ravion aws account refresh-quota-issue <id> <issueId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+#### `ravion aws account request-quota-increase`
+
+Request an AWS service quota increase
+
+```bash
+ravion aws account request-quota-increase <id> <issueId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--desired-value <float>` | yes | desiredValue |
+| `--operation-id <string>` | yes | operationId |
+| `--json` |  | emit response as JSON |
+
 #### `ravion aws account update`
 
 Patch AwsAccount

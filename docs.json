@@ -256,6 +256,7 @@
               "cli/reference/feature-flag",
               "cli/reference/feedback",
               "cli/reference/git",
+              "cli/reference/github-actions",
               "cli/reference/infrastructure-event",
               "cli/reference/login",
               "cli/reference/logout",

@@ -1,0 +1,117 @@
+---
+title: "ravion github-actions"
+sidebarTitle: "github-actions"
+description: "Browse GitHub Actions workflows, runs, jobs, and logs"
+"og:image": "https://www.ravion.com/og/docs/cli/reference/github-actions.png"
+"twitter:image": "https://www.ravion.com/og/docs/cli/reference/github-actions.png"
+---
+
+{/* This page is generated from the Ravion CLI source. Do not edit by hand. */}
+
+## `ravion github-actions`
+
+Browse GitHub Actions workflows, runs, jobs, and logs
+
+### `ravion github-actions job-logs`
+
+Get bounded logs for a workflow job
+
+```bash
+ravion github-actions job-logs <codeSourceId> <jobId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--organization-id <string>` |  | organizationId |
+
+### `ravion github-actions jobs`
+
+List jobs for a workflow run attempt
+
+```bash
+ravion github-actions jobs <codeSourceId> <runId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--attempt <int>` | yes | attempt |
+| `--json` |  | emit response as JSON |
+| `--organization-id <string>` |  | organizationId |
+| `--page <int>` |  | page |
+| `-v, --verbose` |  | show full output |
+
+### `ravion github-actions repositories`
+
+List connected GitHub Actions repositories
+
+```bash
+ravion github-actions repositories [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--organization-id <string>` |  | organizationId |
+| `--project-id <string>` |  | projectId |
+| `-v, --verbose` |  | show full output |
+
+### `ravion github-actions run`
+
+Get a workflow run
+
+```bash
+ravion github-actions run <codeSourceId> <runId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--organization-id <string>` |  | organizationId |
+
+### `ravion github-actions runs`
+
+List workflow runs in a connected repository
+
+```bash
+ravion github-actions runs <codeSourceId> <workflowId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--branch <string>` |  | branch |
+| `--event <string>` |  | event |
+| `--json` |  | emit response as JSON |
+| `--latest` |  | Return only the latest run, without filters or pagination, using a five-minute shared cache. |
+| `--organization-id <string>` |  | organizationId |
+| `--page <int>` |  | page |
+| `--status <string>` |  | status |
+| `-v, --verbose` |  | show full output |
+
+### `ravion github-actions workflows`
+
+List workflows in a connected repository
+
+```bash
+ravion github-actions workflows <codeSourceId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--organization-id <string>` |  | organizationId |
+| `--page <int>` |  | page |
+| `-v, --verbose` |  | show full output |
+
