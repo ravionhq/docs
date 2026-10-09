@@ -12,9 +12,9 @@ Each execution environment can have one sandbox pool. The first step that target
 
 ## When to use sandboxes
 
-Use sandboxes for steps you run often and that spend a lot of their time waiting for a machine: builds, tests, lint and other CI steps.
+Use sandboxes for pipeline steps and module builds by default, including builds, tests, migrations and other scripted tasks.
 
-Use `ec2` or `ec2-spot` [infrastructure](/pipelines/config-reference#stepinfrastructure) instead when a step needs a custom AMI, its own EC2 instance, or a machine type your pool doesn't have.
+Use `ec2` or `ec2-spot` [infrastructure](/pipelines/config-reference#stepinfrastructure) only when you need a custom AMI or direct access to a dedicated EC2 instance. Tasks that must not restart, such as migrations, can still run in a sandbox with `interruptible: false`.
 
 ## What runs inside a sandbox
 
@@ -26,9 +26,9 @@ Docker starts in the background when the sandbox boots. The first `docker` comma
 
 <Steps>
   <Step title="Update your AWS permissions">
-    Update to the latest AWS account role policy, currently 1.0.52. This includes the EC2 Fleet permissions used to launch sandbox hosts; the earlier sandbox policies are no longer sufficient.
+    Update to the latest AWS account role policy.
 
-    1. Go to **Settings → AWS accounts** and open the account.
+    1. Go to [**Settings / AWS accounts**](https://app.ravion.com/org/settings/aws-accounts) and open the account.
     2. Click **Update AWS Permissions** and follow the steps to update the CloudFormation stack.
 
     From the CLI, run `ravion aws account policy-diff <aws-account-id>` to review the change, then apply it with `aws cloudformation update-stack` and a fresh template URL from `ravion aws account cloudformation-template-url <aws-account-id>`.
@@ -41,7 +41,7 @@ Docker starts in the background when the sandbox boots. The first `docker` comma
     You don't need to add machine types or turn on a pool. Your first sandbox step creates it. To customize the defaults, open the environment's **Config** tab and **Sandboxes** section. See [Pool settings](#pool-settings).
   </Step>
   <Step title="Run pipeline steps or module builds in sandboxes">
-    Switch [pipeline steps](#pipeline-steps) and [module builds](#module-builds) to sandbox, as shown below.
+    Set [pipeline steps](#pipeline-steps) to `type: sandbox`. New [module builds](#module-builds) use sandboxes by default; switch existing modules if they still use EC2.
   </Step>
 </Steps>
 
@@ -97,7 +97,7 @@ New module instances default to sandbox builds starting with these versions:
 | [`rvn-lambda`](/module-definitions/catalog/rvn-lambda) | 2.1.0 |
 | [`rvn-aws-static`](/module-definitions/catalog/rvn-aws-static) | 1.4.0 |
 
-Existing instances keep their saved builder settings when you upgrade. To switch one, open **Builder config**, set **Builder capacity type** to **Sandbox**, and choose the CPU and memory. To use a dedicated EC2 runner instead, choose **EC2** or **EC2 spot**.
+Existing instances keep their saved builder settings when you upgrade. To switch one, open **Builder config**, set **Builder capacity type** to **Sandbox**, and choose the CPU and memory. Choose **EC2** or **EC2 spot** only if your build needs a custom AMI or direct access to a dedicated EC2 instance.
 
 New instances use these defaults:
 
