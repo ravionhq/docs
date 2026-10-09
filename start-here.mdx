@@ -101,7 +101,7 @@ npx add-mcp https://www.ravion.com/docs/mcp --name ravion-docs
   ravion aws account get <aws-account-id> --json
   ```
 
-  The `status` field reads `CONNECTED` once the stack finishes. When Ravion later ships new permissions, review them with `ravion aws account policy-diff <aws-account-id>`, then apply them with `aws cloudformation update-stack` and a freshly fetched template URL. [Sandboxes](/concepts/sandboxes) need policy version 1.0.49 or later.
+  The `status` field reads `CONNECTED` once the stack finishes. When Ravion later ships new permissions, review them with `ravion aws account policy-diff <aws-account-id>`, then apply them with `aws cloudformation update-stack` and a freshly fetched template URL. Before using [sandboxes](/concepts/sandboxes), update to the latest policy for sandbox host launch permissions.
 </Accordion>
 
 ## Useful references
