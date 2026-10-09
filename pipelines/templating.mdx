@@ -16,7 +16,7 @@ Template expressions let you insert dynamic values into pipeline config. Wrap a 
     image_ref: << steps.build_web_app.output.image_digest >>
 ```
 
-Expressions are simple dot paths — there are no operators, functions, or conditionals. Each expression resolves to a value from one of the [context namespaces](#context-namespaces) below.
+Expressions can reference values from the [context namespaces](#context-namespaces) below and use functions such as [`slugify()`](#slugify) to transform them.
 
 ## Syntax
 
@@ -37,6 +37,23 @@ Mix one or more expressions with literal text. Each expression is evaluated, con
 name: Deploy << pipeline.input.app_name >> to << pipeline.variant.id >>
 module_instance: << pipeline.variant.id >>.web-app
 ```
+
+### Slugify
+
+Use `slugify(string)` to turn a URL or name into lowercase ASCII letters, digits, and hyphens. It strips a leading URL scheme such as `https://`, replaces runs of other characters with one hyphen, and trims leading and trailing hyphens. The hostname stays in the result.
+
+```yaml
+infrastructure:
+  type: sandbox
+  execution_environment_id: build-runners
+  cpu: 4
+  memory: 8
+  disk_cache: terraform-<< slugify(pipeline.input.repo) >>
+```
+
+With `pipeline.input.repo` set to `https://github.com/ravionhq/modules`, this produces `terraform-github-com-ravionhq-modules`.
+
+`slugify()` takes one string. It does not truncate the result or guarantee uniqueness: names that differ only in punctuation can produce the same slug. An input with no ASCII letters or digits produces an empty string. Disk cache keys must still be nonempty and at most 64 characters, including any prefix.
 
 ### Literal `<<`
 
