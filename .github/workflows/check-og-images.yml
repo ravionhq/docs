@@ -7,9 +7,13 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ravion/ee=github-actions/type=sandbox/cpu=2/memory=4/disk_cache=auto/id=${{ github.run_id }}-check-og-images-check/interruptible=true
     steps:
       - uses: actions/checkout@v4
 

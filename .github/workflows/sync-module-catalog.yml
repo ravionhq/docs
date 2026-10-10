@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   sync:
-    runs-on: ubuntu-latest
+    runs-on: ravion/ee=github-actions/type=sandbox/cpu=2/memory=4/disk_cache=auto/id=${{ github.run_id }}-sync-module-catalog-sync/interruptible=false
     steps:
       - uses: actions/checkout@v4
 
