@@ -64,7 +64,7 @@ Use sandboxes unless your build needs a custom AMI or direct access to a dedicat
 
 The build uses the module's Terraform execution environment unless you set **Builder execution environment**. In **Builder config**, you can adjust **Builder vCPUs**, **Builder memory (GiB)** and **Builder disk (GiB)**.
 
-Before using sandboxes, [update your modules to a supported version](/concepts/sandboxes#module-builds). Existing module instances keep their saved builder settings when upgraded. To move an existing EC2 build to a sandbox, open **Builder config**, set **Builder capacity type** to **Sandbox**, and choose its CPU and memory.
+Existing module instances keep their saved builder settings when upgraded. To move an existing EC2 build to a sandbox, open **Builder config**, set **Builder capacity type** to **Sandbox**, and choose its CPU and memory. Older module versions may still label this option **Sandbox (preview)**.
 
 Sandbox builds use `disk_cache: auto` to keep dependencies, build output and Docker layers between successful runs. **Interruptible build** is on by default, allowing spot hosts and a restart from the beginning if the host is lost. Turn it off if your build changes external state, such as running [database migrations](/guides/database-migrations).
 

@@ -35,6 +35,9 @@ Docker starts in the background when the sandbox boots. The first `docker` comma
 
     Missing permissions can prevent the pool from launching hosts. Check the reported AWS permission error if a launch fails.
   </Step>
+  <Step title="Update your modules">
+    Update your modules to the latest versions available as of October 10, 2026, or newer. Older module versions don't support sandboxes.
+  </Step>
   <Step title="Run pipeline steps or module builds in sandboxes">
     Set [pipeline steps](#pipeline-steps) to `type: sandbox`. New [module builds](#module-builds) use sandboxes by default; switch existing modules if they still use EC2.
   </Step>
@@ -80,8 +83,6 @@ Use your existing execution environment's ID or given ID in place of `ci-builder
 Sandboxes don't take `instance_size`, `ami` or `storage`. The full schema is in [SandboxStepInfrastructure](/pipelines/config-reference#sandboxstepinfrastructure).
 
 ## Module builds
-
-Update your modules to the latest versions available as of October 10, 2026, or newer. Older module versions don't support sandboxes.
 
 New module builds use sandboxes by default. See [Build infrastructure](/modules/build#build-infrastructure) to configure builds or switch an existing module from EC2.
 
