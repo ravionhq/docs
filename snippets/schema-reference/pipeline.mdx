@@ -2502,11 +2502,13 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
   boots the pool's base image every run and keeps nothing. `auto` keeps the
   step's own disk, named by its git source and step (a GitHub runner job's
   by its repository, workflow and job), so it needs a git source. Any other
-  value is a key: every step in the repository that names the same key
-  shares one disk, and the last green run to finish publishes it. A kept
-  disk is restored from the run's branch, falling back to its base branch
-  and then the default branch, and is published to the run's branch only
-  when the run succeeds. Keys are up to 64 lowercase letters, digits, ".",
+  value is a key: every step in the same execution environment that names
+  the same key shares one disk, across repositories, pipelines and branches.
+  The last green run to finish publishes it. Include repository or branch
+  in the key when you want that separation. Explicit keys use the fixed
+  `main` head with no branch fallback. Only `auto` restores from the run's
+  branch, falling back to its base and default branches, and publishes to
+  the run's branch. Keys are up to 64 lowercase letters, digits, ".",
   "_" or "-".
 
   _(minLen:1; templateable)_
