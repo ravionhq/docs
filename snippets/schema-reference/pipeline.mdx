@@ -2280,17 +2280,6 @@ Spot EC2 instance infrastructure
   _(templateable)_
 </ResponseField>
 
-<ResponseField name="execution_environment_overrides" type="ExecutionEnvironmentOverrides">
-  Overrides for individual attributes of the resolved execution environment.
-  Valid with or without `execution_environment_id` — without one, they apply
-  on top of the default environment or the auto-selected network.
-  The whole block and each field inside it accept template tokens.
-
-  See: [ExecutionEnvironmentOverrides](#executionenvironmentoverrides)
-
-  _(templateable)_
-</ResponseField>
-
 <ResponseField name="permissions" type="AwsPermissions">
   IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. EC2 runners always keep AmazonSSMManagedInstanceCore, CloudWatchAgentServerPolicy, and any inline policies Ravion adds (such as access to referenced secrets).
 
@@ -2319,6 +2308,17 @@ Spot EC2 instance infrastructure
 
 <ResponseField name="region" type="string | null">
   AWS region for automatic network selection
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="execution_environment_overrides" type="ExecutionEnvironmentOverrides">
+  Overrides for individual attributes of the resolved execution environment.
+  Valid with or without `execution_environment_id` — without one, they apply
+  on top of the default environment or the auto-selected network.
+  The whole block and each field inside it accept template tokens.
+
+  See: [ExecutionEnvironmentOverrides](#executionenvironmentoverrides)
 
   _(templateable)_
 </ResponseField>
@@ -2355,17 +2355,6 @@ On-demand EC2 instance infrastructure
   _(templateable)_
 </ResponseField>
 
-<ResponseField name="execution_environment_overrides" type="ExecutionEnvironmentOverrides">
-  Overrides for individual attributes of the resolved execution environment.
-  Valid with or without `execution_environment_id` — without one, they apply
-  on top of the default environment or the auto-selected network.
-  The whole block and each field inside it accept template tokens.
-
-  See: [ExecutionEnvironmentOverrides](#executionenvironmentoverrides)
-
-  _(templateable)_
-</ResponseField>
-
 <ResponseField name="permissions" type="AwsPermissions">
   IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. EC2 runners always keep AmazonSSMManagedInstanceCore, CloudWatchAgentServerPolicy, and any inline policies Ravion adds (such as access to referenced secrets).
 
@@ -2394,6 +2383,17 @@ On-demand EC2 instance infrastructure
 
 <ResponseField name="region" type="string | null">
   AWS region for automatic network selection
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="execution_environment_overrides" type="ExecutionEnvironmentOverrides">
+  Overrides for individual attributes of the resolved execution environment.
+  Valid with or without `execution_environment_id` — without one, they apply
+  on top of the default environment or the auto-selected network.
+  The whole block and each field inside it accept template tokens.
+
+  See: [ExecutionEnvironmentOverrides](#executionenvironmentoverrides)
 
   _(templateable)_
 </ResponseField>
@@ -2429,17 +2429,6 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
   Infrastructure type — a Firecracker microVM on the resolved execution environment's sandbox host pool
 
   Allowed values: `sandbox`
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="execution_environment_overrides" type="ExecutionEnvironmentOverrides">
-  Overrides for individual attributes of the resolved execution environment.
-  Valid with or without `execution_environment_id` — without one, they apply
-  on top of the default environment or the auto-selected network.
-  The whole block and each field inside it accept template tokens.
-
-  See: [ExecutionEnvironmentOverrides](#executionenvironmentoverrides)
 
   _(templateable)_
 </ResponseField>
