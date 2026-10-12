@@ -22,13 +22,30 @@ The CLI reads a service-account API key from the `RAVION_API_KEY` environment va
 
 <Steps>
   <Step title="Create a service-account API key">
-    Create a service account for CI and an API key for it. See [`ravion
-    service-account`](/cli/reference/service-account) and [`ravion
-    api-key`](/cli/reference/api-key).
+    Use [CLI v1.14.17 or later](/cli/releases). Sign in as a user and select your organization:
+
+    ```bash
+    ravion login
+    ravion switch
+    ```
+
+    Create a [service account](/cli/reference/service-account) with the permissions your CI needs.
+    Key creation requires your user login; an existing API key cannot create another key.
+    Unset `RAVION_API_KEY` if it is set in your local shell.
   </Step>
   <Step title="Store the key as a repository secret">
-    In your GitHub repository, go to **Settings → Secrets and variables → Actions** and add a secret
-    named `RAVION_API_KEY` with the API key value.
+    From your repository, replace `sa_YOUR_SERVICE_ACCOUNT_ID` with the service account's ID and
+    pipe the new key directly into the [GitHub CLI](https://cli.github.com/):
+
+    ```bash
+    set -o pipefail
+    ravion api-key create --name "GitHub Actions" \
+      --owner-type SERVICE_ACCOUNT --owner-id sa_YOUR_SERVICE_ACCOUNT_ID \
+      --token-only | gh secret set RAVION_API_KEY
+    ```
+
+    The token is returned only once. Without the GitHub CLI, run the command without the pipe and
+    save the token as `RAVION_API_KEY` under **Settings → Secrets and variables → Actions**.
   </Step>
 </Steps>
 
