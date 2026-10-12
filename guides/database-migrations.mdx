@@ -38,7 +38,9 @@ Builds run in your AWS account, inside the module's builder execution environmen
     railpack_build_cmd: "bundle exec rails assets:precompile && bundle exec rails db:migrate"
     build_environment_variables:
       DATABASE_URL:
-        fromSecretManager: "arn:aws:secretsmanager:us-east-2:111122223333:secret:prod/myapp-AbCdEf:DATABASE_URL::"
+        from_secrets_manager:
+          key: "arn:aws:secretsmanager:us-east-2:111122223333:secret:prod/myapp-AbCdEf"
+          json_key: DATABASE_URL
     # ...
 ```
 
@@ -97,7 +99,9 @@ steps:
       - bundle exec rails db:migrate
     environment_variables:
       DATABASE_URL:
-        from_secrets_manager: "arn:aws:secretsmanager:us-east-2:111122223333:secret:prod/myapp-AbCdEf:DATABASE_URL::"
+        from_secrets_manager:
+          key: "arn:aws:secretsmanager:us-east-2:111122223333:secret:prod/myapp-AbCdEf"
+          json_key: DATABASE_URL
     infrastructure:
       type: sandbox
       cpu: 2
