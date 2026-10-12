@@ -48,9 +48,12 @@ The CLI reads a service-account API key from the `RAVION_API_KEY` environment va
         --token-only | gh secret set RAVION_API_KEY
     ```
 
-    The token is returned only once. If transfer fails, find the unused key with
-    `ravion api-key list`, delete it with `ravion api-key delete <key-id>`, and retry. Do not log
-    or save the token to a file.
+    The token is returned only once. Without the GitHub CLI, skip `gh auth login`, `gh auth status`,
+    and the pipe. Run only `ravion api-key create ... --token-only`, then store its output as
+    `RAVION_API_KEY` under **Settings → Secrets and variables → Actions**.
+
+    If transfer fails, find the unused key with `ravion api-key list`, delete it with
+    `ravion api-key delete <key-id>`, and retry. Do not log or save the token to a file.
   </Step>
 </Steps>
 
