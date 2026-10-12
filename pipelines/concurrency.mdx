@@ -1,0 +1,47 @@
+---
+title: "Ravion pipeline concurrency"
+sidebarTitle: "Concurrency"
+description: "Control overlapping pipeline runs that share a concurrency key and scope."
+"og:image": "https://www.ravion.com/og/docs/pipelines/concurrency.png"
+"twitter:image": "https://www.ravion.com/og/docs/pipelines/concurrency.png"
+---
+
+Use `concurrency` on a trigger, step, or block to control competing runs that share its `key` and `scope`. Choose `cancel-intermediate` to replace work that has barely started while letting an older run finish:
+
+```yaml
+concurrency:
+  value: 2
+  behavior: cancel-intermediate
+```
+
+The first run starts immediately. When a newer run reaches the same concurrency limit, it can replace the oldest run if **both** conditions hold:
+
+- The oldest run started less than **15 seconds** ago.
+- Less than **30 seconds** have passed since the first run in that replacement chain started.
+
+Run age starts when the pipeline workflow starts, not when an individual build step starts. Replacements inherit the original 30-second deadline; they do not restart it. Two runs are enough to trigger replacement, even if both would fit within the limit.
+
+With `value: 2`, a quick burst behaves like this:
+
+| Time | New run | Result |
+| --- | --- | --- |
+| 0 seconds | A | A starts immediately. |
+| 6 seconds | B | B replaces A. |
+| 12 seconds | C | C replaces B. |
+| 18 seconds | D | D replaces C. |
+| 24 seconds | E | E replaces D. |
+| 30 seconds | F | The original deadline has passed. E stays; F starts when a slot opens. |
+| 36 seconds | G | E stays; G replaces F. |
+
+If B arrives when A is already 15 seconds old, A stays instead. After either deadline, the policy keeps the oldest run and the newest runs that fit the configured retention window, cancelling intermediate runs. With `value: 2` and no `queue_size`, that means the oldest and newest. Cancelled work still holds its slot until it stops.
+
+Once a built-in `deploy` or `terraform:apply` step starts, `cancel-intermediate` no longer cancels that pipeline run. This protection does not detect publishing or infrastructure changes inside arbitrary shell commands.
+
+The replacement windows are part of `cancel-intermediate`; you do not need another setting. Other behaviors stay separate:
+
+- `queue` waits for a slot without cancelling older runs.
+- `skip` skips new work when the limit is reached.
+- `cancel-in-progress` cancels older work without the age limits or deployment protection above.
+- `value: 0` allows unlimited concurrency and does not apply these cancellations.
+
+See [ConcurrencyConfig](/pipelines/config-reference#concurrencyconfig) for `key`, `scope`, and `queue_size`. Deployment steps still use their separate deployment-manager lock.

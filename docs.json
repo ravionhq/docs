@@ -130,6 +130,7 @@
               "pipelines/examples",
               "pipelines/config-reference",
               "pipelines/step-types",
+              "pipelines/concurrency",
               "pipelines/variants",
               "pipelines/templating"
             ]
