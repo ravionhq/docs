@@ -151,6 +151,58 @@ All inputs for `rvn-aws-alb` version `1.2.2`. Use the `name` shown for each fiel
   - Immutable after creation
 </ResponseField>
 
+Set `network` to `null`.
+Mapped inputs for `network`: set these keys alongside `network`, not inside it, when supplying existing infrastructure instead of a module reference.
+
+<ResponseField name="section_aws" type="section">
+  **AWS account & region.**
+</ResponseField>
+
+<ResponseField name="aws_account_id" type="string">
+  **AWS account.**
+
+  - Default: `<< ref.input.aws_account_id >>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="aws_region" type="string">
+  **Region.** AWS region for this module. If unset in Terraform, the provider region is used.
+
+  - Default: `<< ref.input.aws_region >>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="execution_environment_id" type="string">
+  **Terraform execution environment.** Override the VPC, subnet, and security group for Terraform runners. Must use the same AWS account as selected above.
+
+  - Default: `<< ref.input.execution_environment_id >>`
+</ResponseField>
+
+<ResponseField name="section_vpc" type="section">
+  **VPC.**
+</ResponseField>
+
+<ResponseField name="vpc_id" type="string" required>
+  **VPC ID.**
+
+  - Default: `<<ref.stack.output.vpc_id>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="private_subnet_ids" type="string_array" required>
+  **Private subnet IDs.** Required by Terraform. Used for private workloads and private load balancers.
+
+  - Default: `<<ref.stack.output.private_subnet_ids>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="public_subnet_ids" type="string_array">
+  **Public subnet IDs.** Used for public load balancers. Terraform defaults to [] when no public load balancer is enabled.
+
+  - Default: `<<ref.stack.output.public_subnet_ids>>`
+  - Immutable after creation
+</ResponseField>
+
 ### Load balancer
 
 <ResponseField name="name" type="string" required>
@@ -217,6 +269,15 @@ All inputs for `rvn-aws-alb` version `1.2.2`. Use the `name` shown for each fiel
   **Certificate.** Primary ACM certificate module for HTTPS. The certificate must use the same AWS account and region as the load balancer.
 
   - Shown when: `{"https_listener_enabled":true}`
+</ResponseField>
+
+Set `certificate` to `null`.
+Mapped inputs for `certificate`: set these keys alongside `certificate`, not inside it, when supplying existing infrastructure instead of a module reference.
+
+<ResponseField name="certificate_arns" type="string_array" required>
+  **Certificate ARNs.** ACM certificate ARNs resolved from the selected module. The first ARN is the default certificate.
+
+  - Default: `["<<ref.stack.output.certificate_arn>>"]`
 </ResponseField>
 
 <ResponseField name="additional_certificate_arns" type="string_array">

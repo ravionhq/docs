@@ -349,6 +349,155 @@ All inputs for `rvn-ecs-web` version `2.2.1`. Use the `name` shown for each fiel
   - Immutable after creation
 </ResponseField>
 
+Set `cluster` to `null`.
+Mapped inputs for `cluster`: set these keys alongside `cluster`, not inside it, when supplying existing infrastructure instead of a module reference.
+
+<ResponseField name="aws_account_id" type="string">
+  **AWS account.**
+
+  - Default: `<<ref.input.aws_account_id>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="aws_region" type="string">
+  **Region.**
+
+  - Default: `<<ref.input.aws_region>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="execution_environment_id" type="string">
+  **Terraform execution environment.** Terraform execution environment inherited from the selected ECS cluster.
+
+  - Default: `<< ref.input.execution_environment_id >>`
+</ResponseField>
+
+<ResponseField name="cluster_arn" type="string" required>
+  **Cluster ARN.**
+
+  - Default: `<<ref.stack.output.cluster_arn>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="cluster_log_retention_days" type="number">
+  **Cluster default log retention (days).** Default CloudWatch Logs retention inherited from the selected ECS cluster. Override it per service in the Compliance section.
+
+  - Default: `<<ref.stack.output.log_retention_days>>`
+</ResponseField>
+
+<ResponseField name="vpc_id" type="string" required>
+  **VPC ID.**
+
+  - Default: `<<ref.input.vpc_id>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="private_subnet_ids" type="string_array" required>
+  **Private subnet IDs.** Private subnets available from the selected ECS cluster network.
+
+  - Default: `<<ref.input.private_subnet_ids>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="public_subnet_ids" type="string_array">
+  **Public subnet IDs.** Public subnets available from the selected ECS cluster network.
+
+  - Default: `<<ref.input.public_subnet_ids>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="subnet_ids" type="string_array">
+  **Private subnet IDs.** Legacy service subnet override. Leave blank to derive subnets from the public/private service setting.
+
+  - Default: `<<ref.input.private_subnet_ids>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="section_cluster_capacity" type="section">
+  **Cluster capacity providers.**
+</ResponseField>
+
+<ResponseField name="fargate_capacity_provider_name" type="string">
+  **Fargate capacity provider.**
+
+  - Default: `<<ref.stack.output.fargate_capacity_provider_name>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="fargate_spot_capacity_provider_name" type="string">
+  **Fargate spot capacity provider.**
+
+  - Default: `<<ref.stack.output.fargate_spot_capacity_provider_name>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="ec2_capacity_provider_name" type="string">
+  **EC2 capacity provider.** EC2 capacity provider name from the selected cluster.
+
+  - Default: `<<ref.stack.output.ec2_capacity_provider_name>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="section_cluster_alb" type="section">
+  **Cluster load balancers.**
+</ResponseField>
+
+<ResponseField name="public_alb_http_listener_arn" type="string">
+  **Public ALB HTTP listener ARN.**
+
+  - Default: `<<ref.stack.output.public_alb_http_listener_arn>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="public_alb_https_listener_arn" type="string">
+  **Public ALB HTTPS listener ARN.** HTTPS listener ARN from the selected public ALB. Ravion uses it when present, otherwise falls back to HTTP.
+
+  - Default: `<<ref.stack.output.public_alb_https_listener_arn>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="public_alb_security_group_id" type="string">
+  **Public ALB security group ID.**
+
+  - Default: `<<ref.stack.output.public_alb_security_group_id>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="private_alb_http_listener_arn" type="string">
+  **Private ALB HTTP listener ARN.**
+
+  - Default: `<<ref.stack.output.private_alb_http_listener_arn>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="private_alb_https_listener_arn" type="string">
+  **Private ALB HTTPS listener ARN.** HTTPS listener ARN from the selected private ALB. Ravion uses it when present, otherwise falls back to HTTP.
+
+  - Default: `<<ref.stack.output.private_alb_https_listener_arn>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="private_alb_security_group_id" type="string">
+  **Private ALB security group ID.**
+
+  - Default: `<<ref.stack.output.private_alb_security_group_id>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="public_alb_arn_suffix" type="string">
+  **Public ALB ARN suffix.**
+
+  - Default: `<<ref.stack.output.public_alb_arn_suffix>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="private_alb_arn_suffix" type="string">
+  **Private ALB ARN suffix.**
+
+  - Default: `<<ref.stack.output.private_alb_arn_suffix>>`
+  - Immutable after creation
+</ResponseField>
+
 ### Web service
 
 <ResponseField name="name" type="string" required>
@@ -1317,6 +1466,27 @@ All inputs for `rvn-ecs-web` version `2.2.1`. Use the `name` shown for each fiel
   **EFS file system.**
 
   - Shown when: `{"efs_enabled":true}`
+</ResponseField>
+
+Set `efs` to `null`.
+Mapped inputs for `efs`: set these keys alongside `efs`, not inside it, when supplying existing infrastructure instead of a module reference.
+
+<ResponseField name="efs_file_system_id" type="string">
+  **EFS file system ID.**
+
+  - Default: `<<ref.stack.output.file_system_id>>`
+</ResponseField>
+
+<ResponseField name="efs_access_point_id" type="string">
+  **EFS access point ID.**
+
+  - Default: `<<ref.stack.output.access_point_id>>`
+</ResponseField>
+
+<ResponseField name="efs_client_security_group_id" type="string">
+  **EFS client security group ID.**
+
+  - Default: `<<ref.stack.output.client_security_group_id>>`
 </ResponseField>
 
 <ResponseField name="efs_mount_path" type="string" required>

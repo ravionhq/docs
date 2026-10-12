@@ -367,6 +367,15 @@ All inputs for `rvn-aws-static` version `1.4.0`. Use the `name` shown for each f
   **ACM certificate.** Required if using domain aliases. The certificate module must be in us-east-1.
 </ResponseField>
 
+Set `distribution_acm_certificate` to `null`.
+Mapped inputs for `distribution_acm_certificate`: set these keys alongside `distribution_acm_certificate`, not inside it, when supplying existing infrastructure instead of a module reference.
+
+<ResponseField name="distribution_acm_certificate_arn" type="string">
+  **CloudFront certificate ARN.**
+
+  - Default: `<<ref.stack.output.certificate_arn>>`
+</ResponseField>
+
 <ResponseField name="distribution_aliases" type="string_array">
   **Domain aliases.** Custom domain names like app.example.com. Leave empty to use the default cloudfront.net domain.
 

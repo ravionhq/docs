@@ -495,6 +495,30 @@ All inputs for `rvn-lambda` version `2.1.0`. Use the `name` shown for each field
   - Shown when: `{"lambda_type":"regional","vpc_config_enabled":true}`
 </ResponseField>
 
+Set `network` to `null`.
+Mapped inputs for `network`: set these keys alongside `network`, not inside it, when supplying existing infrastructure instead of a module reference.
+
+<ResponseField name="vpc_id" type="string">
+  **VPC ID.**
+
+  - Default: `<<ref.stack.output.vpc_id>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="private_subnet_ids" type="string_array">
+  **Private subnet IDs.** Private subnet IDs from the selected VPC network.
+
+  - Default: `<<ref.stack.output.private_subnet_ids>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="public_subnet_ids" type="string_array">
+  **Public subnet IDs.** Public subnet IDs from the selected VPC network.
+
+  - Default: `<<ref.stack.output.public_subnet_ids>>`
+  - Immutable after creation
+</ResponseField>
+
 <ResponseField name="private_subnet_placement_enabled" type="boolean">
   **Run in private subnets.** Use private subnets from the selected VPC network. Turn off to use public subnets.
 
