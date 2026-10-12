@@ -56,7 +56,7 @@ Flightcontrol put CloudFront in front of every ECS web service, whether you need
 
 If your app uses `CloudFront-Viewer-Country` for country-specific pricing or other location-based behavior, keep a [`rvn-cloudfront`](/module-definitions/catalog/rvn-cloudfront) module in front of it. Flightcontrol forwarded this header, but Ravion's earlier **AllViewer** origin request policy default does not.
 
-Set **Origin request policy** to **AllViewerAndCloudFrontHeaders-2022-06** to forward country while preserving the viewer's Host header, cookies, and query strings. This is the default for new `rvn-cloudfront` instances from version `2.0.0`. Existing instances keep their saved policy when upgraded, so change it explicitly. For private S3 origins with OAC, use **None** instead.
+Set **Origin request policy** to **AllViewerAndCloudFrontHeaders-2022-06** to forward country while preserving the viewer's Host header, cookies, and query strings. This is the default for new `rvn-cloudfront` instances from version `1.5.0`. Existing instances keep their saved policy when upgraded, so change it explicitly. For private S3 origins with OAC, use **None** instead.
 
 <Warning>
   Forwarding country does not add it to the cache key. For country-specific responses, use **CachingDisabled** or a custom cache policy that includes `CloudFront-Viewer-Country`. Otherwise, CloudFront can serve a cached response from one country to viewers in another.
