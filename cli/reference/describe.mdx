@@ -1,7 +1,7 @@
 ---
 title: "ravion describe"
 sidebarTitle: "describe"
-description: "Print full details for any Ravion resource by its unique id, including projects, modules, environments, pipelines, and deployments."
+description: "Resolve supported Ravion UI-backed resource IDs to safe resource details and dashboard links, including service accounts, API keys, deployments, and code sources."
 "og:image": "https://www.ravion.com/og/docs/cli/reference/describe.png"
 "twitter:image": "https://www.ravion.com/og/docs/cli/reference/describe.png"
 ---
@@ -10,7 +10,9 @@ description: "Print full details for any Ravion resource by its unique id, inclu
 
 ## `ravion describe`
 
-Get info about any resource by unique id
+Resolve /go/&lt;service-account-id&gt; and other supported UI-backed resource IDs to safe resource details and dashboard links.
+
+Supported IDs include organizations, projects, environments, pipelines and runs, modules, deployments, stacks, service accounts, API keys, memberships, AWS accounts, execution environments, module categories, default-value definitions, deployment resources, and code sources. IDs without a UI destination, such as standalone users and provider workflow, run, or job IDs, are not supported.
 
 ```bash
 ravion describe <id> [flags]
