@@ -147,6 +147,7 @@ function renderInput(input, depth = 0) {
     : [];
   if (mappedInputs.length > 0) {
     lines.push("");
+    lines.push(`${indent}Set ${inlineCode(input.id)} to ${inlineCode(null)}.`);
     lines.push(`${indent}Mapped inputs for ${inlineCode(input.id)}: set these keys alongside ${inlineCode(input.id)}, not inside it, when supplying existing infrastructure instead of a module reference.`);
     for (const mapped of mappedInputs) {
       lines.push("");

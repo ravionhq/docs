@@ -45,8 +45,9 @@ console.log(JSON.stringify(process.argv[3] === "definition" ? ${JSON.stringify(d
   assert.match(page, /<ResponseField name="private_subnet_ids" type="string_array" required>/);
   assert.match(page, /Default: `<<ref.stack.output.private_subnet_ids>>`/);
   assert.match(page, /Immutable after creation/);
+  assert.match(page, /Set `network` to `null`\./);
   assert.match(page, /set these keys alongside `network`, not inside it/);
-  assert.match(page, /<\/ResponseField>\n\nMapped inputs for `network`/);
+  assert.match(page, /<\/ResponseField>\n\nSet `network` to `null`\.\nMapped inputs for `network`/);
   assert.match(page, /<ResponseField name="public_alb_certificate"/);
   assert.match(page, /Shown when: `\{"public_alb_enabled":true\}`/);
   assert.match(page, /<ResponseField name="public_alb_certificate_arns"/);
