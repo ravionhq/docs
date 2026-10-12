@@ -22,9 +22,10 @@ The CLI reads a service-account API key from the `RAVION_API_KEY` environment va
 
 <Steps>
   <Step title="Create a service-account API key">
-    Create a service account for CI and an API key for it. See [`ravion
-    service-account`](/cli/reference/service-account) and [`ravion
-    api-key`](/cli/reference/api-key).
+    In the Ravion dashboard, open **Settings → Service accounts**, then create or select
+    your CI service account. On its detail panel, click **Create API key** and copy the key.
+    Create it here, not on your personal member profile. The CLI does not have an
+    `api-key create` command. See [service-account authentication](/cli/authentication#service-accounts-and-api-keys).
   </Step>
   <Step title="Store the key as a repository secret">
     In your GitHub repository, go to **Settings → Secrets and variables → Actions** and add a secret
