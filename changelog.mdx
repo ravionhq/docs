@@ -33,6 +33,93 @@ rss: true
 {/* ravion-changelog:september-21-2026 */}
 {/* ravion-changelog:september-28-2026 */}
 {/* ravion-changelog:october-5-2026 */}
+{/* ravion-changelog:october-12-2026 */}
+<Update
+  label="October 12, 2026"
+  rss={{
+    title: "Automatic sandbox pools, clearer execution-environment usage, safer pipeline configuration, and more capable module builds",
+  }}
+>
+
+## Platform
+### Features
+- **Automatic sandbox pools:** Sandbox execution environments can choose suitable host types automatically and create their default pool when a sandbox step first uses the environment. [Learn more](https://www.ravion.com/docs/concepts/sandboxes).
+- **Public repository runners:** Enable an execution environment's default-off public repository setting so connected public repositories and fork pull requests can use isolated sandbox runners.
+- **Execution environment usage:** View estimated cost, Spot and On-demand usage, capacity allocation, startup timing, and pipeline attribution.
+- **GitHub Actions workflows:** Browse repositories, workflows, runs, jobs, and logs alongside Ravion pipelines. [Learn more](https://www.ravion.com/docs/cli/reference/github-actions).
+- **Pipeline stage descriptions:** Add optional `purpose` text to pipeline steps and groups and view it when hovering their names. [Learn more](https://www.ravion.com/docs/pipelines/config-reference).
+### Improvements
+- Environment canvas loading now uses saved card positions and keeps metric cards at a consistent height while data loads.
+- Execution environment details now open on Usage with a clearer Cost and Usage summary and a pool overview on the Sandbox hosts tab.
+- AWS quota notices now identify the affected account and region and provide a direct path to request an increase.
+- Pull request configuration plans now put errors and destructive changes first and show module changes in a clearer hierarchy.
+### Fixes
+- Personal GitLab repositories now load without a repository-stream error.
+- Cancel controls now offer only actions that the current pipeline run supports.
+- Deployment details now open for operator-applied EKS deploy steps.
+- Successful Terraform applies no longer become failed runs because of a later refresh error.
+- Project configuration applies now skip deferred values and report the correct invalid value when a new module and its references are added together.
+- Sandbox launches now fail promptly with a useful error when AWS access, capacity, or host images prevent a host from starting.
+- Failed AWS Spot requests now move to another zone or instance type instead of repeating the same request.
+## AWS account IAM policy 1.0.50 → 1.0.54
+- **Spot price history lookups:** Allow spot price history lookups for usage capture.
+- **Sandbox EC2 Fleets:** Allow sandbox EC2 Fleets.
+- **AWS Service Quotas:** Allow reading and requesting increases for all AWS service quotas.
+
+Update your AWS account connection in organization settings.
+
+## Modules
+### [AWS Application Load Balancer](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-alb) [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-alb%401.2.0) → [1.2.2](https://github.com/ravionhq/modules/releases/tag/rvn-aws-alb%401.2.2)
+- Add a `web_acl_arn` output for the associated WAF web ACL.
+### [EC2 Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ec2-service) [2.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%402.1.0) → [2.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%402.2.0)
+- Keep sandbox build disks between runs so Docker layers and dependencies stay cached.
+- Run sandbox builds on Spot hosts and restart them on another host if AWS reclaims the host; turn off Interruptible build for commands that change state outside the build.
+- New builds now use sandbox execution with 14 vCPU and 28 GiB by default.
+### [ECS Cluster](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-cluster) [2.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%402.1.0) → [2.1.2](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%402.1.2)
+- Associate the public load balancer with the WAF web ACL when a web ACL ARN is set.
+### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [2.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%402.1.0) → [2.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%402.3.1)
+- Keep sandbox build disks between runs so Docker layers and dependencies stay cached.
+- Run sandbox builds on Spot hosts and restart them on another host if AWS reclaims the host; turn off Interruptible build for commands that change state outside the build.
+- Let TCP and TLS listeners pass the original client IP to tasks through Advanced Terraform variables.
+- New builds now use sandbox execution with 14 vCPU and 28 GiB by default.
+### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [2.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%402.1.0) → [2.2.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%402.2.1)
+- Keep sandbox build disks between runs so Docker layers and dependencies stay cached.
+- Run sandbox builds on Spot hosts and restart them on another host if AWS reclaims the host; turn off Interruptible build for commands that change state outside the build.
+- New builds now use sandbox execution with 14 vCPU and 28 GiB by default.
+### [ECS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-worker) [2.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%402.1.0) → [2.2.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%402.2.1)
+- Keep sandbox build disks between runs so Docker layers and dependencies stay cached.
+- Run sandbox builds on Spot hosts and restart them on another host if AWS reclaims the host; turn off Interruptible build for commands that change state outside the build.
+- New builds now use sandbox execution with 14 vCPU and 28 GiB by default.
+### [Lambda Function](https://www.ravion.com/docs/module-definitions/catalog/rvn-lambda) [1.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%401.4.0) → [2.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%402.1.0)
+- BREAKING: update callers, DNS targets, and IAM policies for the new function URL after applying the live-alias deployment change.
+- Keep sandbox build disks between runs so Docker layers and dependencies stay cached.
+- Run sandbox builds on Spot hosts and restart them on another host if AWS reclaims the host; turn off Interruptible build for commands that change state outside the build.
+- New builds now use sandbox execution with 14 vCPU and 28 GiB by default.
+### [S3 Bucket](https://www.ravion.com/docs/module-definitions/catalog/rvn-s3) [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-s3%401.1.0) → [2.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-s3%402.0.1)
+- Add Requester Pays as an advanced Terraform variable so bucket readers pay for requests and data transfer.
+- BREAKING: apply the region change only after emptying a bucket that an earlier version created in another region, because it will be replaced there.
+### [Static Hosting](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-static) [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%401.3.0) → [1.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%401.4.0)
+- Keep sandbox build disks between runs so Docker layers and dependencies stay cached.
+- Run sandbox builds on Spot hosts and restart them on another host if AWS reclaims the host; turn off Interruptible build for commands that change state outside the build.
+- New builds now use sandbox execution with 14 vCPU and 28 GiB by default.
+## CLI [1.10.1](https://github.com/ravionhq/cli/releases/tag/v1.10.1) → [1.14.12](https://github.com/ravionhq/cli/releases/tag/v1.14.12)
+### Breaking changes
+- **Authorization resource types:** Replace `kind` with `type` in authorization resources and scopes and use `resourceTypes` in catalog responses.
+- **Sandbox interruptibility:** Move `interruptible` into the sandbox `infrastructure` block before upgrading configurations.
+- **Public repository settings:** Replace per-repository `sandboxes.publicRepositoryIds` with the default-off `sandboxes.allowPublicRepositories` setting.
+### Features
+- **Multiple roles:** Assign several roles to members and service accounts with `ravion membership` and `ravion service-account` commands.
+- **API key permissions:** Limit an API key to selected permissions and inspect the available permissions for its owner with `ravion api-key`.
+- **Automatic sandbox host selection:** Let sandbox pools choose suitable instance types, create a default pool on first use, and keep a reserve of idle ephemeral hosts.
+- **Execution environment usage:** View Spot and On-demand compute, busy-host allocation, and startup timing in usage data.
+- **Sandbox capacity options:** Configure persistent or ephemeral host storage and allow interruptible steps to use Spot capacity.
+### Improvements
+- **Pipeline configuration validation:** Send `null` values in pipeline version create requests without rejecting unknown or removed fields.
+### Fixes
+- **Project configuration diffs:** Preserve written number formatting in plan diffs and keep dry runs consistent with pull request comments.
+
+</Update>
+
 <Update
   label="October 5, 2026"
   rss={{
