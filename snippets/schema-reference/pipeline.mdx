@@ -42,6 +42,15 @@ Pipeline configuration - the top-level schema
   _(minItems:1)_
 </ResponseField>
 
+<ResponseField name="pipeline" type="PipelineConfigTarget">
+  The pipeline this config is for. `ravion pipeline config pull` writes it,
+  and the Ravion GitHub App reads it to find the pipeline a repository's
+  ravion-pipeline.yaml configures. Applying a config whose block names
+  another pipeline is refused. It is not stored on a pipeline version.
+
+  See: [PipelineConfigTarget](#pipelineconfigtarget)
+</ResponseField>
+
 ## Triggers
 
 Webhook triggers that automatically start pipeline runs on events like git push
@@ -296,9 +305,15 @@ Concurrency configuration for controlling parallel execution
 <ResponseField name="behavior" type="enum" default="queue">
   Behavior when the concurrency limit is reached
   "queue" waits for a slot; "cancel-in-progress" cancels older contenders;
-  "cancel-intermediate" preserves the oldest contender and newest
-  contenders while cancelling the oldest intermediates; "skip" denies the new contender and
-  ends the run as skipped.
+  "cancel-intermediate" immediately replaces the oldest contender when its
+  immutable workflow-start age is under 15 seconds and the replacement
+  chain, anchored to the original first workflow start, is under 30 seconds.
+  Replacements never reset the 30-second cap. Replacements can continue below
+  capacity, including at value 1. At either age limit, it preserves the
+  oldest and newest contenders while cancelling intermediates. Built-in
+  deploy and terraform:apply steps cannot be cancelled by this policy after
+  execution starts; manual cancellation and cancel-in-progress are unchanged.
+  "skip" denies the new contender and ends the run as skipped.
   This controls trigger/step/block admission only and never relaxes the
   separate deployment-manager serialization used by deploy steps.
   Default: "queue"
@@ -313,11 +328,16 @@ Concurrency configuration for controlling parallel execution
   QUEUEING_DISABLED and the pipeline run ends as cancelled with "the trigger
   concurrency queue was full"; "skip" also denies immediately but ends the
   run as skipped. For "cancel-in-progress" and "cancel-intermediate", the
-  survivor window is value + queue_size (plus the oldest contender for
-  "cancel-intermediate"); contenders outside it are cancelled or evicted at
+  survivor window is value + positive queue_size total, including the oldest
+  contender for "cancel-intermediate"; contenders outside it are cancelled
+  or evicted at
   admission even when queue_size is unset, so unset does not mean unlimited
   retention. For "cancel-intermediate", the survivors are the oldest
-  contender plus the newest value + queue_size - 1 contenders.
+  contender plus the newest contenders that fit in that total window. Within
+  the age limits above, the oldest young contender may instead be replaced
+  by the strictly newer run. With "cancel-intermediate" and value: 1,
+  queue_size must be at least 1 to keep the newest waiting run while the
+  current run finishes.
 
   _(format:int32,min:0)_
 </ResponseField>
@@ -1200,10 +1220,17 @@ Build static CI action step
 General-purpose build action step — triggers a build based on the module's build config.
 
 By default, build steps use `value: 2` with `behavior: cancel-intermediate`,
-keyed automatically by module instance and, when set, `input.branch`. This
-preserves the oldest in-flight build because its deployment may already be
-running, as well as the newest push, while cancelling stale intermediate
-builds. An explicit `concurrency` block opts out of this default entirely.
+keyed automatically by module instance and, when set, `input.branch`. The
+policy starts replacing the oldest run immediately when a strictly newer
+run arrives, while the oldest workflow is under 15 seconds old and the
+inherited replacement chain is under 30 seconds old. This lets a rapid
+burst collapse to its newest build, including before capacity is reached.
+At either age limit, the oldest and newest builds survive and intermediates
+are cancelled. Built-in deploy and terraform:apply execution is protected.
+
+For example, with `value: 2` and arrivals at 0, 6, 12, 18, 24, 30, 36
+seconds, run 5 is protected when the 30-second chain cap is reached; runs 5
+and 7 survive. An explicit `concurrency` block opts out of this default.
 
 <ResponseField name="id" type="string" required>
   Unique step identifier, used for referencing in logs and dependencies
@@ -2824,6 +2851,30 @@ Secrets Manager reference with optional JSON key and version metadata
   Secret version ID or stage — defaults to latest if omitted
 
   _(templateable)_
+</ResponseField>
+
+## Other types
+
+### PipelineConfigTarget
+
+The pipeline a pipeline config file is for. It identifies the target and is
+never stored on a pipeline version.
+
+<ResponseField name="id" type="string">
+  Pipeline ID, such as pipe_3HpMAgQNqx2TTUDEakfaELp3hi3
+</ResponseField>
+
+<ResponseField name="givenId" type="string">
+  Pipeline given ID, used when the file has no id. A given ID is unique
+  within its project, so project names the project too.
+</ResponseField>
+
+<ResponseField name="project" type="string">
+  The pipeline's project, by ID or given ID; required with givenId
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  Pipeline name, for readers of the file
 </ResponseField>
 
 ## Template expressions
