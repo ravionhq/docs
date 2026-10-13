@@ -37,26 +37,27 @@ rss: true
 <Update
   label="October 12, 2026"
   rss={{
-    title: "Automatic sandbox pools, clearer execution-environment usage, safer pipeline configuration, and more capable module builds",
+    title: "Faster sandbox builds and Terraform runs, AWS quota management, execution-environment usage, and more capable module builds",
   }}
 >
 
+## New features
+### Sandboxes
+Sandboxes can make builds around 4× faster and Terraform runs up to 10× faster, depending on your workload. Steps start in seconds on warm hosts, and cached disks keep dependencies and Docker layers between runs. Ravion selects host types automatically and creates a pool on first use. To get started, update your AWS account to the latest permissions with **Update AWS Permissions** in [AWS account settings](https://app.ravion.com/org/settings/aws-accounts), then follow the [sandboxes getting started guide](https://www.ravion.com/docs/concepts/sandboxes).
+
+### AWS quota management
+When an AWS quota blocks a deployment, Ravion identifies the affected account and region and lets you request an increase from Ravion.
+
 ## Platform
 ### Features
-- **Automatic sandbox pools:** Sandbox execution environments can choose suitable host types automatically and create their default pool when a sandbox step first uses the environment. [Learn more](https://www.ravion.com/docs/concepts/sandboxes).
-- **Public repository runners:** Enable an execution environment's default-off public repository setting so connected public repositories and fork pull requests can use isolated sandbox runners.
 - **Execution environment usage:** View estimated cost, Spot and On-demand usage, capacity allocation, startup timing, and pipeline attribution.
-- **GitHub Actions workflows:** Browse repositories, workflows, runs, jobs, and logs alongside Ravion pipelines. [Learn more](https://www.ravion.com/docs/cli/reference/github-actions).
 - **Pipeline stage descriptions:** Add optional `purpose` text to pipeline steps and groups and view it when hovering their names. [Learn more](https://www.ravion.com/docs/pipelines/config-reference).
 ### Improvements
 - Environment canvas loading now uses saved card positions and keeps metric cards at a consistent height while data loads.
 - Execution environment details now open on Usage with a clearer Cost and Usage summary and a pool overview on the Sandbox hosts tab.
-- AWS quota notices now identify the affected account and region and provide a direct path to request an increase.
-- Pull request configuration plans now put errors and destructive changes first and show module changes in a clearer hierarchy.
 ### Fixes
 - Personal GitLab repositories now load without a repository-stream error.
 - Cancel controls now offer only actions that the current pipeline run supports.
-- Deployment details now open for operator-applied EKS deploy steps.
 - Successful Terraform applies no longer become failed runs because of a later refresh error.
 - Project configuration applies now skip deferred values and report the correct invalid value when a new module and its references are added together.
 - Sandbox launches now fail promptly with a useful error when AWS access, capacity, or host images prevent a host from starting.
@@ -66,7 +67,7 @@ rss: true
 - **Sandbox EC2 Fleets:** Allow sandbox EC2 Fleets.
 - **AWS Service Quotas:** Allow reading and requesting increases for all AWS service quotas.
 
-Update your AWS account connection in organization settings.
+Update your [AWS account connection in organization settings](https://app.ravion.com/org/settings/aws-accounts).
 
 ## Modules
 ### [AWS Application Load Balancer](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-alb) [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-alb%401.2.0) → [1.2.2](https://github.com/ravionhq/modules/releases/tag/rvn-aws-alb%401.2.2)
@@ -104,9 +105,7 @@ Update your AWS account connection in organization settings.
 - New builds now use sandbox execution with 14 vCPU and 28 GiB by default.
 ## CLI [1.10.1](https://github.com/ravionhq/cli/releases/tag/v1.10.1) → [1.14.12](https://github.com/ravionhq/cli/releases/tag/v1.14.12)
 ### Breaking changes
-- **Authorization resource types:** Replace `kind` with `type` in authorization resources and scopes and use `resourceTypes` in catalog responses.
 - **Sandbox interruptibility:** Move `interruptible` into the sandbox `infrastructure` block before upgrading configurations.
-- **Public repository settings:** Replace per-repository `sandboxes.publicRepositoryIds` with the default-off `sandboxes.allowPublicRepositories` setting.
 ### Features
 - **Multiple roles:** Assign several roles to members and service accounts with `ravion membership` and `ravion service-account` commands.
 - **API key permissions:** Limit an API key to selected permissions and inspect the available permissions for its owner with `ravion api-key`.
