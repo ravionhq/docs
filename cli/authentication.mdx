@@ -56,7 +56,14 @@ ${XDG_CONFIG_HOME:-$HOME/.config}/ravion/auth.json
 
 ## Service accounts and API keys
 
-For automation that should not depend on a person's session, use a service account API key instead of an interactive login. See [`ravion service-account`](/cli/reference/service-account) and [`ravion api-key`](/cli/reference/api-key).
+For CI and automation, use a service-account API key instead of a personal membership key or interactive login.
+
+1. In the dashboard, open [**Settings / Service accounts**](https://app.ravion.com/org/settings/service-accounts).
+2. Create or select the service account for your automation.
+3. On that account's detail panel, click **Create API key** and copy the key.
+4. Store it as your CI secret and pass it to the CLI as `RAVION_API_KEY`.
+
+Create the key on the service account, not on your personal member profile. The CLI can manage service accounts and existing keys, but it does not have an `api-key create` command. See [`ravion service-account`](/cli/reference/service-account) and [`ravion api-key`](/cli/reference/api-key).
 
 ## Non-interactive authentication
 
