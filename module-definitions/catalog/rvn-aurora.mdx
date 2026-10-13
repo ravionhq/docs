@@ -162,6 +162,59 @@ All inputs for `rvn-aurora` version `1.4.0`. Use the `name` shown for each field
   - Immutable after creation
 </ResponseField>
 
+Set `network` to `null`.
+Mapped inputs for `network`: set these keys alongside `network`, not inside it, when supplying existing infrastructure instead of a module reference.
+
+<ResponseField name="section_aws" type="section">
+  **AWS account & region.**
+</ResponseField>
+
+<ResponseField name="aws_account_id" type="string">
+  **AWS account.**
+
+  - Default: `<< ref.input.aws_account_id >>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="aws_region" type="string">
+  **Region.**
+
+  - Default: `<< ref.input.aws_region >>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="execution_environment_id" type="string">
+  **Terraform execution environment.** Override the VPC, subnet, and security group for Pipeline Terraform runners. Must use the same AWS account as selected above.
+
+  - Default: `<< ref.input.execution_environment_id >>`
+</ResponseField>
+
+<ResponseField name="section_vpc" type="section">
+  **VPC.**
+</ResponseField>
+
+<ResponseField name="vpc_id" type="string" required>
+  **VPC ID.**
+
+  - Default: `<<ref.stack.output.vpc_id>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="private_subnet_ids" type="string_array" required>
+  **Private subnet IDs.** Used for the Aurora DB subnet group when the database is not publicly accessible. Use at least two subnets in different Availability Zones.
+
+  - Default: `<<ref.stack.output.private_subnet_ids>>`
+  - Immutable after creation
+</ResponseField>
+
+<ResponseField name="public_subnet_ids" type="string_array">
+  **Public subnet IDs.** Used for the Aurora DB subnet group when Publicly accessible is enabled. AWS requires public subnets for public database access.
+
+  - Default: `<<ref.stack.output.public_subnet_ids>>`
+  - Immutable after creation
+  - Shown when: `{"public_access_enabled":true}`
+</ResponseField>
+
 ### Database
 
 <ResponseField name="name" type="string" required>

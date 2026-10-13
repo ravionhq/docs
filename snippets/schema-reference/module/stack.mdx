@@ -344,9 +344,15 @@ Concurrency configuration for controlling parallel execution
 <ResponseField name="behavior" type="enum" default="queue">
   Behavior when the concurrency limit is reached
   "queue" waits for a slot; "cancel-in-progress" cancels older contenders;
-  "cancel-intermediate" preserves the oldest contender and newest
-  contenders while cancelling the oldest intermediates; "skip" denies the new contender and
-  ends the run as skipped.
+  "cancel-intermediate" immediately replaces the oldest contender when its
+  immutable workflow-start age is under 15 seconds and the replacement
+  chain, anchored to the original first workflow start, is under 30 seconds.
+  Replacements never reset the 30-second cap. Replacements can continue below
+  capacity, including at value 1. At either age limit, it preserves the
+  oldest and newest contenders while cancelling intermediates. Built-in
+  deploy and terraform:apply steps cannot be cancelled by this policy after
+  execution starts; manual cancellation and cancel-in-progress are unchanged.
+  "skip" denies the new contender and ends the run as skipped.
   This controls trigger/step/block admission only and never relaxes the
   separate deployment-manager serialization used by deploy steps.
   Default: "queue"
@@ -361,11 +367,16 @@ Concurrency configuration for controlling parallel execution
   QUEUEING_DISABLED and the pipeline run ends as cancelled with "the trigger
   concurrency queue was full"; "skip" also denies immediately but ends the
   run as skipped. For "cancel-in-progress" and "cancel-intermediate", the
-  survivor window is value + queue_size (plus the oldest contender for
-  "cancel-intermediate"); contenders outside it are cancelled or evicted at
+  survivor window is value + positive queue_size total, including the oldest
+  contender for "cancel-intermediate"; contenders outside it are cancelled
+  or evicted at
   admission even when queue_size is unset, so unset does not mean unlimited
   retention. For "cancel-intermediate", the survivors are the oldest
-  contender plus the newest value + queue_size - 1 contenders.
+  contender plus the newest contenders that fit in that total window. Within
+  the age limits above, the oldest young contender may instead be replaced
+  by the strictly newer run. With "cancel-intermediate" and value: 1,
+  queue_size must be at least 1 to keep the newest waiting run while the
+  current run finishes.
 
   _(format:int32,min:0)_
 </ResponseField>

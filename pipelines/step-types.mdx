@@ -34,6 +34,8 @@ Triggers a build for a module instance using the module's own build configuratio
     ref: << pipeline.input.commit >>
 ```
 
+By default, `build` steps use `value: 2` with `behavior: cancel-intermediate`, keyed by module instance and `input.branch` when set. This replaces young runs during a quick burst, then protects an older run so it can finish. See [Concurrency](/pipelines/concurrency) for the 15-second replacement window and 30-second cap. An explicit `concurrency` block replaces this default; CI steps such as `build:image` do not inherit it.
+
 See [BuildStep schema](/pipelines/config-reference#buildstep).
 
 ### deploy

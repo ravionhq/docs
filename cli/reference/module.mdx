@@ -276,11 +276,17 @@ ravion module list [flags]
 
 ### `ravion module schema`
 
-Print module input schema
+Print published Ravion module input definitions. JSON output is not standard JSON Schema.
 
 ```bash
-ravion module schema <type> [version]
+ravion module schema <type> [version] [flags]
 ```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | Print Ravion input definitions as JSON, not standard JSON Schema |
 
 ### `ravion module update`
 
@@ -346,7 +352,9 @@ ravion module version get <id> [flags]
 
 #### `ravion module version list`
 
-List ModuleVersions
+List module versions, optionally selected by module type, with comparisons derived from published source refs.
+
+GitHub comparisons are repository-wide, not filtered to the module's base path, and are not a safe-upgrade verdict.
 
 ```bash
 ravion module version list [flags]
@@ -362,6 +370,7 @@ ravion module version list [flags]
 | `--limit <int>` |  | limit |
 | `--module-definition-id <string>` |  | moduleDefinitionId |
 | `--since-version <string>` |  | Only return versions greater than or equal to this semantic version. Requires moduleDefinitionId. |
+| `--type <string>` |  | Module type; cannot be combined with --module-definition-id |
 | `-v, --verbose` |  | show full output |
 
 #### `ravion module version summaries`
