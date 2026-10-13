@@ -44,11 +44,15 @@ rss: true
 
 ## Major new features
 
-### Faster pipelines with high performance, sticky disk sandbox runners
+### Autoscaling sandbox fleets with sticky disks
 
-Sandbox runners can make builds up to 4× faster and Terraform runs up to 10× faster, depending on your workload. Steps start in roughly a second on warm hosts, and cached disks keep dependencies and Docker layers between runs. Ravion selects host types automatically unless you specify them. By default we run jobs with `interruptible:true` on spot instances for maximum savings. We automatically try different spot instances and AZs to use spot as much as possible, falling back to on-demand if necessary.
+Sandbox runners can make builds up to 4× faster and Terraform runs up to 10× faster, depending on your workload. Behind those faster runs is a fully managed fleet: Ravion orchestrates isolated Firecracker microVMs across EC2 hosts in your AWS account, packing multiple sandboxes onto each host and scaling the fleet up and down with demand.
 
-Also by default sandbox hosts are ephemeral. We delete them when idle.
+- **Fast starts and sticky disks.** Steps start in roughly a second on warm hosts. Cached disks keep dependencies, build output and Docker layers between runs, and saved snapshots can follow your work to another host.
+- **Automatic host selection and Spot fallback.** Ravion chooses host types unless you specify them. New pools use Spot for eligible work with `interruptible: true` when more capacity is needed, trying compatible instance types and Availability Zones before falling back to On-Demand.
+- **Disposable hosts without disposable caches.** Hosts are ephemeral by default and deleted when idle; the fleet can scale to zero without losing saved sandbox disks. Keep a warm reserve for faster starts, or use persistent hosts that stop with their disks retained and wake for later work.
+
+You configure what each step needs; Ravion manages the fleet underneath it. Read [how sandbox fleets work](https://www.ravion.com/docs/concepts/sandboxes#how-the-fleet-works) for the architecture and cost trade-offs.
 
 To get started, update your AWS account to the latest permissions with **Update AWS Permissions** in [AWS account settings](https://app.ravion.com/org/settings/aws-accounts), then follow the [sandboxes getting started guide](https://www.ravion.com/docs/concepts/sandboxes).
 
