@@ -132,7 +132,7 @@ To stop using sandboxes, switch your steps and module builds back to EC2. Removi
 
 `interruptible: true` says a step can be stopped partway and started over. Builds, tests and lint usually can.
 
-New pools allow Spot hosts by default. When interruptible work needs new capacity, Ravion tries compatible Spot instance types across the Availability Zones available to your execution environment. It can try other instance sizes and replan how steps fit across hosts, then fall back to On-Demand if Spot capacity is unavailable.
+New pools allow Spot hosts by default. When interruptible work needs new capacity, Ravion tries compatible Spot instance types across the Availability Zones available to your execution environment. It can try other instance sizes and adjust how steps are distributed across hosts, then fall back to On-Demand if Spot capacity is unavailable.
 
 Interruptible steps can also use spare capacity on running On-Demand hosts. Setting `interruptible: true` permits Spot; it doesn't require a new Spot instance for every step.
 
