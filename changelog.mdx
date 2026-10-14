@@ -46,7 +46,7 @@ rss: true
 
 ### Autoscaling sandbox fleets with sticky disks
 
-Sandbox runners can make builds up to 4× faster and Terraform runs up to 10× faster, depending on your workload. Behind those faster runs is a fully managed fleet: Ravion orchestrates isolated Firecracker microVMs across EC2 hosts in your AWS account, packing multiple sandboxes onto each host and scaling the fleet up and down with demand.
+Pipeline sandbox runners can make builds up to 4× faster and Terraform runs up to 10× faster, depending on your workload. Behind those faster runs is a fully managed fleet: Ravion orchestrates isolated Firecracker microVMs across EC2 hosts in your AWS account, packing multiple sandboxes onto each host and scaling the fleet up and down with demand.
 
 - **Fast starts and sticky disks.** Steps start in roughly a second on warm hosts. Cached disks keep dependencies, build output and Docker layers between runs, and saved snapshots can follow your work to another host.
 - **Automatic host selection and Spot fallback.** Ravion chooses host types unless you specify them. New pools use Spot for eligible work with `interruptible: true` when more capacity is needed, trying compatible instance types and Availability Zones before falling back to On-Demand.
