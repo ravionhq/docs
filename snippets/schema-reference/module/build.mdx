@@ -479,8 +479,18 @@ Dockerfile configuration for image builds
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="build_args" type="map<string,string> | null">
+  Explicit Docker build args passed to buildx without adding declarations to the Dockerfile.
+  Values can be literal strings or pipeline templates.
+
+  _(templateable)_
+</ResponseField>
+
 <ResponseField name="inject_env_variables_in_dockerfile" type="boolean | null">
-  Whether to inject environment variables as Docker build args
+  Whether to inject environment variables as ARG and ENV declarations after every FROM
+  in the Dockerfile. Changing injected values invalidates every following layer, and the ENV
+  declarations persist those values in the image. Prefer build_args when you need explicit
+  control over ARG placement, and use BuildKit secrets for credentials.
   Accepts either a boolean literal or a full template token
 
   _(templateable)_
@@ -881,8 +891,18 @@ Dockerfile configuration for Lambda builds
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="build_args" type="map<string,string> | null">
+  Explicit Docker build args passed to buildx without adding declarations to the Dockerfile.
+  Values can be literal strings or pipeline templates.
+
+  _(templateable)_
+</ResponseField>
+
 <ResponseField name="inject_env_variables_in_dockerfile" type="boolean | null">
-  Whether to inject environment variables as Docker build args
+  Whether to inject environment variables as ARG and ENV declarations after every FROM
+  in the Dockerfile. Changing injected values invalidates every following layer, and the ENV
+  declarations persist those values in the image. Prefer build_args when you need explicit
+  control over ARG placement, and use BuildKit secrets for credentials.
   Accepts either a boolean literal or a full template token
 
   _(templateable)_
@@ -1002,8 +1022,18 @@ Dockerfile configuration for static builds
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="build_args" type="map<string,string> | null">
+  Explicit Docker build args passed to buildx without adding declarations to the Dockerfile.
+  Values can be literal strings or pipeline templates.
+
+  _(templateable)_
+</ResponseField>
+
 <ResponseField name="inject_env_variables_in_dockerfile" type="boolean | null">
-  Whether to inject environment variables as Docker build args
+  Whether to inject environment variables as ARG and ENV declarations after every FROM
+  in the Dockerfile. Changing injected values invalidates every following layer, and the ENV
+  declarations persist those values in the image. Prefer build_args when you need explicit
+  control over ARG placement, and use BuildKit secrets for credentials.
   Accepts either a boolean literal or a full template token
 
   _(templateable)_
