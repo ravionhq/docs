@@ -1,14 +1,41 @@
 ---
 title: "Sandboxes"
 sidebarTitle: "Sandboxes"
-description: "Run pipeline steps and module builds as Firecracker microVMs in your AWS account, with automatic host selection and fast starts on warm hosts."
+description: "Run pipeline steps and module builds on an autoscaling fleet of Firecracker microVMs in your AWS account, with sticky disks and Spot capacity."
 "og:image": "https://www.ravion.com/og/docs/concepts/sandboxes.png"
 "twitter:image": "https://www.ravion.com/og/docs/concepts/sandboxes.png"
 ---
 
-A sandbox runs a pipeline step or a module build as a [Firecracker](https://firecracker-microvm.github.io/) microVM. The microVM runs on a pool of EC2 hosts in your AWS account. Steps start in seconds when a host has room. When no host is available, Ravion launches one.
+A sandbox runs a pipeline step or a module build as an isolated [Firecracker](https://firecracker-microvm.github.io/) microVM. Ravion orchestrates an entire fleet of these microVMs across EC2 hosts in your AWS account, automatically scaling the hosts up and down as work arrives and finishes.
 
-Each execution environment can have one sandbox pool. The first step that targets it with `type: sandbox` creates the pool automatically. Ravion chooses the host machine types unless you set your own. Several sandboxes can share one host.
+You choose the CPU, memory and disk each step needs. Ravion handles host selection, scheduling, Spot capacity and host cleanup. Steps can start in roughly a second on warm hosts, and [sticky disks](#disk-cache) keep dependencies, build output and Docker layers ready for later runs.
+
+## How the fleet works
+
+Each execution environment can have one **sandbox pool**: the fleet of EC2 hosts that runs its sandboxes. The first step that targets it with `type: sandbox` creates the pool automatically. You don't need to provision hosts or maintain an Auto Scaling group yourself.
+
+An EC2 host is not a single runner. Several isolated sandboxes can run on it at once, each with its own CPU, memory and disk allocation. This lets steps share available host capacity instead of launching a dedicated EC2 instance for every step.
+
+1. **Use available capacity.** Ravion places steps on running hosts with enough room. When possible, it prefers the host that already has the step's cached disk data.
+2. **Scale up for waiting work.** When running hosts don't have room, Ravion launches more hosts or wakes suitable stopped hosts in persistent pools. It selects compatible machine types for your region and workload unless you restrict the selection.
+3. **Choose Spot or On-Demand capacity.** Interruptible work can use Spot hosts, with alternatives across instance types and Availability Zones and an On-Demand fallback. Work that must not be interrupted uses On-Demand hosts.
+4. **Scale down after work finishes.** Ravion stops or terminates idle hosts according to your pool settings. Normal scale-down waits for running steps to finish.
+
+The default pool can scale down to zero hosts. A later run then waits for a host to launch; the roughly one-second start applies when a warm host already has capacity.
+
+### Ephemeral hosts, persistent hosts and warm capacity
+
+Host lifetime and sandbox disk caching are separate settings. You can use disposable EC2 hosts without throwing away the sandbox's saved disk after every run.
+
+| Mode | What happens when a host becomes idle | Trade-off |
+| --- | --- | --- |
+| **Ephemeral** (default) | Ravion terminates the host and deletes its attached volumes after the idle timeout, unless a running reserve keeps it. | No idle compute charges after termination, but the next burst may need new hosts. |
+| **Persistent** | Ravion stops On-Demand hosts and retains their disks, then starts suitable hosts again when needed. | Local cached data survives a stop. Retained disks still incur storage charges, and waking a host takes time. |
+| **Warm reserve** (ephemeral pools) | Ravion keeps a chosen number of idle hosts running. | Faster starts after quiet periods, at the cost of continued compute charges. |
+
+Spot hosts are terminated rather than stopped, even in persistent pools. Stopped hosts outside a persistent pool's retained reserve are deleted after the configured retention period.
+
+You can set the reserve to a fixed count or have Ravion size it from your peak or rolling-average daily peak usage. In ephemeral pools, that reserve stays running; in persistent pools, it stays stopped with its disks retained. See [Pool settings](#pool-settings) for the controls and defaults.
 
 ## When to use sandboxes
 
@@ -105,6 +132,10 @@ To stop using sandboxes, switch your steps and module builds back to EC2. Removi
 
 `interruptible: true` says a step can be stopped partway and started over. Builds, tests and lint usually can.
 
+New pools allow Spot hosts by default. When interruptible work needs new capacity, Ravion tries compatible Spot instance types across the Availability Zones available to your execution environment. It can try other instance sizes and adjust how steps are distributed across hosts, then fall back to On-Demand if Spot capacity is unavailable.
+
+Interruptible steps can also use spare capacity on running On-Demand hosts. Setting `interruptible: true` permits Spot; it doesn't require a new Spot instance for every step.
+
 - Only interruptible steps run on spot hosts, and only in a pool with **Use spot hosts for interruptible steps** turned on. Other steps run on on-demand hosts.
 - If an interruptible step's host is lost or AWS reclaims it, Ravion reruns the step from the start on another host. The last retry always runs on an on-demand host.
 - If a step that isn't interruptible loses its host, the step fails.
@@ -114,6 +145,10 @@ Leave `interruptible` off for steps that change things outside the sandbox and c
 ## Disk cache
 
 `disk_cache` controls whether a sandbox keeps its disk, with your dependencies, build output and Docker layers, between runs.
+
+These **sticky disks** save the sandbox filesystem rather than requiring you to select individual cache directories. Ravion stores the saved disk snapshots in an S3-backed chunk store in your AWS account and caches data locally on hosts. Later runs can restore a saved disk on another host, even after the original ephemeral host has been terminated.
+
+When a suitable previous host is still available, Ravion prefers it so the sandbox can reuse local cached data. Disk caching reduces repeated downloads and setup, while warm host capacity avoids waiting for EC2 to launch. Both affect how much faster your workload runs. Enable it with `disk_cache: auto` or a cache key; custom pipeline steps default to `off`.
 
 | Value | What it does |
 | --- | --- |
