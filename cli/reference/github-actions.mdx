@@ -12,6 +12,21 @@ description: "Browse GitHub Actions workflows, runs, jobs, and logs"
 
 Browse GitHub Actions workflows, runs, jobs, and logs
 
+### `ravion github-actions import-usage`
+
+Start importing usage for connected repositories
+
+```bash
+ravion github-actions import-usage [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--organization-id <string>` |  | organizationId |
+
 ### `ravion github-actions job-logs`
 
 Get bounded logs for a workflow job
@@ -43,6 +58,22 @@ ravion github-actions jobs <codeSourceId> <runId> [flags]
 | `--json` |  | emit response as JSON |
 | `--organization-id <string>` |  | organizationId |
 | `--page <int>` |  | page |
+| `-v, --verbose` |  | show full output |
+
+### `ravion github-actions latest-runs`
+
+List the latest run of each workflow
+
+```bash
+ravion github-actions latest-runs <codeSourceId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--organization-id <string>` |  | organizationId |
 | `-v, --verbose` |  | show full output |
 
 ### `ravion github-actions repositories`
@@ -97,6 +128,37 @@ ravion github-actions runs <codeSourceId> <workflowId> [flags]
 | `--page <int>` |  | page |
 | `--status <string>` |  | status |
 | `-v, --verbose` |  | show full output |
+
+### `ravion github-actions usage-report`
+
+Read GitHub Actions cost and savings estimates
+
+```bash
+ravion github-actions usage-report [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--organization-id <string>` |  | organizationId |
+| `--period <string>` |  | period. Available values: latest, previous_month. |
+
+### `ravion github-actions workflow-usage`
+
+Get a workflow's estimated cost and savings
+
+```bash
+ravion github-actions workflow-usage <codeSourceId> <workflowId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--organization-id <string>` |  | organizationId |
 
 ### `ravion github-actions workflows`
 
