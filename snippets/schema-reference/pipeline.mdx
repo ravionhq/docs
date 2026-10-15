@@ -1655,6 +1655,13 @@ Terraform apply CI action step
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="integrations" type="string[] | null">
+  Integrations whose credentials are injected into the Terraform/OpenTofu process.
+  Each entry is an integration ID or givenId; at most one per provider.
+
+  _(templateable)_
+</ResponseField>
+
 <ResponseField name="plan_file_uri" type="string" required>
   S3 URI of the plan file to apply — typically from a preceding plan step output (e.g. s3://bucket/path/to/plan.tfplan)
 
@@ -1744,6 +1751,13 @@ Terraform plan CI action step
 <ResponseField name="stack_id" type="string | null">
   Stack ID used for terraform resource/execution tracking
   Automatically set when triggered from a stack
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="integrations" type="string[] | null">
+  Integrations whose credentials are injected into the Terraform/OpenTofu process.
+  Each entry is an integration ID or givenId; at most one per provider.
 
   _(templateable)_
 </ResponseField>
@@ -2079,6 +2093,29 @@ security group produced by an earlier step can be wired straight in.
 
   _(minLen:1; templateable)_
 </ResponseField>
+
+<ResponseField name="subnet" type="string | null">
+  Subnet ID the runner is launched into, replacing the resolved execution
+  environment's subnet. It must be in the environment's VPC, or in the VPC
+  `vpc` names.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="vpc" type="string | null">
+  VPC ID the runner runs in, replacing the resolved execution environment's
+  VPC. A subnet and a security group belong to one VPC, so a VPC other than
+  the environment's is taken only with `subnet` and `security_group` naming
+  a subnet and a security group in it.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+### IntegrationReference
+
+Integration ID or givenId
+
+Type: string
 
 ### TerraformTool
 
@@ -2515,10 +2552,11 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
 </ResponseField>
 
 <ResponseField name="disk" type="integer | null">
-  GiB of host disk reserved for the sandbox microVM's writes — the restored
-  lineage overlay plus everything the step builds before it is frozen. A host
-  takes the sandbox only when it has this much free, so a step that writes
-  more than the default should say so.
+  GiB of host disk the sandbox microVM may write — the restored lineage
+  overlay plus everything the step builds before it is frozen. A host takes
+  the sandbox only when it has this much free, and stops it if it writes
+  more, failing the step with SandboxDiskExceeded, so a step that writes
+  more than the default must say so.
 
   _(format:int32,min:1; templateable)_
 </ResponseField>
@@ -2546,6 +2584,19 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
   another host if its host is lost or reclaimed. Leave it off for steps that
   change things outside the sandbox and can't safely be cut off and repeated,
   such as database migrations.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="execution_environment_overrides" type="ExecutionEnvironmentOverrides">
+  Overrides for individual attributes of the resolved execution environment.
+  A sandbox runs on a host of the environment's pool, so the host's network
+  is the step's: a step whose overrides name another security group or
+  subnet runs on a pool host launched into them, which is ended at its idle
+  timer rather than kept. The whole block and each field inside it accept
+  template tokens.
+
+  See: [ExecutionEnvironmentOverrides](#executionenvironmentoverrides)
 
   _(templateable)_
 </ResponseField>
