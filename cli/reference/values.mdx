@@ -168,6 +168,39 @@ ravion values opentofu/versions [flags]
 | `--json` |  | emit response as JSON |
 | `-v, --verbose` |  | show full output |
 
+### `ravion values planetscale/cluster-sizes`
+
+Get PlanetScale cluster size values
+
+```bash
+ravion values planetscale/cluster-sizes [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--integration-id <string>` | yes | Active PlanetScale integration ID |
+| `--region <string>` | yes | PlanetScale region slug |
+| `--json` |  | emit response as JSON |
+| `-v, --verbose` |  | show full output |
+
+### `ravion values planetscale/regions`
+
+Get PlanetScale region values
+
+```bash
+ravion values planetscale/regions [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--integration-id <string>` | yes | Active PlanetScale integration ID |
+| `--json` |  | emit response as JSON |
+| `-v, --verbose` |  | show full output |
+
 ### `ravion values terraform/versions`
 
 Get Terraform version values
