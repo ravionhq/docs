@@ -29,11 +29,11 @@ Host lifetime and sandbox disk caching are separate settings. You can use dispos
 
 | Mode | What happens when a host becomes idle | Trade-off |
 | --- | --- | --- |
-| **Ephemeral** (default) | Ravion terminates the host and deletes its attached volumes after the idle timeout, unless a running reserve keeps it. | No idle compute charges after termination, but the next burst may need new hosts. |
+| **Ephemeral** (default) | Ravion terminates the host and deletes its attached volumes once it's empty, unless a running reserve keeps it. | No idle compute charges after termination, but the next burst may need new hosts. |
 | **Persistent** | Ravion stops On-Demand hosts and retains their disks, then starts suitable hosts again when needed. | Local cached data survives a stop. Retained disks still incur storage charges, and waking a host takes time. |
 | **Warm reserve** (ephemeral pools) | Ravion keeps a chosen number of idle hosts running. | Faster starts after quiet periods, at the cost of continued compute charges. |
 
-Spot hosts are terminated rather than stopped, even in persistent pools. Stopped hosts outside a persistent pool's retained reserve are deleted after the configured retention period.
+Ravion decides when to shut down an empty host. If the other running hosts have enough free room for upcoming work, it shuts the host down right away. Otherwise it waits 40 seconds, so the next wave of jobs can reuse it. Spot hosts are terminated rather than stopped, even in persistent pools. Stopped hosts outside a persistent pool's retained reserve are deleted after the configured retention period.
 
 You can set the reserve to a fixed count or have Ravion size it from your peak or rolling-average daily peak usage. In ephemeral pools, that reserve stays running; in persistent pools, it stays stopped with its disks retained. See [Pool settings](#pool-settings) for the controls and defaults.
 
@@ -123,7 +123,6 @@ Open [**Settings / Execution environments**](https://app.ravion.com/org/settings
 | **Host storage** | Ephemeral | **Ephemeral** terminates idle hosts unless you keep some running. Types with an instance store use it for sandboxes and local cache. **Persistent** stops idle on-demand hosts and retains their disks for reuse. Spot hosts are always terminated, even in a persistent pool. |
 | **Use spot hosts for interruptible steps** | On | Allows spot hosts for [interruptible steps](#interruptible-steps-and-spot-hosts). Steps that aren't interruptible still use on-demand hosts. |
 | **Idle hosts to keep running** / **Stopped hosts to retain** | None | Ephemeral pools keep the chosen number running, with compute charges. Persistent pools retain stopped hosts and their disks instead. **Peak** matches your busiest minute; **Rolling average** matches your average daily peak over the selected window. **Fixed** keeps a set number; **None** keeps none. |
-| **Terminate idle hosts after (seconds)** | 20 | How long an idle host waits before termination. With a running reserve, this becomes **Terminate excess idle hosts after (seconds)**. Persistent pools use **Stop idle hosts after (seconds)**. |
 | **Delete stopped hosts after (minutes)** | 1440 | Deletes stopped hosts outside the retained reserve after this time. Persistent pools only. |
 
 To stop using sandboxes, switch your steps and module builds back to EC2. Removing a pool through the [CLI](/cli/reference/environment) tears down its hosts, but the next sandbox step creates a default pool again.
