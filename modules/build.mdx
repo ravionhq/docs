@@ -58,7 +58,7 @@ Builds run in your AWS account, so your source code never enters the Ravion cont
 
 ## Build infrastructure
 
-New instances of the latest standard library modules default to **Sandbox** builds: Firecracker microVMs with **14 vCPUs**, **28 GiB memory** and **30 GiB disk**. The first build creates the host pool automatically. You don't need to choose EC2 machine types. Before your first sandbox build, [update your AWS permissions](/concepts/sandboxes#get-started).
+New instances of the latest standard library modules default to **Sandbox** builds: Firecracker microVMs with **14 vCPUs**, **28 GiB memory** and **30 GiB disk**. The first build sets up sandbox hosts automatically. You don't need to choose EC2 machine types. Before your first sandbox build, [update your AWS permissions](/concepts/sandboxes#get-started).
 
 Use sandboxes unless your build needs a custom AMI or direct access to a dedicated EC2 instance. For those requirements, change **Builder capacity type** to **EC2** or **EC2 spot**.
 
