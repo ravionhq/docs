@@ -165,6 +165,7 @@ ravion pipeline run create [flags]
 | `--attached-entity-id <string>` |  | ID of the entity (e.g. Stack) that this run is associated with |
 | `--input <string>` |  | Manual pipeline input values keyed by input definition key. Example: \{"image_tag": "v1.2.3", "enable_debug": true\}. |
 | `--json` |  | emit response as JSON |
+| `--no-cache` |  | When true, each sandbox step that keeps a disk (infrastructure.disk_cache) clears its saved disk and starts on a clean one; when the step succeeds, the disk it finished with is saved in its place. Pipelines this run starts run the same way. The run's triggerMetadata.no_cache records it. |
 | `--pipeline-version-id <string>` |  | pipelineVersionId |
 
 #### `ravion pipeline run get`
@@ -276,8 +277,8 @@ ravion pipeline run list [flags]
 Retry a pipeline run
 
 Flags depend on --retry-scope:
-  - FAILED_STEPS: no additional flags
-  - FULL_RUN: accepts --use-latest-version
+  - FAILED_STEPS: accepts --no-cache
+  - FULL_RUN: accepts --no-cache, --use-latest-version
 
 ```bash
 ravion pipeline run retry <id> [flags]
@@ -289,6 +290,7 @@ ravion pipeline run retry <id> [flags]
 | --- | --- | --- |
 | `--retry-scope <string>` | yes | Which portion of the same pipeline run should be retried. Available values: FAILED_STEPS, FULL_RUN. |
 | `--json` |  | emit response as JSON |
+| `--no-cache` |  | When true, each sandbox step that keeps a disk (infrastructure.disk_cache) clears its saved disk and starts on a clean one; when the step succeeds, the disk it finished with is saved in its place. |
 | `--use-latest-version` |  | When true, a full-run retry should use the latest pipeline version. |
 
 #### `ravion pipeline run terraform-resources`

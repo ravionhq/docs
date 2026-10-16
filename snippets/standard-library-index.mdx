@@ -7,7 +7,7 @@
     Requests an AWS Certificate Manager public certificate with DNS validation.
   </Card>
   <Card title="Aurora Database" href="/module-definitions/catalog/rvn-aurora">
-    `rvn-aurora` · v1.4.0
+    `rvn-aurora` · v1.5.0
 
     Creates and manages an Amazon Aurora cluster. Supports Aurora PostgreSQL and Aurora MySQL with provisioned or Serverless v2 capacity.
   </Card>
@@ -15,6 +15,11 @@
     `rvn-aws-alb` · v1.3.0
 
     Standalone Application Load Balancer (ALB) with HTTP/HTTPS listeners that multiple services can attach listener rules to.
+  </Card>
+  <Card title="alterNAT" href="/module-definitions/catalog/rvn-aws-alternat">
+    `rvn-aws-alternat` · v0.1.2
+
+    Highly available alterNAT instances that replace NAT gateway data processing charges and fail over to a NAT gateway automatically.
   </Card>
   <Card title="AMI" href="/module-definitions/catalog/rvn-aws-ami">
     `rvn-aws-ami` · v0.3.1
@@ -42,7 +47,7 @@
     Creates a regional symmetric AWS KMS encryption key and stable alias.
   </Card>
   <Card title="VPC Network" href="/module-definitions/catalog/rvn-aws-network">
-    `rvn-aws-network` · v1.2.0
+    `rvn-aws-network` · v1.2.1
 
     Production-ready AWS VPC with public and private subnets, NAT gateways, and compliance-ready flow logs.
   </Card>
@@ -92,27 +97,27 @@
     Creates and manages an Amazon EFS file system with mount targets, security groups, automatic backups, and an optional access point.
   </Card>
   <Card title="EKS Add-ons" href="/module-definitions/catalog/rvn-eks-addons">
-    `rvn-eks-addons` · v0.19.0
+    `rvn-eks-addons` · v0.22.0
 
     Selectable add-ons for an existing EKS cluster.
   </Card>
   <Card title="EKS Helm Chart" href="/module-definitions/catalog/rvn-eks-chart">
-    `rvn-eks-chart` · v0.2.1
+    `rvn-eks-chart` · v0.3.0
 
-    Install any third-party Helm chart from an HTTP Helm repository or an OCI registry onto an EKS cluster, with full control over the chart's values.
+    Install any Helm chart from an HTTP Helm repository, an OCI registry or a Git repository onto an EKS cluster, with full control over the chart's values.
   </Card>
   <Card title="EKS Cluster" href="/module-definitions/catalog/rvn-eks-cluster">
-    `rvn-eks-cluster` · v0.8.0
+    `rvn-eks-cluster` · v0.8.1
 
     Production-ready Amazon EKS cluster with default managed capacity, core add-ons, and optional Fargate compute. Extend with the EKS Add-ons module (Karpenter, load balancer controller, EBS CSI, Container Insights).
   </Card>
   <Card title="EKS Web Service" href="/module-definitions/catalog/rvn-eks-web">
-    `rvn-eks-web` · v1.8.0
+    `rvn-eks-web` · v1.10.0
 
     Web server on EKS for running any HTTP application on your Kubernetes cluster behind a shared load balancer, with no Kubernetes manifests or Helm charts to write.
   </Card>
   <Card title="EKS Worker" href="/module-definitions/catalog/rvn-eks-worker">
-    `rvn-eks-worker` · v0.11.0
+    `rvn-eks-worker` · v0.13.0
 
     Background worker on EKS for running a long-lived private process with no exposed port, and no Kubernetes manifests or Helm charts to write.
   </Card>
@@ -125,6 +130,11 @@
     `rvn-lambda` · v2.1.0
 
     AWS Lambda function with zip or container image deployments, alias-based releases, IAM, logs, and optional function URLs.
+  </Card>
+  <Card title="PlanetScale MySQL" href="/module-definitions/catalog/rvn-planetscale-vitess">
+    `rvn-planetscale-vitess` · v0.1.0
+
+    Managed PlanetScale MySQL with application credentials, safe migrations, and in-place cluster resizing.
   </Card>
   <Card title="RDS Database" href="/module-definitions/catalog/rvn-rds">
     `rvn-rds` · v1.4.0

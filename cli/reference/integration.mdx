@@ -1,0 +1,121 @@
+---
+title: "ravion integration"
+sidebarTitle: "integration"
+description: "Manage integrations"
+"og:image": "https://www.ravion.com/og/docs/cli/reference/integration.png"
+"twitter:image": "https://www.ravion.com/og/docs/cli/reference/integration.png"
+---
+
+{/* This page is generated from the Ravion CLI source. Do not edit by hand. */}
+
+## `ravion integration`
+
+Manage integrations
+
+**Aliases:** `integrations`
+
+### `ravion integration delete`
+
+Delete Integration
+
+```bash
+ravion integration delete <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `-y, --yes` |  | skip confirmation prompt |
+
+### `ravion integration get`
+
+Get Integration by id
+
+```bash
+ravion integration get <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+### `ravion integration list`
+
+List Integrations
+
+```bash
+ravion integration list [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--cursor <string>` |  | cursor |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | limit |
+| `-v, --verbose` |  | show full output |
+
+### `ravion integration planet-scale`
+
+```bash
+ravion integration planet-scale [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--external-account-id <string>` | yes | externalAccountId |
+| `--given-id <string>` | yes | User-provided identifier pattern used by all givenId fields |
+| `--name <string>` | yes | name |
+| `--token <string>` | yes | token |
+| `--token-id <string>` | yes | tokenId |
+| `--json` |  | emit response as JSON |
+| `--metrics-database <string>` |  | Database for read-only metrics tokens. Omit if this connection is only used by Terraform. |
+
+### `ravion integration rotate-planet-scale-credential`
+
+```bash
+ravion integration rotate-planet-scale-credential <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--token <string>` | yes | token |
+| `--token-id <string>` | yes | tokenId |
+| `--json` |  | emit response as JSON |
+
+### `ravion integration update`
+
+Patch Integration
+
+```bash
+ravion integration update <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--given-id <string>` |  | User-provided identifier pattern used by all givenId fields |
+| `--json` |  | emit response as JSON |
+| `--name <string>` |  | name |
+
+### `ravion integration validate-planet-scale`
+
+```bash
+ravion integration validate-planet-scale <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+

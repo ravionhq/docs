@@ -13,6 +13,9 @@ Define a pipeline declaratively in `.yaml`, `.jsonc`, or `.cue`. The config file
   The step `input` keys come from the module definition: the `rvn-ecs-web` build accepts `branch` and `ref`, and the deploy accepts `image_ref` (an image tag or digest, not a full URI). The deploy consumes the build's `image_digest` output, so it pins the exact image the build pushed to the module's ECR repository.
 
   ```yaml ravion-pipeline.yaml
+  pipeline:
+    givenId: deploy
+    project: demo
   triggers:
     - id: github_push
       type: webhook:github
@@ -52,7 +55,15 @@ Define a pipeline declaratively in `.yaml`, `.jsonc`, or `.cue`. The config file
   ```
 </Accordion>
 
-## Pull and apply
+## Automatic updates with GitHub
+
+Commit a `ravion-pipeline.yaml` file to a repository connected through the Ravion GitHub App. The app automatically plans changes on pull requests and publishes a new pipeline version when a changed config reaches the default branch. No GitHub Actions workflow is needed.
+
+Keep the top-level `pipeline` block in the file. It selects an existing pipeline by `pipeline.id`, or by `pipeline.givenId` together with `pipeline.project` (the project's unique ID or given ID). For the example above, create a pipeline with given ID `deploy` in the `demo` project first.
+
+See [GitHub integration](/config-as-code/github-integration) for all supported filenames and matching rules. A file named `pipeline.yaml` is not automatically scanned.
+
+## Pull and apply with the CLI
 
 Store the config file in your repository and manage it with the CLI.
 
@@ -68,7 +79,7 @@ Store the config file in your repository and manage it with the CLI.
     Write the live pipeline config to a file.
 
     ```bash
-    ravion pipeline config pull <pipeline-id> --file pipeline.yaml
+    ravion pipeline config pull <pipeline-id> --file ravion-pipeline.yaml
     ```
 
   </Step>
@@ -79,14 +90,14 @@ Store the config file in your repository and manage it with the CLI.
     Apply the config. This creates a new Pipeline Version every time.
 
     ```bash
-    ravion pipeline config apply <pipeline-id> --file pipeline.yaml
+    ravion pipeline config apply <pipeline-id> --file ravion-pipeline.yaml
     ```
 
   </Step>
-  <Step title="Integrate with CI">
-    Commit the config file and let GitHub Actions plan changes on each pull request and apply them on merge.
+  <Step title="Commit for automatic updates">
+    Commit the config file and let the Ravion GitHub App plan future changes on pull requests and apply them on merge to the default branch.
 
-    See [CI integration](/config-as-code/ci-integration).
+    See [GitHub integration](/config-as-code/github-integration).
   </Step>
 </Steps>
 

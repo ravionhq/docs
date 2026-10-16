@@ -59,7 +59,7 @@
             "pages": [
               "config-as-code/project-config-file",
               "config-as-code/pipeline-config-file",
-              "config-as-code/ci-integration"
+              "config-as-code/github-integration"
             ]
           },
           {
@@ -91,6 +91,7 @@
                   "module-definitions/catalog/rvn-acm-certificate",
                   "module-definitions/catalog/rvn-aurora",
                   "module-definitions/catalog/rvn-aws-alb",
+                  "module-definitions/catalog/rvn-aws-alternat",
                   "module-definitions/catalog/rvn-aws-ami",
                   "module-definitions/catalog/rvn-aws-compliance",
                   "module-definitions/catalog/rvn-aws-iam-policy",
@@ -113,6 +114,7 @@
                   "module-definitions/catalog/rvn-eks-worker",
                   "module-definitions/catalog/rvn-elasticache",
                   "module-definitions/catalog/rvn-lambda",
+                  "module-definitions/catalog/rvn-planetscale-vitess",
                   "module-definitions/catalog/rvn-rds",
                   "module-definitions/catalog/rvn-rds-proxy",
                   "module-definitions/catalog/rvn-route53",
@@ -254,11 +256,13 @@
               "cli/reference/describe",
               "cli/reference/domain",
               "cli/reference/environment",
+              "cli/reference/execution-environment",
               "cli/reference/feature-flag",
               "cli/reference/feedback",
               "cli/reference/git",
               "cli/reference/github-actions",
               "cli/reference/infrastructure-event",
+              "cli/reference/integration",
               "cli/reference/login",
               "cli/reference/logout",
               "cli/reference/logs",
@@ -326,6 +330,11 @@
     ]
   },
   "redirects": [
+    {
+      "source": "/config-as-code/ci-integration",
+      "destination": "/config-as-code/github-integration",
+      "permanent": true
+    },
     {
       "source": "/quickstart",
       "destination": "/start-here",

@@ -209,6 +209,7 @@ Discriminated union. The `type` field selects which schema applies.
 | `cloudwatch`     | [CloudWatchMetricSource](#cloudwatchmetricsource)       |
 | `eks_prometheus` | [EksPrometheusMetricSource](#eksprometheusmetricsource) |
 | `link`           | [LinkMetricSource](#linkmetricsource)                   |
+| `planetscale`    | [PlanetScaleMetricSource](#planetscalemetricsource)     |
 
 ### MetricType
 
@@ -569,6 +570,180 @@ cannot query. Rendered as an "Open in &lt;provider&gt;" action. Pairs with
 
   _(minLen:1; templateable)_
 </ResponseField>
+
+### PlanetScaleMetricSource
+
+Native PlanetScale time-series source; no AWS credentials or endpoints.
+
+<ResponseField name="type" type="enum" required>
+  Allowed values: `planetscale`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="integration_id" type="string" required>
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="database" type="string" required>
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="branch" type="string" required>
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="name" type="enum" required>
+  Allowed values: `avg_parallel_workers` | `avg_shard_queries` | `block_cache_hit_ratio` | `blocks_dirtied` | `blocks_hit` | `blocks_read` | `blocks_written` | `connections` | `cpu_duration_millis` | `egress_bytes` | `egress_bytes_per_query` | `ingress_bytes` | `ingress_bytes_per_query` | `io_duration_millis` | `latency_max` | `latency_p50` | `latency_p95` | `latency_p99` | `latency_p999` | `max_egress_bytes` | `max_ingress_bytes` | `max_shard_queries` | `planetscale_dedicated_pgbouncer_cpu_usage` | `planetscale_dedicated_pgbouncer_current_connections` | `planetscale_dedicated_pgbouncer_memory_usage` | `planetscale_edge_bytes_received` | `planetscale_edge_bytes_received_rate` | `planetscale_edge_bytes_sent` | `planetscale_edge_bytes_sent_rate` | `planetscale_neki_router_pods_container_ooms` | `planetscale_neki_router_pods_container_restarts` | `planetscale_neki_router_pods_container_waiting_reason` | `planetscale_neki_router_pods_cpu_util_percentages` | `planetscale_neki_router_pods_mem_util_percentages` | `planetscale_neki_router_pods_status_phase` | `planetscale_neki_router_queries` | `planetscale_neki_router_query_errors` | `planetscale_neki_router_query_latency_avg` | `planetscale_neki_router_query_latency_avg_by_database` | `planetscale_neki_router_query_latency_p50` | `planetscale_neki_router_query_latency_p50_by_database` | `planetscale_neki_router_query_latency_p95` | `planetscale_neki_router_query_latency_p95_by_database` | `planetscale_neki_router_query_latency_p99` | `planetscale_neki_router_query_latency_p99_by_database` | `planetscale_pgbouncer_current_connections` | `planetscale_pgbouncer_pools_client` | `planetscale_pgbouncer_pools_server` | `planetscale_pods_container_ooms` | `planetscale_pods_container_restarts` | `planetscale_pods_container_waiting_reason` | `planetscale_pods_cpu_util_percentages` | `planetscale_pods_iops_total` | `planetscale_pods_mem_util_percentages` | `planetscale_primary_memory_active_cache_bytes` | `planetscale_primary_memory_inactive_cache_bytes` | `planetscale_primary_memory_mmap_bytes` | `planetscale_primary_memory_rss_bytes` | `planetscale_primary_pgbouncer_cpu_util_percentages` | `planetscale_primary_pgbouncer_mem_util_percentages` | `planetscale_primary_pods_cpu_util_percentages` | `planetscale_primary_pods_iops_total` | `planetscale_primary_pods_mem_util_percentages` | `planetscale_primary_pods_status_phase` | `planetscale_primary_postgres_connection_state` | `planetscale_primary_postgres_locks` | `planetscale_primary_storage_usage` | `planetscale_primary_storage_usage_bytes` | `planetscale_primary_volume_usage_percentages` | `planetscale_primary_xact_commit_rate` | `planetscale_replica_lag_seconds` | `planetscale_replica_memory_active_cache_bytes` | `planetscale_replica_memory_inactive_cache_bytes` | `planetscale_replica_memory_mmap_bytes` | `planetscale_replica_memory_rss_bytes` | `planetscale_replica_pgbouncer_cpu_util_percentages` | `planetscale_replica_pgbouncer_current_connections` | `planetscale_replica_pgbouncer_mem_util_percentages` | `planetscale_replica_pods_cpu_util_percentages` | `planetscale_replica_pods_iops_total` | `planetscale_replica_pods_mem_util_percentages` | `planetscale_replica_pods_status_phase` | `planetscale_replica_postgres_connection_state` | `planetscale_replica_postgres_locks` | `planetscale_replica_storage_usage_bytes` | `planetscale_replica_volume_usage_percentages` | `planetscale_replication_slot_max_wal_retained_bytes` | `planetscale_replication_slots_lost` | `planetscale_settings_max_slot_wal_keep_size_bytes` | `planetscale_storage_usage_bytes` | `planetscale_volume_usage_percentages` | `planetscale_wal_archiver_failed_rate` | `planetscale_wal_archiver_lag_bytes` | `planetscale_wal_archiver_last_age_succeeded` | `planetscale_wal_archiver_succeeded_rate` | `planetscale_wal_size_bytes` | `queries` | `query_errors` | `rows_affected_per_query` | `rows_read` | `rows_read_per_query` | `rows_read_per_returned` | `rows_returned` | `rows_returned_per_query` | `rows_written` | `storage_per_table` | `total_duration_millis` | `traffic_control_throttled` | `traffic_control_warnings` | `violations` | `vtgate_cpu_avg_by_az` | `vtgate_cpu_by_az` | `vtgate_latency_p50` | `vtgate_latency_p95` | `vtgate_memory_avg_by_az` | `vtgate_memory_by_az` | `vtgate_requests` | `replication_lag` | `vreplication_lag` | `pod_cpu_usage` | `pod_memory_usage` | `pod_queries` | `pod_rows_read` | `pod_iops` | `pod_ooms` | `primary_cpu_usage` | `primary_memory_usage` | `primary_iops` | `primary_queries` | `primary_rows_read` | `primary_rows_written` | `shard_storage_usage` | `shard_storage_available`
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="keyspace" type="string | null">
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="shard" type="string | null">
+  _(templateable)_
+</ResponseField>
+
+### PlanetScaleMetricName
+
+Allowed values:
+
+- `avg_parallel_workers`
+- `avg_shard_queries`
+- `block_cache_hit_ratio`
+- `blocks_dirtied`
+- `blocks_hit`
+- `blocks_read`
+- `blocks_written`
+- `connections`
+- `cpu_duration_millis`
+- `egress_bytes`
+- `egress_bytes_per_query`
+- `ingress_bytes`
+- `ingress_bytes_per_query`
+- `io_duration_millis`
+- `latency_max`
+- `latency_p50`
+- `latency_p95`
+- `latency_p99`
+- `latency_p999`
+- `max_egress_bytes`
+- `max_ingress_bytes`
+- `max_shard_queries`
+- `planetscale_dedicated_pgbouncer_cpu_usage`
+- `planetscale_dedicated_pgbouncer_current_connections`
+- `planetscale_dedicated_pgbouncer_memory_usage`
+- `planetscale_edge_bytes_received`
+- `planetscale_edge_bytes_received_rate`
+- `planetscale_edge_bytes_sent`
+- `planetscale_edge_bytes_sent_rate`
+- `planetscale_neki_router_pods_container_ooms`
+- `planetscale_neki_router_pods_container_restarts`
+- `planetscale_neki_router_pods_container_waiting_reason`
+- `planetscale_neki_router_pods_cpu_util_percentages`
+- `planetscale_neki_router_pods_mem_util_percentages`
+- `planetscale_neki_router_pods_status_phase`
+- `planetscale_neki_router_queries`
+- `planetscale_neki_router_query_errors`
+- `planetscale_neki_router_query_latency_avg`
+- `planetscale_neki_router_query_latency_avg_by_database`
+- `planetscale_neki_router_query_latency_p50`
+- `planetscale_neki_router_query_latency_p50_by_database`
+- `planetscale_neki_router_query_latency_p95`
+- `planetscale_neki_router_query_latency_p95_by_database`
+- `planetscale_neki_router_query_latency_p99`
+- `planetscale_neki_router_query_latency_p99_by_database`
+- `planetscale_pgbouncer_current_connections`
+- `planetscale_pgbouncer_pools_client`
+- `planetscale_pgbouncer_pools_server`
+- `planetscale_pods_container_ooms`
+- `planetscale_pods_container_restarts`
+- `planetscale_pods_container_waiting_reason`
+- `planetscale_pods_cpu_util_percentages`
+- `planetscale_pods_iops_total`
+- `planetscale_pods_mem_util_percentages`
+- `planetscale_primary_memory_active_cache_bytes`
+- `planetscale_primary_memory_inactive_cache_bytes`
+- `planetscale_primary_memory_mmap_bytes`
+- `planetscale_primary_memory_rss_bytes`
+- `planetscale_primary_pgbouncer_cpu_util_percentages`
+- `planetscale_primary_pgbouncer_mem_util_percentages`
+- `planetscale_primary_pods_cpu_util_percentages`
+- `planetscale_primary_pods_iops_total`
+- `planetscale_primary_pods_mem_util_percentages`
+- `planetscale_primary_pods_status_phase`
+- `planetscale_primary_postgres_connection_state`
+- `planetscale_primary_postgres_locks`
+- `planetscale_primary_storage_usage`
+- `planetscale_primary_storage_usage_bytes`
+- `planetscale_primary_volume_usage_percentages`
+- `planetscale_primary_xact_commit_rate`
+- `planetscale_replica_lag_seconds`
+- `planetscale_replica_memory_active_cache_bytes`
+- `planetscale_replica_memory_inactive_cache_bytes`
+- `planetscale_replica_memory_mmap_bytes`
+- `planetscale_replica_memory_rss_bytes`
+- `planetscale_replica_pgbouncer_cpu_util_percentages`
+- `planetscale_replica_pgbouncer_current_connections`
+- `planetscale_replica_pgbouncer_mem_util_percentages`
+- `planetscale_replica_pods_cpu_util_percentages`
+- `planetscale_replica_pods_iops_total`
+- `planetscale_replica_pods_mem_util_percentages`
+- `planetscale_replica_pods_status_phase`
+- `planetscale_replica_postgres_connection_state`
+- `planetscale_replica_postgres_locks`
+- `planetscale_replica_storage_usage_bytes`
+- `planetscale_replica_volume_usage_percentages`
+- `planetscale_replication_slot_max_wal_retained_bytes`
+- `planetscale_replication_slots_lost`
+- `planetscale_settings_max_slot_wal_keep_size_bytes`
+- `planetscale_storage_usage_bytes`
+- `planetscale_volume_usage_percentages`
+- `planetscale_wal_archiver_failed_rate`
+- `planetscale_wal_archiver_lag_bytes`
+- `planetscale_wal_archiver_last_age_succeeded`
+- `planetscale_wal_archiver_succeeded_rate`
+- `planetscale_wal_size_bytes`
+- `queries`
+- `query_errors`
+- `rows_affected_per_query`
+- `rows_read`
+- `rows_read_per_query`
+- `rows_read_per_returned`
+- `rows_returned`
+- `rows_returned_per_query`
+- `rows_written`
+- `storage_per_table`
+- `total_duration_millis`
+- `traffic_control_throttled`
+- `traffic_control_warnings`
+- `violations`
+- `vtgate_cpu_avg_by_az`
+- `vtgate_cpu_by_az`
+- `vtgate_latency_p50`
+- `vtgate_latency_p95`
+- `vtgate_memory_avg_by_az`
+- `vtgate_memory_by_az`
+- `vtgate_requests`
+- `replication_lag`
+- `vreplication_lag`
+- `pod_cpu_usage`
+- `pod_memory_usage`
+- `pod_queries`
+- `pod_rows_read`
+- `pod_iops`
+- `pod_ooms`
+- `primary_cpu_usage`
+- `primary_memory_usage`
+- `primary_iops`
+- `primary_queries`
+- `primary_rows_read`
+- `primary_rows_written`
+- `shard_storage_usage`
+- `shard_storage_available`
 
 ## Readme
 

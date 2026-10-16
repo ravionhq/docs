@@ -63,7 +63,33 @@ For CI and automation, use a service-account API key instead of a personal membe
 3. On that account's detail panel, click **Create API key** and copy the key.
 4. Store it as your CI secret and pass it to the CLI as `RAVION_API_KEY`.
 
-Create the key on the service account, not on your personal member profile. The CLI can manage service accounts and existing keys, but it does not have an `api-key create` command. See [`ravion service-account`](/cli/reference/service-account) and [`ravion api-key`](/cli/reference/api-key).
+Create the key on the service account, not on your personal member profile.
+
+### Create a key with the CLI
+
+Use [CLI v1.16.8 or later](/cli/releases). Sign in as a user and select your organization:
+
+```bash
+unset RAVION_API_KEY
+ravion login
+ravion switch
+```
+
+Create or select a [service account](/cli/reference/service-account) with the permissions your automation needs. Key creation requires your user login; an existing API key cannot create another key.
+
+For GitHub Actions jobs that use the CLI, run `gh auth login` and make sure your GitHub account can manage repository secrets. From your repository, replace `sa_YOUR_SERVICE_ACCOUNT_ID` with the service account's ID and pipe the new key directly into the [GitHub CLI](https://cli.github.com/):
+
+```bash
+set -o pipefail
+gh auth status && \
+  ravion api-key create --name "GitHub Actions" \
+    --owner-type SERVICE_ACCOUNT --owner-id sa_YOUR_SERVICE_ACCOUNT_ID \
+    --token-only | gh secret set RAVION_API_KEY
+```
+
+The token is returned only once. For other CI systems or without the GitHub CLI, run only `ravion api-key create` with the same flags and store its output in your secret manager as `RAVION_API_KEY`.
+
+If transfer fails, find the unused key with `ravion api-key list`, delete it with `ravion api-key delete <key-id>`, and retry. Do not log or save the token to a file.
 
 ## Non-interactive authentication
 
@@ -75,7 +101,7 @@ Set a credential in the environment to authenticate without `ravion login`. When
 | `RAVION_TOKEN` | An OAuth access token. Used if `RAVION_API_KEY` is not set. |
 | `RAVION_ACCESS_TOKEN` | Alias for `RAVION_TOKEN`. |
 
-An API key is scoped to its organization, so you don't run `ravion switch` when you use `RAVION_API_KEY`. This is the recommended way to authenticate in CI. See [CI integration](/config-as-code/ci-integration).
+An API key is scoped to its organization, so you don't run `ravion switch` when you use `RAVION_API_KEY`. This is the recommended way to authenticate CLI commands in CI. The [Ravion GitHub App](/config-as-code/github-integration) plans and applies repository config changes without a CLI API key.
 
 ```bash
 export RAVION_API_KEY=<your-api-key>

@@ -1,0 +1,140 @@
+---
+title: "ravion execution-environment"
+sidebarTitle: "execution-environment"
+description: "Manage execution environments"
+"og:image": "https://www.ravion.com/og/docs/cli/reference/execution-environment.png"
+"twitter:image": "https://www.ravion.com/og/docs/cli/reference/execution-environment.png"
+---
+
+{/* This page is generated from the Ravion CLI source. Do not edit by hand. */}
+
+## `ravion execution-environment`
+
+Manage execution environments
+
+**Aliases:** `execution-environments`
+
+### `ravion execution-environment create`
+
+Create ExecutionEnvironment
+
+```bash
+ravion execution-environment create [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--aws-account-id <string>` | yes | awsAccountId |
+| `--given-id <string>` | yes | User-provided execution environment identifier. Must be unique within organization. |
+| `--name <string>` | yes | name |
+| `--region <string>` | yes | region |
+| `--security-group-id <string>` | yes | securityGroupId |
+| `--subnet-id <string>` | yes | subnetId |
+| `--type <string>` | yes | type. Available values: AWS. |
+| `--vpc-id <string>` | yes | vpcId |
+| `--json` |  | emit response as JSON |
+| `--sandboxes <{}>` |  | Sparse overrides for the sandbox defaults. Send \{\} to enable a pool that inherits global defaults, `null` to remove it, or omit it on a patch to leave the pool as it is. |
+
+### `ravion execution-environment delete`
+
+Delete ExecutionEnvironment
+
+```bash
+ravion execution-environment delete <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `-y, --yes` |  | skip confirmation prompt |
+
+### `ravion execution-environment get`
+
+Get ExecutionEnvironment by id
+
+```bash
+ravion execution-environment get <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+### `ravion execution-environment list`
+
+List ExecutionEnvironments
+
+```bash
+ravion execution-environment list [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--aws-account-id <string>` |  | awsAccountId |
+| `--cursor <string>` |  | cursor |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | limit |
+| `-v, --verbose` |  | show full output |
+
+### `ravion execution-environment sandbox-hosts`
+
+List sandbox pool hosts
+
+```bash
+ravion execution-environment sandbox-hosts <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `-v, --verbose` |  | show full output |
+
+### `ravion execution-environment update`
+
+Patch ExecutionEnvironment
+
+```bash
+ravion execution-environment update <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--aws-account-id <string>` |  | awsAccountId |
+| `--given-id <string>` |  | User-provided execution environment identifier. Must be unique within organization. |
+| `--json` |  | emit response as JSON |
+| `--name <string>` |  | name |
+| `--region <string>` |  | region |
+| `--sandboxes <{}>` |  | Sparse overrides for the sandbox defaults. Send \{\} to enable a pool that inherits global defaults, `null` to remove it, or omit it on a patch to leave the pool as it is. |
+| `--security-group-id <string>` |  | securityGroupId |
+| `--subnet-id <string>` |  | subnetId |
+| `--type <string>` |  | type. Available values: AWS. |
+| `--vpc-id <string>` |  | vpcId |
+
+### `ravion execution-environment usage`
+
+Get execution environment usage
+
+```bash
+ravion execution-environment usage <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--end <string>` |  | end |
+| `--json` |  | emit response as JSON |
+| `--period <string>` |  | period. Available values: CURRENT, PREVIOUS. |
+| `--start <string>` |  | Inclusive start; requires end, excludes period. Maximum window: 93 days. |
+
