@@ -1,80 +1,217 @@
 ---
 title: "Sandboxes"
 sidebarTitle: "Sandboxes"
-description: "Run pipeline steps and module builds on an autoscaling fleet of Firecracker microVMs in your AWS account, with sticky disks and Spot capacity."
+description: "Run pipeline steps and module builds in Firecracker microVMs on an autoscaling fleet of EC2 hosts in your AWS account, with whole-disk caching and Spot capacity."
 "og:image": "https://www.ravion.com/og/docs/concepts/sandboxes.png"
 "twitter:image": "https://www.ravion.com/og/docs/concepts/sandboxes.png"
 ---
 
-A sandbox runs a pipeline step or a module build as an isolated [Firecracker](https://firecracker-microvm.github.io/) microVM. Ravion orchestrates an entire fleet of these microVMs across EC2 hosts in your AWS account, automatically scaling the hosts up and down as work arrives and finishes.
+A sandbox runs one pipeline step or module build in its own [Firecracker](https://firecracker-microvm.github.io/) microVM, on EC2 hosts in your AWS account.
 
-You choose the CPU, memory and disk each step needs. Ravion handles host selection, scheduling, Spot capacity and host cleanup. Steps can start in roughly a second on warm hosts, and [sticky disks](#disk-cache) keep dependencies, build output and Docker layers ready for later runs.
+You set the CPU, memory and disk a step needs. Ravion launches, packs, scales and retires the hosts. On a running host, a sandbox boots in one to two seconds, and the [disk cache](#disk-cache) brings back the whole disk from the last successful run.
 
 ## How the fleet works
 
-Each execution environment can have one **sandbox pool**: the fleet of EC2 hosts that runs its sandboxes. The first step that targets it with `type: sandbox` creates the pool automatically. You don't need to provision hosts or maintain an Auto Scaling group yourself.
+Each execution environment gets its own set of sandbox hosts, in its VPC and subnets. The first step that runs with `type: sandbox` sets them up. There's nothing to provision.
 
-An EC2 host is not a single runner. Several isolated sandboxes can run on it at once, each with its own CPU, memory and disk allocation. This lets steps share available host capacity instead of launching a dedicated EC2 instance for every step.
+Everything runs in your AWS account. Sandboxes can reach private resources in the VPC, and saved disks stay in an S3 bucket in your account. Hosts connect out to Ravion, so they need no inbound ports.
 
-1. **Use available capacity.** Ravion places steps on running hosts with enough room. When possible, it prefers the host that already has the step's cached disk data.
-2. **Scale up for waiting work.** When running hosts don't have room, Ravion launches more hosts or wakes suitable stopped hosts in persistent pools. It selects compatible machine types for your region and workload unless you restrict the selection.
-3. **Choose Spot or On-Demand capacity.** Interruptible work can use Spot hosts, with alternatives across instance types and Availability Zones and an On-Demand fallback. Work that must not be interrupted uses On-Demand hosts.
-4. **Scale down after work finishes.** Ravion stops or terminates idle hosts according to your pool settings. Normal scale-down waits for running steps to finish.
+```mermaid
+flowchart TB
+  Ravion[Ravion control plane]
 
-The default pool can scale down to zero hosts. A later run then waits for a host to launch; the roughly one-second start applies when a warm host already has capacity.
+  subgraph Account[Your AWS account]
+    subgraph VPC[Execution environment VPC]
+      Hosts[Sandbox hosts]
+      Private[(Private resources)]
+    end
+    Store[(S3 disk store)]
+  end
 
-### Ephemeral hosts, persistent hosts and warm capacity
+  Ravion -- places steps --> Hosts
+  Hosts --> Private
+  Hosts <-- saved disks --> Store
 
-Host lifetime and sandbox disk caching are separate settings. You can use disposable EC2 hosts without throwing away the sandbox's saved disk after every run.
+  class Ravion external
+  class Account,VPC cloud
+  class Hosts host
+  class Private resource
+  class Store store
 
-| Mode | What happens when a host becomes idle | Trade-off |
+  classDef external fill:#FE6104,stroke:#BD4406,color:#fff
+  classDef cloud fill:#F6DDCE,stroke:#FE6104,color:#2a1208
+  classDef host fill:#1f2937,stroke:#111827,color:#fff
+  classDef resource fill:#fff,stroke:#BD4406,color:#2a1208
+  classDef store fill:#23000A,stroke:#571D04,color:#FDDDC9
+```
+
+One host runs many sandboxes at once. Each sandbox is a separate VM with its own kernel, network namespace, CPU, memory and disk.
+
+```mermaid
+flowchart LR
+  Ravion[Ravion]
+
+  subgraph Spot[EC2 host · Spot]
+    S1[Build · 8 vCPU]
+    S2[Tests · 4 vCPU]
+    S3[Lint · 2 vCPU]
+  end
+
+  subgraph OnDemand[EC2 host · On-Demand]
+    O1[Migrate · 2 vCPU]
+  end
+
+  Ravion -- places steps --> Spot
+  Ravion -- places steps --> OnDemand
+
+  class Ravion external
+  class Spot,OnDemand host
+  class S1,S2,S3,O1 sandbox
+
+  classDef external fill:#FE6104,stroke:#BD4406,color:#fff
+  classDef host fill:#F6DDCE,stroke:#FE6104,color:#2a1208
+  classDef sandbox fill:#1f2937,stroke:#111827,color:#fff
+```
+
+- **Placement.** Ravion puts a step on a running host with room, preferring the host that last ran it, since that host already has its disk cached.
+- **Scale up.** When no host has room, Ravion launches one sized for the waiting steps. When a pipeline run starts, Ravion plans hosts for the whole run up front, so later steps don't wait for a launch.
+- **Spot.** [Interruptible steps](#interruptible-steps-and-spot-hosts) can run on Spot hosts. Other steps only run on On-Demand hosts.
+- **Scale down.** Ravion shuts down a host once it's empty. If the remaining hosts don't have room for what's coming next, it waits 40 seconds first. Running steps always finish.
+
+### Host lifecycle
+
+Hosts are disposable. Saved disks live in an S3 bucket in your AWS account, so you lose no cache when a host goes away. The next host restores the disk from S3.
+
+```mermaid
+flowchart LR
+  subgraph Account[Your AWS account]
+    Old[Old host]
+    Store[(S3 disk store)]
+    New[New host]
+  end
+
+  Old -- saves disk --> Store
+  Store -- restores disk --> New
+
+  class Account cloud
+  class Old,New host
+  class Store store
+
+  classDef cloud fill:#F6DDCE,stroke:#FE6104,color:#2a1208
+  classDef host fill:#fff,stroke:#BD4406,color:#2a1208
+  classDef store fill:#23000A,stroke:#571D04,color:#FDDDC9
+```
+
+| Host storage | When a host is idle | Trade-off |
 | --- | --- | --- |
-| **Ephemeral** (default) | Ravion terminates the host and deletes its attached volumes once it's empty, unless a running reserve keeps it. | No idle compute charges after termination, but the next burst may need new hosts. |
-| **Persistent** | Ravion stops On-Demand hosts and retains their disks, then starts suitable hosts again when needed. | Local cached data survives a stop. Retained disks still incur storage charges, and waking a host takes time. |
-| **Warm reserve** (ephemeral pools) | Ravion keeps a chosen number of idle hosts running. | Faster starts after quiet periods, at the cost of continued compute charges. |
+| **Ephemeral** (default) | Terminated | No idle charges. The next step after a quiet period waits for a new host. |
+| **Persistent** | On-Demand hosts are stopped and keep their disks. Spot hosts are terminated. | Woken hosts still have their local cache. Retained disks incur storage charges. |
 
-Ravion decides when to shut down an empty host. If the other running hosts have enough free room for upcoming work, it shuts the host down right away. Otherwise it waits 40 seconds, so the next wave of jobs can reuse it. Spot hosts are terminated rather than stopped, even in persistent pools. Stopped hosts outside a persistent pool's retained reserve are deleted after the configured retention period.
+For faster starts after quiet periods, you can keep a few hosts on hand: running in ephemeral mode, or stopped in persistent mode. See [Sandbox settings](#sandbox-settings).
 
-You can set the reserve to a fixed count or have Ravion size it from your peak or rolling-average daily peak usage. In ephemeral pools, that reserve stays running; in persistent pools, it stays stopped with its disks retained. See [Pool settings](#pool-settings) for the controls and defaults.
+## Why sandboxes are fast
+
+A cold CI job spends much of its time getting back to where the last one was: installing tools, restoring caches and pulling Docker layers. A sandbox skips that. It boots in one to two seconds with the whole disk from the last successful run already attached.
+
+### The whole disk is the cache
+
+When `disk_cache` is on, Ravion saves the sandbox's entire root disk after a successful run. You don't list cache paths. Everything the step left behind comes back next time:
+
+- Packages installed with `apt`, `setup` actions or install scripts
+- `node_modules`, `~/.cache`, `~/.m2`, Go and Cargo build caches, `.next/cache`, `.turbo`
+- Docker images, layer cache and BuildKit `RUN --mount=type=cache` directories in `/var/lib/docker`
+- Your git checkout, so the next clone only fetches new commits
+
+### Restores stream instead of downloading
+
+A saved disk is stored as 2 MiB chunks, zstd-compressed and named by their content hash. A restore doesn't download the disk first:
+
+1. The sandbox boots right away with the full disk attached. Its writes go to its own copy-on-write layer.
+2. When the sandbox reads a block, the host serves it from its local NVMe cache. On a miss, it fetches only that chunk from S3 and checks it against its hash.
+3. In the background, the host prefetches the chunks the previous run read, in the order it read them.
+
+The size of the disk doesn't change the boot time, and the step rarely waits on S3.
+
+### Saves upload only what changed
+
+While the step runs, the host uploads changed chunks in the background. When the step succeeds, only the remaining chunks are left to upload. Unchanged chunks are never uploaded again, and empty chunks cost nothing.
+
+```mermaid
+sequenceDiagram
+  participant Store as S3 disk store
+  participant Host as EC2 host
+  participant VM as Sandbox
+
+  Host->>Store: Read the branch's latest disk
+  Host->>VM: Boot with the full disk attached
+  Store-->>Host: Prefetch what the last run read
+  VM->>Host: Read blocks (served from NVMe cache)
+  Host->>Store: Upload changed chunks while the step runs
+  VM->>Host: Step succeeds
+  Host->>Store: Upload the rest and save for the branch
+```
+
+### The VM runs at host speed
+
+Each sandbox's memory is backed by 2 MiB huge pages, and the guest kernel is tuned to avoid costly exits to the hypervisor. CPU- and memory-heavy work such as compiling and package installs runs close to bare-host speed. On instance types with local NVMe, the sandbox disks and chunk cache use it instead of EBS.
+
+### Compared with other CI caches
+
+| | GitHub Actions cache | Blacksmith sticky disks | Ravion sandboxes |
+| --- | --- | --- | --- |
+| **What's kept** | Paths you list, plus Docker layers you export | Docker builder state and directories you mount | The entire VM disk |
+| **Restore** | Download and extract the archive before the job continues | Mount a saved disk per cache key | Boot right away; stream blocks as they're read |
+| **Save** | Compress and upload the archive under a new key | Commit the disk at the end of the job | Upload changed chunks, mostly during the run |
+| **Where it lives** | GitHub's cache service | Blacksmith's storage | S3 in your AWS account |
+| **Setup** | Cache keys and paths per job | Actions and cache keys per workload | `disk_cache: auto` |
+
+With path-based caches, anything you don't list starts over on every run, including system packages, toolchains and files outside those paths. A sandbox keeps everything.
+
+## Why sandboxes are cheap
+
+Hosts run in your AWS account, so you pay AWS directly at your own rates. Ravion keeps that bill low:
+
+- **Spot for interruptible steps.** Spot capacity costs much less than On-Demand. [Interruptible steps](#interruptible-steps-and-spot-hosts) run on Spot, with On-Demand as the fallback. If AWS reclaims a Spot host in its first hour, [AWS doesn't charge for that host's usage](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/billing-for-interrupted-spot-instances.html), and Ravion reruns the step on another host.
+- **Many sandboxes per host.** Each step gets exactly the CPU and memory it asks for, on a shared host, instead of a whole instance per job.
+- **Whole-run planning.** When a pipeline run starts, Ravion estimates each step's duration from its recent successful runs. It packs short steps beside long ones, holds room for the steps due next, and launches hosts only for work that won't fit. Hosts stay busy, and steps don't wait for capacity.
+- **No idle hosts.** Ravion shuts down empty hosts as soon as the rest of the fleet can handle what's next. By default, nothing runs between pipeline runs.
 
 ## When to use sandboxes
 
 Use sandboxes for pipeline steps and module builds by default, including builds, tests, migrations and other scripted tasks.
 
-Use `ec2` or `ec2-spot` [infrastructure](/pipelines/config-reference#stepinfrastructure) only when you need a custom AMI or direct access to a dedicated EC2 instance. Tasks that must not restart, such as migrations, can still run in a sandbox with `interruptible: false`.
+Use `ec2` or `ec2-spot` [infrastructure](/pipelines/config-reference#stepinfrastructure) only when you need a custom AMI or a dedicated EC2 instance.
 
 ## What runs inside a sandbox
 
-Every sandbox boots the same x86_64 Ubuntu 24.04 image, with git, GitHub CLI (`gh`), build-essential, Node.js 24, Docker, the AWS CLI, `jq`, `curl` and `zstd`. Install anything else with the step's `setup` actions or commands.
+Every sandbox boots the same x86_64 Ubuntu 24.04 image, with git, GitHub CLI (`gh`), build-essential, Node.js 24, Docker, the AWS CLI, `jq`, `curl` and `zstd`. Install anything else with the step's `setup` actions or commands. With `disk_cache` on, what you install stays for later runs.
 
-Docker starts in the background when the sandbox boots. The first `docker` command waits for it. Tools that talk to Docker another way, such as Testcontainers or a Docker SDK, must wait for the daemon themselves.
+Docker starts in the background when the sandbox boots, and the first `docker` command waits for it. Tools that talk to Docker another way, such as Testcontainers or a Docker SDK, must wait for the daemon themselves.
 
 ## Get started
 
 <Steps>
   <Step title="Update your AWS permissions">
-    Sandboxes require AWS account role policy **1.0.52 or later**. Upgrade to the latest version if yours is older.
+    Sandboxes require AWS account role policy **1.0.52 or later**.
 
     1. Go to [**Settings / AWS accounts**](https://app.ravion.com/org/settings/aws-accounts) and open the account.
     2. Click **Update AWS Permissions** and follow the steps to update the CloudFormation stack.
 
-    From the CLI, run `ravion aws account policy-diff <aws-account-id>` to review the change, then apply it with `aws cloudformation update-stack` and a fresh template URL from `ravion aws account cloudformation-template-url <aws-account-id>`.
-
-    Missing permissions can prevent the pool from launching hosts. Check the reported AWS permission error if a launch fails.
+    From the CLI, run `ravion aws account policy-diff <aws-account-id>` to review the change. Then apply it with `aws cloudformation update-stack` and a template URL from `ravion aws account cloudformation-template-url <aws-account-id>`.
   </Step>
   <Step title="Update your modules">
-    Update your modules to the latest versions available as of October 10, 2026, or newer. Older module versions don't support sandboxes.
+    Update your modules to versions released on or after October 10, 2026. Older versions don't support sandboxes.
   </Step>
   <Step title="Run pipeline steps or module builds in sandboxes">
-    Set [pipeline steps](#pipeline-steps) to `type: sandbox`. New [module builds](#module-builds) use sandboxes by default; switch existing modules if they still use EC2.
+    Set [pipeline steps](#pipeline-steps) to `type: sandbox`. New [module builds](#module-builds) use sandboxes by default; switch existing modules that still use EC2.
   </Step>
 </Steps>
 
 ## Pipeline steps
 
-Set the step's `infrastructure.type` to `sandbox`. Any step with an `infrastructure` block can run in a sandbox, such as `custom`, `build:image` and `build:static`.
+Set the step's `infrastructure.type` to `sandbox`. Any step with an `infrastructure` block can run in a sandbox, including `custom`, `build:image` and `build:static`.
 
-Use your existing execution environment's ID or given ID in place of `ci-builders` below. If you need a new environment, create one in [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments). You don't need to configure a pool; your first sandbox step creates it automatically.
+Replace `ci-builders` with the ID or given ID of your execution environment. To create one, go to [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments).
 
 ```yaml
 - id: run_tests
@@ -99,66 +236,66 @@ Use your existing execution environment's ID or given ID in place of `ci-builder
 
 | Field | Required | Default | What it does |
 | --- | --- | --- | --- |
-| `execution_environment_id` | One target | None | ID or given ID of the execution environment whose pool runs the step. |
-| `aws_account_id` + `region` | One target | None | Use the execution environment for this account and region instead. See [Limits](#limits-and-caveats). |
+| `execution_environment_id` | One target | None | ID or given ID of the execution environment to run in. |
+| `aws_account_id` + `region` | One target | None | Run in this account and region's execution environment instead. See [Limits](#limits-and-caveats). |
 | `cpu` | Yes | None | vCPUs for the sandbox. |
 | `memory` | Yes | None | Memory in GiB. |
-| `disk` | No | 8 | GiB of host disk the sandbox reserves for what it writes. A host takes the step only when it has this much free. |
+| `disk` | No | 8 | GiB of host disk reserved for what the sandbox writes. |
 | `disk_cache` | No | `off` | Keep the sandbox's disk between runs. See [Disk cache](#disk-cache). |
-| `interruptible` | No | `false` | Let the step run on spot hosts and rerun from the start if its host is lost. See [Interruptible steps](#interruptible-steps-and-spot-hosts). |
+| `interruptible` | No | `false` | Allow Spot hosts, and rerun the step from the start if its host is lost. See [Interruptible steps](#interruptible-steps-and-spot-hosts). |
 
-Sandboxes don't take `instance_size`, `ami` or `storage`. The full schema is in [SandboxStepInfrastructure](/pipelines/config-reference#sandboxstepinfrastructure).
+Sandboxes don't take `instance_size`, `ami` or `storage`. See [SandboxStepInfrastructure](/pipelines/config-reference#sandboxstepinfrastructure) for the full schema.
 
 ## Module builds
 
 New module builds use sandboxes by default. See [Build infrastructure](/modules/build#build-infrastructure) to configure builds or switch an existing module from EC2.
 
-## Pool settings
+## Sandbox settings
 
-Open [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments), choose the environment, then open **Config / Sandboxes**. These are the defaults for a new pool. Existing pools keep their saved settings.
+Go to [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments), choose the environment, then open **Config / Sandboxes**.
+
+<Tip>
+  We recommend keeping the defaults. We're still tuning them for everyone, and any setting you leave at its default picks up each improvement automatically. If something is slow, costs more than you expect, or doesn't fit your workload, send us feedback with `ravion feedback "<what you noticed>"`. See [Report bugs and feedback](/report-bugs-and-feedback).
+</Tip>
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| **Machine types** | Automatic | Leave empty to let Ravion choose compatible types for your region and workload. Add types only to restrict that choice or customize host disks. Removing every type returns to automatic selection; it does not turn the pool off. |
-| **Host storage** | Ephemeral | **Ephemeral** terminates idle hosts unless you keep some running. Types with an instance store use it for sandboxes and local cache. **Persistent** stops idle on-demand hosts and retains their disks for reuse. Spot hosts are always terminated, even in a persistent pool. |
-| **Use spot hosts for interruptible steps** | On | Allows spot hosts for [interruptible steps](#interruptible-steps-and-spot-hosts). Steps that aren't interruptible still use on-demand hosts. |
-| **Idle hosts to keep running** / **Stopped hosts to retain** | None | Ephemeral pools keep the chosen number running, with compute charges. Persistent pools retain stopped hosts and their disks instead. **Peak** matches your busiest minute; **Rolling average** matches your average daily peak over the selected window. **Fixed** keeps a set number; **None** keeps none. |
-| **Delete stopped hosts after (minutes)** | 1440 | Deletes stopped hosts outside the retained reserve after this time. Persistent pools only. |
+| **Machine types** | Automatic | Leave empty to let Ravion choose. Add types only to restrict the choice or customize host disks. |
+| **Host storage** | Ephemeral | See [Host lifecycle](#host-lifecycle). |
+| **Use spot hosts for interruptible steps** | On | Lets [interruptible steps](#interruptible-steps-and-spot-hosts) run on Spot hosts. |
+| **Idle hosts to keep running** (ephemeral) / **Stopped hosts to retain** (persistent) | None | Hosts kept for faster starts. **Fixed** keeps a set number. **Peak** matches your busiest minute. **Rolling average** matches your average daily peak. Running hosts incur compute charges. |
+| **Delete stopped hosts after (minutes)** | 1440 | Persistent only. Deletes stopped hosts outside the retained reserve. |
 
-To stop using sandboxes, switch your steps and module builds back to EC2. Removing a pool through the [CLI](/cli/reference/environment) tears down its hosts, but the next sandbox step creates a default pool again.
+To list an environment's hosts, run `ravion execution-environment sandbox-hosts <id>`.
+
+To stop using sandboxes, switch your steps and module builds back to EC2. Running `ravion execution-environment update <id> --sandboxes null` removes the hosts, but the next sandbox step sets them up again.
 
 ## Interruptible steps and spot hosts
 
-`interruptible: true` says a step can be stopped partway and started over. Builds, tests and lint usually can.
+`interruptible: true` means a step can be stopped partway and started over. Builds, tests and lint usually can.
 
-New pools allow Spot hosts by default. When interruptible work needs new capacity, Ravion tries compatible Spot instance types across the Availability Zones available to your execution environment. It can try other instance sizes and adjust how steps are distributed across hosts, then fall back to On-Demand if Spot capacity is unavailable.
-
-Interruptible steps can also use spare capacity on running On-Demand hosts. Setting `interruptible: true` permits Spot; it doesn't require a new Spot instance for every step.
-
-- Only interruptible steps run on spot hosts, and only in a pool with **Use spot hosts for interruptible steps** turned on. Other steps run on on-demand hosts.
-- If an interruptible step's host is lost or AWS reclaims it, Ravion reruns the step from the start on another host. The last retry always runs on an on-demand host.
+- Interruptible steps can run on Spot hosts, or on spare room on On-Demand hosts. Ravion tries several Spot instance types and Availability Zones, then falls back to On-Demand.
+- If an interruptible step loses its host, Ravion reruns it from the start on another host. The last retry always runs On-Demand.
 - If a step that isn't interruptible loses its host, the step fails.
 
-Leave `interruptible` off for steps that change things outside the sandbox and can't safely be cut off and rerun, such as database migrations or deploys.
+Leave `interruptible` off for steps with side effects that aren't safe to repeat, such as database migrations and deploys.
 
 ## Disk cache
 
-`disk_cache` controls whether a sandbox keeps its disk, with your dependencies, build output and Docker layers, between runs.
-
-These **sticky disks** save the sandbox filesystem rather than requiring you to select individual cache directories. Ravion stores the saved disk snapshots in an S3-backed chunk store in your AWS account and caches data locally on hosts. Later runs can restore a saved disk on another host, even after the original ephemeral host has been terminated.
-
-When a suitable previous host is still available, Ravion prefers it so the sandbox can reuse local cached data. Disk caching reduces repeated downloads and setup, while warm host capacity avoids waiting for EC2 to launch. Both affect how much faster your workload runs. Enable it with `disk_cache: auto` or a cache key; custom pipeline steps default to `off`.
+`disk_cache` controls whether a sandbox keeps its disk between runs. See [Why sandboxes are fast](#why-sandboxes-are-fast) for how it works.
 
 | Value | What it does |
 | --- | --- |
-| `off` | Boot the base image every run and keep nothing. This is the default. |
+| `off` | Start from the base image every run. Default for pipeline steps. |
 | `auto` | Keep this step's own disk, named by its git source and step. Needs a git `source`. |
-| A key, such as `web-deps` | Every step in the repository that uses the same key shares one disk. The last successful run to finish saves it. Keys are up to 64 lowercase letters, digits, `.`, `_` or `-`. |
+| A key, such as `web-deps` | Share one disk across every step in the repository that uses the key. The last successful run to finish saves it. Keys are up to 64 lowercase letters, digits, `.`, `_` or `-`. |
 
-A run restores the disk saved for its branch. If there's none, it uses the disk from the branch's pull request base, then the repository's default branch. A run saves its disk back to its own branch only when it succeeds.
+A run restores the disk saved for its branch. If there's none, it uses the pull request's base branch, then the repository's default branch. A run saves its disk to its own branch only when it succeeds.
+
+To start a run on clean disks, pass `--no-cache` to `ravion pipeline run create` or `ravion pipeline run retry`.
 
 ## Limits and caveats
 
-- **Account and region targets.** With `aws_account_id` and `region`, Ravion uses that account and region's execution environment, and creates one from the default VPC if none exists. The sandbox pool is also created automatically. Use `execution_environment_id` to select a specific network placement.
-- **Size and regional availability.** The step's `cpu`, `memory` and `disk` must fit an available host type. If you restrict **Machine types**, include a type large enough for the step, or leave the list empty for automatic selection. Automatic selection still depends on compatible types being available in your region and AWS having capacity.
-- **Cold starts.** The default pool keeps no idle hosts running. A step may wait for a new host after an idle period. Set **Idle hosts to keep running** to reduce this wait, at the cost of continued compute charges. Persistent pools can wake retained stopped hosts instead.
+- **Account and region targets.** With `aws_account_id` and `region`, Ravion uses that account and region's execution environment, and creates one in the default VPC if none exists. Use `execution_environment_id` to choose the network.
+- **Step size.** A step's `cpu`, `memory` and `disk` must fit an instance type available in your region. If you restrict **Machine types**, include one large enough.
+- **Cold starts.** With no reserve, a step after an idle period waits for a new host to launch. Keep idle hosts running, or use persistent hosts, to shorten the wait.
