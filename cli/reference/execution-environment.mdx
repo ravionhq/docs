@@ -65,6 +65,20 @@ ravion execution-environment get <id> [flags]
 | --- | --- | --- |
 | `--json` |  | emit response as JSON |
 
+### `ravion execution-environment github-runner-migration-preview`
+
+Get a GitHub Actions runner migration preview
+
+```bash
+ravion execution-environment github-runner-migration-preview <id> <previewId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
 ### `ravion execution-environment list`
 
 List ExecutionEnvironments
@@ -97,6 +111,37 @@ ravion execution-environment sandbox-hosts <id> [flags]
 | --- | --- | --- |
 | `--json` |  | emit response as JSON |
 | `-v, --verbose` |  | show full output |
+
+### `ravion execution-environment start-github-runner-migration`
+
+Start a GitHub Actions runner migration
+
+```bash
+ravion execution-environment start-github-runner-migration <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--data <string>` |  | Request data as JSON |
+| `--json` |  | emit response as JSON |
+
+### `ravion execution-environment start-github-runner-migration-preview`
+
+Preview a GitHub Actions runner migration
+
+```bash
+ravion execution-environment start-github-runner-migration-preview <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--mode <string>` |  | mode. Available values: migrate, compare. |
+| `--repositories <strings>` |  | repositories |
 
 ### `ravion execution-environment update`
 
