@@ -62,7 +62,13 @@ environments:
 
 </Accordion>
 
-## Pull and apply
+## Automatic updates with GitHub
+
+Commit a `ravion.yaml` file to a repository connected through the Ravion GitHub App. The app automatically plans config changes on pull requests and applies them on pushes to the default branch. It matches the existing project using `project.id`, or `project.givenId` when no ID is supplied. You don't need a GitHub Actions workflow.
+
+See [GitHub integration](/config-as-code/github-integration) for supported filenames, matching rules, and approval behavior. The integration requires an existing project; use the CLI steps below to create one if needed.
+
+## Pull and apply with the CLI
 
 Store the config file in your repository and manage it with the CLI.
 
@@ -158,10 +164,10 @@ Store the config file in your repository and manage it with the CLI.
     ```
 
   </Step>
-  <Step title="Integrate with CI">
-    Commit the config file and let GitHub Actions plan changes on each pull request and apply them on merge.
+  <Step title="Commit for automatic updates">
+    Commit the config file and let the Ravion GitHub App plan future changes on pull requests and apply them on merge to the default branch.
 
-    See [CI integration](/config-as-code/ci-integration).
+    See [GitHub integration](/config-as-code/github-integration).
 
   </Step>
 </Steps>
