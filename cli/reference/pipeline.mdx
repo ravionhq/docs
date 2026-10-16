@@ -163,7 +163,7 @@ ravion pipeline run create [flags]
 | `--pipeline-id <string>` | yes | pipelineId |
 | `--variant-id <string>` | yes | ID of the variant to execute. |
 | `--attached-entity-id <string>` |  | ID of the entity (e.g. Stack) that this run is associated with |
-| `--input <string>` |  | Manual pipeline input values keyed by input definition key. Example: \{"image_tag": "v1.2.3", "enable_debug": true\}. |
+| `--input <string>` |  | Caller-controlled pipeline input values keyed by input definition key. Inputs fixed by the selected variant must be omitted, even when the supplied value equals the fixed value. Invalid inputs return HTTP 422 without creating a run. Inspect getPipelineVersionRunInputs for the selected variant, then pass that pipelineVersionId when creating the run to use the same input contract. Example: \{"image_tag": "v1.2.3", "enable_debug": true\}. |
 | `--json` |  | emit response as JSON |
 | `--no-cache` |  | When true, each sandbox step that keeps a disk (infrastructure.disk_cache) clears its saved disk and starts on a clean one; when the step succeeds, the disk it finished with is saved in its place. Pipelines this run starts run the same way. The run's triggerMetadata.no_cache records it. |
 | `--pipeline-version-id <string>` |  | pipelineVersionId |
@@ -493,6 +493,21 @@ ravion pipeline version list [flags]
 | `--limit <int>` |  | limit |
 | `--pipeline-id <string>` |  | pipelineId |
 | `-v, --verbose` |  | show full output |
+
+#### `ravion pipeline version run-inputs`
+
+Get a pipeline variant's run inputs
+
+```bash
+ravion pipeline version run-inputs <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--variant-id <string>` | yes | Variant to run |
+| `--json` |  | emit response as JSON |
 
 #### `ravion pipeline version sandbox-plan`
 
