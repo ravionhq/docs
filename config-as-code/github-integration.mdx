@@ -106,7 +106,7 @@ When you open or reopen a pull request, push new commits, or mark it ready for r
 Tick the re-plan checkbox in the app's plan comment to refresh the plan without pushing another commit. Pull requests from forks are not planned.
 
 <Note>
-  A config dry run previews configuration changes; it does not apply them or run a Terraform plan. Require **Ravion config plan** in your GitHub branch protection or ruleset if you want a failed config plan to block merging.
+  A config dry run previews configuration changes; it does not apply them or run a Terraform plan. Require **Ravion config plan** in your GitHub branch protection settings if you want a failed config plan to block merging.
 </Note>
 
 ### Apply on the default branch
@@ -124,7 +124,7 @@ The app reports a **Ravion config apply** check and posts the apply result on th
 
 ## Conflicts and deleted files
 
-Keep one config file per project and one per standalone pipeline. When multiple recognized files name the same target reference, Ravion rejects those files together instead of choosing one. An unchanged file can conflict with a changed file. Remove or retarget the duplicate before merging; the remaining file is reconsidered when that conflict is resolved.
+Keep one config file per project and one per standalone pipeline. When multiple recognized files name the same target reference, Ravion rejects those files together instead of choosing one. An unchanged file can conflict with a changed file. Remove the duplicate or change its target before merging; the remaining file is reconsidered when that conflict is resolved.
 
 Deleting a config file does not delete its project, pipeline, or infrastructure. This differs from removing a module from a project config, which can plan a destroy. See [Project config file](/config-as-code/project-config-file).
 
