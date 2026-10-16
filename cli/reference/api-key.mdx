@@ -14,6 +14,27 @@ Create a service-account API key in the dashboard: Settings &gt; Service account
 
 **Aliases:** `api-keys`
 
+### `ravion api-key create`
+
+Create an API key for a membership or service account
+
+```bash
+ravion api-key create [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--name <string>` | yes | User-facing label for the API key. |
+| `--owner-id <string>` | yes | ID of the membership or service account this API key authenticates as. |
+| `--owner-type <string>` | yes | Type of principal this API key authenticates as. Available values: MEMBERSHIP, SERVICE_ACCOUNT. |
+| `--description <string>` |  | Optional context for where or why this API key is used. |
+| `--expires-at <string>` |  | Optional expiration timestamp. Null or omitted means the key does not expire. |
+| `--json` |  | emit response as JSON |
+| `--permissions <type:action>` |  | The most the key may do, as type:action pairs from the authorization catalog, for example `project:read` or `pipelineRun:create`. The key may do something only when its owner may too, so it can narrow its owner's permissions but never widen them. Null means everything its owner may do. Omitting this field on create uses the owner's permissions; omitting it on update preserves the current limit. Limits apply only in organizations with authorization enforcement enabled. Limited keys cannot access the Terraform Cloud API or personal-account operations, and cannot select another organization. Only a member signed in to the dashboard or the CLI can change it, never an API key. |
+| `--token-only` |  | Print only the new API key token |
+
 ### `ravion api-key delete`
 
 Delete ApiKey
