@@ -1,0 +1,140 @@
+---
+title: "GitHub integration"
+description: "Automatically plan project and pipeline config changes on pull requests and apply them on merge with the Ravion GitHub App."
+"og:image": "https://www.ravion.com/og/docs/config-as-code/github-integration.png"
+"twitter:image": "https://www.ravion.com/og/docs/config-as-code/github-integration.png"
+---
+
+The Ravion GitHub App scans your repository for project and pipeline config changes. It previews changes on pull requests and applies them when they reach the repository's default branch. You don't need a GitHub Actions workflow, a runner, or a `RAVION_API_KEY` repository secret for this integration.
+
+## Get started
+
+1. Connect your GitHub repository to your Ravion organization through the Ravion GitHub App, and grant the app access to the repository.
+2. Create the project or pipeline in Ravion if it doesn't exist yet. The GitHub integration updates existing projects and pipelines; it doesn't create them from config files.
+3. Pull its config with the [CLI](/cli/installation):
+
+   ```bash
+   ravion project config pull <project-id> --file ravion.yaml
+   ravion pipeline config pull <pipeline-id> --file ravion-pipeline.yaml
+   ```
+
+   Use either command or both, depending on what you want to manage. Keep the `project` or `pipeline` block in the file: it identifies the resource to update.
+
+4. Edit the file, commit it on a branch in the same repository, and open a pull request.
+5. Review the app's plan, then merge into the default branch to apply the config changes.
+
+## Which files are scanned?
+
+Ravion recognizes these filenames in any directory, including nested directories in a monorepo:
+
+| Filename pattern | Examples |
+| --- | --- |
+| `ravion.yaml` | `ravion.yaml`, `infra/ravion.yaml` |
+| `<name>.ravion.yaml` | `shop.ravion.yaml` |
+| `ravion.<name>.yaml` | `ravion.shop.yaml` |
+| `ravion-pipeline.yaml` | `services/web/ravion-pipeline.yaml` |
+| `<name>.ravion-pipeline.yaml` | `deploy.ravion-pipeline.yaml` |
+| `ravion-pipeline.<name>.yaml` | `ravion-pipeline.deploy.yaml` |
+
+All patterns also accept `.yml`. Names are case-sensitive. Files named `pipeline.yaml`, `ravion.yaml.bak`, or files using `.json`, `.jsonc`, or `.cue` are not scanned, even though the CLI supports additional formats.
+
+The filename makes a file eligible for scanning; its contents determine whether it is a project config or a pipeline config. Ravion compares the top-level fields against the two schemas. Project configs describe `project` and `environments`; pipeline configs describe `steps` and `variants`, with a `pipeline` block identifying their target. A pipeline config can therefore live in a file named `ravion.yaml`, although `ravion-pipeline.yaml` makes its purpose clearer.
+
+Ravion plans or applies changed files, not every file on each push. It also checks other recognized config files for conflicting target references.
+
+## How projects are matched
+
+Ravion reads the top-level `project` block:
+
+1. If `project.id` is present and non-empty, it takes precedence.
+2. Otherwise, Ravion uses `project.givenId`.
+3. The project must already exist in a Ravion organization connected to this repository. A project outside those organizations is treated as not found.
+
+For example, this block targets a project by its unique ID:
+
+```yaml
+project:
+  id: proj_3AV4cGr0t841Bstn4swCCrHrgly
+  givenId: shop
+  name: Shop
+```
+
+Without `id`, this block targets an existing project whose given ID is `shop`:
+
+```yaml
+project:
+  givenId: shop
+  name: Shop
+```
+
+These are identification blocks, not complete config files. Keep your `environments` and module configuration below them. Neither the filename, directory, repository name, nor `project.name` selects the project. An invalid `project.id` does not fall back to `project.givenId`.
+
+Prefer the unique `proj_...` ID from a pulled config, especially when the repository is connected to multiple organizations that reuse the same given ID.
+
+## How pipelines are matched
+
+A standalone pipeline config must contain a top-level `pipeline` block. Ravion uses one of two forms:
+
+- **Unique ID:** `pipeline.id` selects the existing pipeline directly and takes precedence over `pipeline.givenId`.
+- **Given ID within a project:** when `pipeline.id` is absent or empty, both `pipeline.givenId` and `pipeline.project` are required. `pipeline.project` accepts the project's unique ID or given ID. Ravion finds that project first, then finds the pipeline by its given ID within that project.
+
+For example, target a pipeline by its unique ID:
+
+```yaml
+pipeline:
+  id: pipe_3AV4cGr0t841Bstn4swCCrHrgly
+```
+
+Or target the `deploy` pipeline in the `shop` project:
+
+```yaml
+pipeline:
+  givenId: deploy
+  project: shop
+```
+
+Keep `steps`, `variants`, and the rest of your pipeline config below the block. The given ID `deploy` alone is not enough: different projects can each have a pipeline with that given ID. If you also supply `pipeline.project` alongside `pipeline.id`, the project must match the pipeline's actual project.
+
+The pipeline must belong to a connected Ravion organization; global system pipelines cannot be configured this way. The filename and `pipeline.name` do not select the pipeline, and an ID in a YAML comment is not a substitute for the `pipeline` block. Pull the current config to get that block rather than copying an old header comment.
+
+## Pull requests and applies
+
+### Preview on pull requests
+
+When you open or reopen a pull request, push new commits, or mark it ready for review, the app dry-runs the changed configs against the current Ravion state. It maintains one plan comment, adds a summary to the pull request description, and reports a **Ravion config plan** check. Invalid configs fail the check.
+
+Tick the re-plan checkbox in the app's plan comment to refresh the plan without pushing another commit. Pull requests from forks are not planned.
+
+<Note>
+  A config dry run previews configuration changes; it does not apply them or run a Terraform plan. Require **Ravion config plan** in your GitHub branch protection or ruleset if you want a failed config plan to block merging.
+</Note>
+
+### Apply on the default branch
+
+A push that changes a recognized config on the existing default branch applies it, whether the push comes from a merged pull request or a direct commit. Pushes to other branches do not apply configs.
+
+- **Project configs** update the project configuration and start stack change pipeline runs when needed. Those runs create the Terraform plans.
+- **Pipeline configs** are compared with the latest pipeline version. A changed config publishes a new version; an unchanged config does not create a version.
+
+The app reports a **Ravion config apply** check and posts the apply result on the merged pull request when available.
+
+<Warning>
+  Applying a project config does not auto-approve infrastructure changes. The GitHub App leaves stack approval gates in place. Review and approve the Terraform plans in Ravion before the infrastructure changes apply. A successful config apply check does not mean those stack runs have finished.
+</Warning>
+
+## Conflicts and deleted files
+
+Keep one config file per project and one per standalone pipeline. When multiple recognized files name the same target reference, Ravion rejects those files together instead of choosing one. An unchanged file can conflict with a changed file. Remove or retarget the duplicate before merging; the remaining file is reconsidered when that conflict is resolved.
+
+Deleting a config file does not delete its project, pipeline, or infrastructure. This differs from removing a module from a project config, which can plan a destroy. See [Project config file](/config-as-code/project-config-file).
+
+## Replace an existing GitHub Actions workflow
+
+If you previously installed a workflow to run `ravion project config apply` or `ravion pipeline config apply` on pull requests and merges:
+
+1. Ensure each file uses a recognized filename and includes its target identification block.
+2. Remove the old config plan/apply jobs so the workflow and app don't both apply the same change. Keep unrelated build, test, and deployment jobs.
+3. Remove CLI-version update jobs, version files, and repository secrets only if no remaining workflow uses them.
+4. If branch protection required the old workflow's plan check, replace it with **Ravion config plan**.
+
+You can still use the CLI to preview or apply changes manually, or from other CI systems. See [Project config file](/config-as-code/project-config-file), [Pipeline config file](/config-as-code/pipeline-config-file), and [CLI authentication](/cli/authentication).

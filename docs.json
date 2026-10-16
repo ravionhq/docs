@@ -59,7 +59,7 @@
             "pages": [
               "config-as-code/project-config-file",
               "config-as-code/pipeline-config-file",
-              "config-as-code/ci-integration"
+              "config-as-code/github-integration"
             ]
           },
           {
@@ -330,6 +330,11 @@
     ]
   },
   "redirects": [
+    {
+      "source": "/config-as-code/ci-integration",
+      "destination": "/config-as-code/github-integration",
+      "permanent": true
+    },
     {
       "source": "/quickstart",
       "destination": "/start-here",

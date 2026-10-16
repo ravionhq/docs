@@ -75,7 +75,7 @@ Set a credential in the environment to authenticate without `ravion login`. When
 | `RAVION_TOKEN` | An OAuth access token. Used if `RAVION_API_KEY` is not set. |
 | `RAVION_ACCESS_TOKEN` | Alias for `RAVION_TOKEN`. |
 
-An API key is scoped to its organization, so you don't run `ravion switch` when you use `RAVION_API_KEY`. This is the recommended way to authenticate in CI. See [CI integration](/config-as-code/ci-integration).
+An API key is scoped to its organization, so you don't run `ravion switch` when you use `RAVION_API_KEY`. This is the recommended way to authenticate CLI commands in CI. The [Ravion GitHub App](/config-as-code/github-integration) plans and applies repository config changes without a CLI API key.
 
 ```bash
 export RAVION_API_KEY=<your-api-key>
