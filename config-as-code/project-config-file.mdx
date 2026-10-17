@@ -1,13 +1,13 @@
 ---
 title: "Project config file"
-description: "Manage a full Ravion project's configuration—environments, modules, and pipelines—from a single declarative YAML file in source control."
+description: "Manage a full Ravion project's configuration—environments, modules, and pipelines—from a single declarative config file in source control."
 "og:image": "https://www.ravion.com/og/docs/config-as-code/project-config-file.png"
 "twitter:image": "https://www.ravion.com/og/docs/config-as-code/project-config-file.png"
 ---
 
 import ProjectConfigSchemaReference from "/snippets/schema-reference/project-config.mdx";
 
-Define a project declaratively in `.yaml`, `.jsonc`, or `.cue`. The top-level `environments[]` array contains `moduleInstances[]`, and modules reference each other with `moduleGivenIdRef`.
+Define a project declaratively in `.yaml`, `.yml`, `.json`, `.jsonc`, or `.cue`. The top-level `environments[]` array contains `moduleInstances[]`, and modules reference each other with `moduleGivenIdRef`.
 
 <Accordion title="Example project config">
   A minimal `ravion.yaml` with a VPC, an ECS cluster, and a web service. Modules reference each other with `moduleGivenIdRef`.
