@@ -294,6 +294,23 @@ A run restores the disk saved for its branch. If there's none, it uses the pull 
 
 To start a run on clean disks, pass `--no-cache` to `ravion pipeline run create` or `ravion pipeline run retry`.
 
+### Delete cached state
+
+To remove cached state after a compromised dependency or a bad build, open [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments), select the environment, then open **Config / Cache**.
+
+Choose an option from the **Delete cache** button and confirm:
+
+- **Delete cache** pauses new sandbox jobs and lets running jobs finish before clearing their caches.
+- **Kill all jobs & delete cache** stops running jobs in this execution environment before clearing their caches.
+
+Both options delete saved disk snapshots, Ravion-hosted Actions cache, and host-local caches by replacing the sandbox hosts, including stopped persistent hosts. This affects every repository using the execution environment. It does not delete deployed images, ECR build caches, your Terraform infrastructure, or caches stored by GitHub itself.
+
+New sandbox jobs resume after cleanup completes. If cleanup fails, they stay paused; resolve the reported problem and retry. Update the connected AWS account's permissions if prompted.
+
+<Warning>
+  Deleting caches cannot be undone. Fix or remove a compromised dependency before running jobs again; deleting its cached files does not make the dependency safe or revoke exposed credentials.
+</Warning>
+
 ## Limits and caveats
 
 - **Account and region targets.** With `aws_account_id` and `region`, Ravion uses that account and region's execution environment, and creates one in the default VPC if none exists. Use `execution_environment_id` to choose the network.
