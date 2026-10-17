@@ -507,8 +507,10 @@ module instance's stack outputs.
 </ResponseField>
 
 <ResponseField name="endpoint" type="string | null">
-  Base URL of an external Prometheus reachable from the cluster. Omit to
-  query the in-cluster Prometheus the add-ons install.
+  Base URL of the Prometheus-compatible query API reachable from the
+  cluster, without the `/api/v1/...` suffix: the add-ons module's
+  `prometheus_endpoint` output (Thanos Query, Prometheus, or Mimir's
+  `/prometheus` prefix), or an external store. Required to chart.
 
   _(minLen:1; templateable)_
 </ResponseField>

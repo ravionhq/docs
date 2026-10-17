@@ -895,7 +895,8 @@ Variant definition
 </ResponseField>
 
 <ResponseField name="input" type="map<string,any | null>">
-  Hard-coded input values for this variant — keys must match declared inputs, cannot be overridden by triggers
+  Hard-coded input values for this variant — keys must match declared inputs, and manual callers
+  and triggers must omit them because they cannot be overridden.
 </ResponseField>
 
 ## Steps
