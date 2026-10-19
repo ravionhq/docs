@@ -36,7 +36,7 @@ Ravion recognizes these filenames in any directory, including nested directories
 | `<name>.ravion-pipeline.yaml` | `deploy.ravion-pipeline.yaml` |
 | `ravion-pipeline.<name>.yaml` | `ravion-pipeline.deploy.yaml` |
 
-All patterns also accept `.yml`. Names are case-sensitive. Files named `pipeline.yaml`, `ravion.yaml.bak`, or files using `.json`, `.jsonc`, or `.cue` are not scanned, even though the CLI supports additional formats.
+All patterns also accept `.yml`, `.json`, `.jsonc`, and `.cue` in place of `.yaml`, for example `ravion.json` or `ravion-pipeline.deploy.cue`. Names are case-sensitive. Files named `pipeline.yaml` or `ravion.yaml.bak` are not scanned.
 
 The filename makes a file eligible for scanning; its contents determine whether it is a project config or a pipeline config. Ravion compares the top-level fields against the two schemas. Project configs describe `project` and `environments`; pipeline configs describe `steps` and `variants`, with a `pipeline` block identifying their target. A pipeline config can therefore live in a file named `ravion.yaml`, although `ravion-pipeline.yaml` makes its purpose clearer.
 

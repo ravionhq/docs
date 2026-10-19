@@ -39,22 +39,19 @@ rss: true
 <Update
   label="October 19, 2026"
   rss={{
-    title: "More visible execution environment data, safer GitHub Actions sandbox scheduling, and new infrastructure modules and CLI capabilities",
+    title: "GitHub App config automation, more visible execution environment data, and new infrastructure modules and CLI capabilities",
   }}
 >
 
 ## Platform
-### Breaking changes
-- **Execution environment commands:** Use the `ravion execution-environment` command group instead of `ravion environment execution`.
 ### Features
+- **[GitHub config automation](https://www.ravion.com/docs/config-as-code/github-integration):** The Ravion GitHub App plans project and pipeline config changes on pull requests and applies them when they merge to the default branch, so you no longer need your own GitHub Actions workflow to publish Ravion config files. Config files can be YAML, JSON, JSONC, or CUE.
 - **Execution environment visibility:** Execution environment cards now show costs, pipeline minutes, running sandbox jobs, vCPU capacity, and host states.
-- **GitHub Actions migration:** Preview and start pull-request-based migrations for connected GitHub repositories.
 - **Execution environment usage:** Report usage and cost for exact UTC time windows, including coverage status.
 ### Improvements
 - Pipeline canvases now use a more compact layout with zoom, fit, and expand controls.
 - AWS quota issues on the dashboard now refresh automatically while retaining an explicit refresh option.
 - Pipeline runs now reach the completed state sooner after their work finishes.
-- GitHub Actions matrix jobs now wait for GitHub admission before provisioning private sandboxes.
 ### Fixes
 - Resending email verification during an identity-provider sign-in now sends the code that completes that sign-in.
 - Module configuration refreshes now apply before webhook and scheduled triggers select a pipeline.
@@ -103,7 +100,6 @@ Update your AWS account connection in organization settings.
 - **Sandbox host details:** Show the security group and subnet for hosts launched with execution-environment overrides.
 - **PlanetScale values:** List PlanetScale regions and cluster sizes for module inputs.
 - **Lambda rollback:** Roll back Lambda deployments by moving the deploy alias to a previous published version.
-- **GitHub Actions savings:** Import usage and view stored runs, workflow usage, and savings reports.
 - **Execution environment usage:** Include daily quantities, billed pipeline-minute costs, and internet egress as usage categories.
 - **API key creation:** Create service-account API keys with `ravion api-key create`.
 - **Pipeline inputs:** Expose pipeline variant run-input contracts through the CLI.
