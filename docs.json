@@ -132,6 +132,13 @@
             ]
           },
           {
+            "group": "GitHub Actions",
+            "pages": [
+              "github-actions/runners",
+              "github-actions/caching"
+            ]
+          },
+          {
             "group": "Guides",
             "pages": [
               "guides/custom-domains",
