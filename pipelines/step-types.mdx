@@ -256,7 +256,7 @@ Commands run as the image's default user: `ec2-user` on Amazon Linux and `ubuntu
 
 The standard Amazon Linux 2023 AMI includes AWS CLI v2; the minimal AMI does not. Ravion installs Git if the image does not include it. Docker is not installed. Install other packages in your commands, for example `sudo dnf install -y jq`.
 
-For a ready toolchain with Node.js, Docker, AWS CLI, and `jq`, use a [sandbox](/concepts/sandboxes#what-runs-inside-a-sandbox) instead.
+If you need Node.js, Docker, AWS CLI, and `jq` already installed, use a [sandbox](/concepts/sandboxes#what-runs-inside-a-sandbox) instead.
 
 ### Runner permissions
 
