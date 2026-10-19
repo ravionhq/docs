@@ -17,8 +17,36 @@ test("catalog sync includes mapped inputs, conditional fields, and the full inpu
     navigation: {tabs: [{tab: "Documentation", groups: [{group: "Modules", pages: []}]}]},
   }));
 
-  const definitions = [{type: "rvn-ecs-cluster", name: "ECS cluster", latestVersion: "2.1.2", latestVersionId: "version-1"}];
+  const definitions = [
+    {
+      type: "rvn-ecs-cluster",
+      name: "ECS cluster",
+      latestVersion: "2.1.2",
+      latestVersionId: "version-1",
+      organizationId: null,
+    },
+    {
+      type: "rvn-aws-network",
+      name: "AWS network",
+      latestVersion: "1.0.0",
+      latestVersionId: "version-3",
+      organizationId: null,
+    },
+    {
+      type: "rvn-org-only",
+      name: "Organization-only module",
+      latestVersion: "1.0.0",
+      latestVersionId: "version-2",
+      organizationId: "org-1",
+    },
+    {
+      type: "rvn-no-latest",
+      name: "Module without a latest version",
+      organizationId: null,
+    },
+  ];
   const version = {config: {inputs: [
+    {id: "org_only", type: "$ref:rvn-org-only", required: true},
     {id: "network", type: "$ref:rvn-aws-network", mapped_inputs: [
       {id: "private_subnet_ids", type: "string_array", required: true, immutable: true, default: "<<ref.stack.output.private_subnet_ids>>"},
     ]},
@@ -42,6 +70,12 @@ console.log(JSON.stringify(process.argv[3] === "definition" ? ${JSON.stringify(d
     env: {...process.env, PATH: `${path.join(root, "bin")}${path.delimiter}${process.env.PATH}`},
   });
   const page = readFileSync(path.join(root, "module-definitions/catalog/rvn-ecs-cluster.mdx"), "utf8");
+  const networkPage = readFileSync(path.join(root, "module-definitions/catalog/rvn-aws-network.mdx"), "utf8");
+  assert.throws(() => readFileSync(path.join(root, "module-definitions/catalog/rvn-org-only.mdx")));
+  assert.throws(() => readFileSync(path.join(root, "module-definitions/catalog/rvn-no-latest.mdx")));
+  assert.match(page, /click rvn_aws_network/);
+  assert.doesNotMatch(page, /click rvn_org_only/);
+  assert.doesNotMatch(networkPage, /click rvn_org_only/);
   assert.match(page, /<ResponseField name="private_subnet_ids" type="string_array" required>/);
   assert.match(page, /Default: `<<ref.stack.output.private_subnet_ids>>`/);
   assert.match(page, /Immutable after creation/);

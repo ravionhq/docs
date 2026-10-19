@@ -224,6 +224,7 @@ function buildRelationGraph(definitions, versionsByType) {
   for (const d of definitions) {
     const inputs = versionsByType.get(d.type)?.config?.inputs;
     for (const ref of collectModuleRefs(inputs)) {
+      if (!graph.has(ref.target)) continue;
       const deps = graph.get(d.type).deps;
       const existing = deps.get(ref.target);
       // Prefer the required edge if the same target is referenced twice.
@@ -420,7 +421,9 @@ const definitions = ravion([
   "--limit",
   "100",
   "--json",
-]).filter((d) => d.type.startsWith("rvn-") && d.latestVersionId);
+]).filter(
+  (d) => d.type.startsWith("rvn-") && d.organizationId == null && d.latestVersionId,
+);
 
 if (definitions.length === 0) {
   throw new Error("No active rvn-* module definitions returned; refusing to wipe catalog pages.");
