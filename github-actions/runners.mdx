@@ -104,7 +104,7 @@ When a label in a private repository is invalid, Ravion fails the job, and the j
 
 ## Disk cache
 
-On sandboxes, `disk_cache=auto` is the default. After a job succeeds, Ravion saves the sandbox's whole disk, and the job's next run starts with it: packages, toolchains, `node_modules`, Docker layers and your checkout. See [Why sandboxes are fast](/concepts/sandboxes#why-sandboxes-are-fast).
+On sandboxes, `disk_cache=auto` is the default. After a job succeeds, Ravion saves the sandbox's whole disk, and the job's next run starts with it: packages, installed tools, `node_modules`, Docker layers and your checkout. See [Why sandboxes are fast](/concepts/sandboxes#why-sandboxes-are-fast).
 
 | Value | What it does |
 | --- | --- |
