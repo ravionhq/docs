@@ -138,6 +138,12 @@
             ]
           },
           {
+            "group": "GitHub Actions",
+            "pages": [
+              "github-actions/runners"
+            ]
+          },
+          {
             "group": "Guides",
             "pages": [
               "guides/custom-domains",
