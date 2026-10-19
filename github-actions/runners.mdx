@@ -136,8 +136,6 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=4/memory=16/disk=60/interrupt
 
 Mark jobs that are safe to run twice as `interruptible=true`, such as tests, lint and builds. Leave it off for jobs that publish, deploy or push.
 
-Sandboxes boot an x86_64 Ubuntu 24.04 image. See [What runs inside a sandbox](/concepts/sandboxes#what-runs-inside-a-sandbox). Install anything else with `setup-*` actions or `run` steps; with the disk cache on, what you install stays for later runs.
-
 ### EC2
 
 ```yaml
@@ -153,6 +151,22 @@ runs-on: ravion/ee=github-actions/type=ec2/instance_size=c7i.2xlarge/disk=100/id
 | `id` | Yes | None | See [Unique labels](#unique-labels). |
 
 EC2 runners start a whole instance per job, boot Amazon Linux 2023, and have no disk cache. If AWS reclaims an `ec2-spot` instance, GitHub fails the job.
+
+### The runner image
+
+Sandbox jobs boot an x86_64 Ubuntu 24.04 image with git, GitHub CLI (`gh`), build-essential, Node.js 24, Docker, the AWS CLI, `jq`, `curl` and `zstd`. See [What runs inside a sandbox](/concepts/sandboxes#what-runs-inside-a-sandbox).
+
+The image is much smaller than GitHub's hosted runner images. Their `ubuntu-latest` comes with hundreds of preinstalled tools — several versions each of Node.js, Python, Java, Go, Ruby and .NET, plus browsers, databases and cloud SDKs. The Ravion image doesn't. If a job needs something missing, install it natively in a `run` step:
+
+- System packages with `apt-get`, for example `apt-get update && apt-get install -y python3-pip`. Jobs run as root.
+- Language versions with the usual `setup-*` actions, such as `actions/setup-node`, `actions/setup-python` or `actions/setup-java`.
+- Anything else by downloading its binary or installer.
+
+With the disk cache on, what you install stays for later runs, so you pay the install cost once.
+
+<Note>
+  Runners are in private preview. If a job hits a problem you can't explain — a tool that won't install, a missing kernel feature, or anything unexpected — [contact support](/contact-support).
+</Note>
 
 ### Unique labels
 
