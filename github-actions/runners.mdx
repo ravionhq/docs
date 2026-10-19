@@ -15,7 +15,7 @@ Ravion runs your GitHub Actions jobs on machines in your AWS account. Change a j
 ```yaml
 jobs:
   test:
-    runs-on: ravion/ee=ci-builders/type=sandbox/cpu=4/memory=16/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
+    runs-on: ravion/ee=github-actions/type=sandbox/cpu=4/memory=16/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
     steps:
       - uses: actions/checkout@v4
       - run: npm ci
@@ -104,7 +104,7 @@ A Ravion label starts with `ravion/` and is a list of `key=value` segments separ
 ### Sandbox
 
 ```yaml
-runs-on: ravion/ee=ci-builders/type=sandbox/cpu=4/memory=16/disk=60/interruptible=true/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
+runs-on: ravion/ee=github-actions/type=sandbox/cpu=4/memory=16/disk=60/interruptible=true/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
 ```
 
 | Key | Required | Default | What it does |
@@ -125,7 +125,7 @@ Sandboxes boot an x86_64 Ubuntu 24.04 image. See [What runs inside a sandbox](/c
 ### EC2
 
 ```yaml
-runs-on: ravion/ee=ci-builders/type=ec2/instance_size=c7i.2xlarge/disk=100/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
+runs-on: ravion/ee=github-actions/type=ec2/instance_size=c7i.2xlarge/disk=100/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
 ```
 
 | Key | Required | Default | What it does |
@@ -148,7 +148,7 @@ jobs:
     strategy:
       matrix:
         shard: [1, 2, 3]
-    runs-on: ravion/ee=ci-builders/type=sandbox/cpu=4/memory=16/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
+    runs-on: ravion/ee=github-actions/type=sandbox/cpu=4/memory=16/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
 ```
 
 ### Invalid labels
