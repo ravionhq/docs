@@ -30,7 +30,7 @@ jobs:
 
 1. GitHub sends Ravion a webhook when a job with a `ravion/...` label is queued.
 2. Ravion registers a just-in-time runner for that job only, and starts a sandbox or EC2 instance for it in your execution environment.
-3. The runner picks up the job, runs it, and is removed when the job ends. Each job gets a clean machine.
+3. The runner picks up the job, runs it, and is removed when the job ends. Each job gets a fresh runner. On sandboxes, its disk starts from the last successful run unless you set `disk_cache=off`. See [Disk cache](#disk-cache).
 
 Runners run in your VPC, so jobs can reach private resources such as databases, without exposing them to GitHub. They connect out to GitHub and Ravion, so they need no inbound ports.
 
