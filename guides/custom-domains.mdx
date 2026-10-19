@@ -156,7 +156,7 @@ Use this for anything managed domains don't cover: CloudFront, static sites, NLB
   <Step title="Request the certificate">
     Add an `rvn-acm-certificate` module with your domains. If the domain has a Route 53 public
     hosted zone in the same AWS account, set `route53_validation_records_creation_enabled: true`
-    and the module creates the validation records itself. You can't change this setting after the
+    and `route53_zone_id`, and the module creates the validation records itself. You can't change this setting after the
     first apply.
 
     ```yaml ravion.yaml
@@ -164,9 +164,13 @@ Use this for anything managed domains don't cover: CloudFront, static sites, NLB
       name: App certificate
       type: rvn-acm-certificate
       input:
+        aws_account_id: my-aws-account
         aws_region: us-east-1 # For CloudFront. Otherwise, the cluster's region
         domains:
           - app.example.com
+        # With a Route 53 zone for the domain in the same account:
+        # route53_validation_records_creation_enabled: true
+        # route53_zone_id: Z1234567890ABC
     ```
 
   </Step>
