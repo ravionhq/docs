@@ -63,3 +63,7 @@ Public repositories get a separate cache per repository and can't read private c
 Artifacts work on all Ravion runners. Use `actions/upload-artifact` and `actions/download-artifact` as usual. GitHub stores the artifacts, and its retention and limits apply. Ravion stores nothing.
 
 If a sandbox job is rerun after its host is lost, Ravion replaces an artifact uploaded by the earlier attempt of that same job so the rerun's upload succeeds. Other artifact name conflicts are unchanged.
+
+<Note>
+  Making heavy use of artifacts? [Let us know](/contact-support). We're adding support for storing artifacts in S3 in your own AWS account, which will nearly eliminate artifact egress costs.
+</Note>
