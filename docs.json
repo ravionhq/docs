@@ -267,6 +267,7 @@
               "cli/reference/logout",
               "cli/reference/logs",
               "cli/reference/membership",
+              "cli/reference/merge-queue",
               "cli/reference/metrics",
               "cli/reference/module",
               "cli/reference/organization",
