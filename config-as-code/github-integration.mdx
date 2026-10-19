@@ -36,7 +36,11 @@ Ravion recognizes these filenames in any directory, including nested directories
 | `<name>.ravion-pipeline.yaml` | `deploy.ravion-pipeline.yaml` |
 | `ravion-pipeline.<name>.yaml` | `ravion-pipeline.deploy.yaml` |
 
-All patterns also accept `.yml`. Names are case-sensitive. Files named `pipeline.yaml`, `ravion.yaml.bak`, or files using `.json`, `.jsonc`, or `.cue` are not scanned, even though the CLI supports additional formats.
+All patterns accept `.yaml`, `.yml`, `.json`, `.jsonc`, and `.cue`. For example, use `ravion.jsonc`, `shop.ravion.cue`, or `ravion-pipeline.deploy.json`. Names are case-sensitive. Files named `pipeline.yaml` or `ravion.yaml.bak` are not scanned.
+
+The extension selects the parser. JSON must be valid JSON; JSONC also supports comments and trailing commas. CUE files can use definitions, expressions, and standard-library imports, but must evaluate to a concrete config object. Each CUE file is evaluated independently: sibling files, repository-local imports, and external CUE modules are not loaded.
+
+All supported formats use the same validation and automation: pull requests receive a dry-run plan, and merges into the default branch apply the changes. Direct commits to the default branch also apply changes.
 
 The filename makes a file eligible for scanning; its contents determine whether it is a project config or a pipeline config. Ravion compares the top-level fields against the two schemas. Project configs describe `project` and `environments`; pipeline configs describe `steps` and `variants`, with a `pipeline` block identifying their target. A pipeline config can therefore live in a file named `ravion.yaml`, although `ravion-pipeline.yaml` makes its purpose clearer.
 
