@@ -48,6 +48,20 @@ ravion pipeline config pull <pipeline-id> [flags]
 | --- | --- | --- |
 | `--file <string>` | yes | File to write pipeline config to |
 
+#### `ravion pipeline config validate`
+
+Validate a pipeline config file with the checks applying it gets, without a pipeline. Use it for a pipeline that does not exist yet.
+
+```bash
+ravion pipeline config validate [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--file <string>` | yes | File to read pipeline config from |
+
 ### `ravion pipeline create`
 
 Create Pipeline
