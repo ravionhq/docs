@@ -162,7 +162,7 @@ The image is much smaller than GitHub's hosted runner images. Their `ubuntu-late
 - Language versions with the usual `setup-*` actions, such as `actions/setup-node`, `actions/setup-python` or `actions/setup-java`.
 - Anything else by downloading its binary or installer.
 
-With the disk cache on, what you install stays for later runs, so you pay the install cost once.
+With the disk cache on, what you install usually stays for later runs. Only runs whose trigger can write the cache save their disk, so some jobs install on every run. See [Disk cache](/github-actions/caching#disk-cache).
 
 <Note>
   Runners are in private preview. If a job hits a problem you can't explain — a tool that won't install, a missing kernel feature, or anything unexpected — [contact support](/contact-support).

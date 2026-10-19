@@ -192,7 +192,7 @@ The image is much smaller than GitHub's hosted runner images. Their `ubuntu-late
 - Language versions with the usual `setup-*` actions in GitHub Actions jobs, or with version managers and install scripts in pipeline steps.
 - Anything else by downloading its binary or installer in a command.
 
-With `disk_cache` on, what you install stays for later runs, so you pay the install cost once.
+With `disk_cache` on, what you install usually stays for later runs — only runs that can write the cache save their disk. See [Disk cache](#disk-cache).
 
 Docker starts in the background when the sandbox boots, and the first `docker` command waits for it. Tools that talk to Docker another way, such as Testcontainers or a Docker SDK, must wait for the daemon themselves.
 
