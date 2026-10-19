@@ -60,11 +60,6 @@ rss: true
 - Removing a module after its consumer finishes destroying no longer blocks the plan.
 - Execution environment usage requests no longer time out while checking stale records.
 
-## AWS account IAM policy 1.0.54 → 1.0.55
-- **EKS version lookup:** Module configuration pages can suggest Kubernetes versions using the AWS account's credentials.
-
-Update your AWS account connection in organization settings.
-
 ## Modules
 ### New modules
 - **[alterNAT](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-alternat)** 0.1.2: Provision alterNAT instances that reduce NAT gateway data processing charges and fail over to a NAT gateway automatically.
@@ -86,7 +81,6 @@ Update your AWS account connection in organization settings.
 
 ## CLI [1.14.12](https://github.com/ravionhq/cli/releases/tag/v1.14.12) → [1.17.7](https://github.com/ravionhq/cli/releases/tag/v1.17.7)
 ### Breaking changes
-- **EKS version lookup:** Pass `--aws-account-id` when running `ravion values aws/eks-versions`.
 - **Execution environment commands:** Use `ravion execution-environment` instead of `ravion environment execution`.
 - **Sandbox idle shutdown:** Remove `idleShutdownSeconds` from `--sandboxes` configuration.
 - **Public pipeline validation:** Invalid public manual pipeline runs are rejected before a run is created.
@@ -98,7 +92,6 @@ Update your AWS account connection in organization settings.
 - **Sandbox host versions:** Pin sandbox host releases globally with the `sandbox-host-version` feature flag.
 - **Deployment operations:** Read durable operation references for deployment resource restarts and rollbacks.
 - **Sandbox host details:** Show the security group and subnet for hosts launched with execution-environment overrides.
-- **PlanetScale values:** List PlanetScale regions and cluster sizes for module inputs.
 - **Lambda rollback:** Roll back Lambda deployments by moving the deploy alias to a previous published version.
 - **Execution environment usage:** Include daily quantities, billed pipeline-minute costs, and internet egress as usage categories.
 - **API key creation:** Create service-account API keys with `ravion api-key create`.
