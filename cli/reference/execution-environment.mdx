@@ -14,6 +14,21 @@ Manage execution environments
 
 **Aliases:** `execution-environments`
 
+### `ravion execution-environment cache`
+
+Delete execution environment cache
+
+```bash
+ravion execution-environment cache <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--mode <string>` | yes | mode. Available values: DELETE_CACHE, KILL_JOBS_AND_DELETE_CACHE. |
+| `--json` |  | emit response as JSON |
+
 ### `ravion execution-environment create`
 
 Create ExecutionEnvironment
