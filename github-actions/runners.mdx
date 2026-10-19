@@ -15,7 +15,7 @@ Ravion runs your GitHub Actions jobs on machines in your AWS account. Change a j
 ```yaml
 jobs:
   test:
-    runs-on: ravion/ee=ci-builders/type=sandbox/cpu=4/memory=16
+    runs-on: ravion/ee=ci-builders/type=sandbox/cpu=4/memory=16/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
     steps:
       - uses: actions/checkout@v4
       - run: npm ci
@@ -23,24 +23,77 @@ jobs:
 ```
 
 <Tip>
-  Use `type=sandbox` for your jobs. Sandboxes boot in seconds, keep the whole disk between runs, and pack many jobs onto each host. Use `type=ec2` only when a job needs a custom AMI, ARM, or a whole instance. Avoid `type=ec2-spot`: if AWS reclaims the instance, GitHub fails the job.
+  Use `type=sandbox` for your jobs. Sandboxes boot in seconds, keep the whole disk between runs, and pack many jobs onto each host. Use `type=ec2` only when a job needs ARM or a whole EC2 instance. Avoid `type=ec2-spot`: if AWS reclaims the instance, GitHub fails the job.
 </Tip>
 
 ## How it works
 
 1. GitHub sends Ravion a webhook when a job with a `ravion/...` label is queued.
 2. Ravion registers a just-in-time runner for that job only, and starts a sandbox or EC2 instance for it in your execution environment.
-3. The runner picks up the job, runs it, and is removed when the job ends. Each job gets a fresh runner. On sandboxes, its disk starts from the last successful run unless you set `disk_cache=off`. See [Disk cache](#disk-cache).
+3. The runner picks up the job, runs it, and is removed when the job ends. Each job gets a fresh runner. On sandboxes, its disk starts from an earlier run's saved disk unless you set `disk_cache=off`. See [Disk cache](#disk-cache).
 
-Runners run in your VPC, so jobs can reach private resources such as databases, without exposing them to GitHub. They connect out to GitHub and Ravion, so they need no inbound ports.
+```mermaid
+sequenceDiagram
+  participant GitHub
+  participant Ravion
+  participant Host as Your AWS account
+
+  GitHub->>Ravion: Job queued (webhook)
+  Ravion->>GitHub: Register a runner for this job
+  Ravion->>Host: Start a sandbox
+  Host->>GitHub: Runner connects and takes the job
+  Host->>GitHub: Job logs and result
+  Note over Ravion,Host: Disk saved to S3 in your account
+```
+
+Runners run in your execution environment's VPC, so jobs can reach private resources in it, such as databases, without exposing them to GitHub. They connect out to GitHub and Ravion, so they need no inbound ports.
+
+```mermaid
+flowchart TB
+  GitHub[GitHub]
+  Ravion[Ravion control plane]
+
+  subgraph CI[Your CI AWS account]
+    subgraph EE[CI execution environment VPC]
+      Hosts[Sandbox hosts / one sandbox per job]
+    end
+    Store[(S3 / saved disks and Actions cache)]
+  end
+
+  subgraph Prod[Your production AWS account]
+    App[Production services]
+  end
+
+  Ravion -- starts sandboxes --> Hosts
+  Hosts -- connects out --> GitHub
+  Hosts <--> Store
+
+  class GitHub,Ravion external
+  class CI,EE,Prod cloud
+  class Hosts host
+  class App resource
+  class Store store
+
+  classDef external fill:#FE6104,stroke:#BD4406,color:#fff
+  classDef cloud fill:#F6DDCE,stroke:#FE6104,color:#2a1208
+  classDef host fill:#1f2937,stroke:#111827,color:#fff
+  classDef resource fill:#fff,stroke:#BD4406,color:#2a1208
+  classDef store fill:#23000A,stroke:#571D04,color:#FDDDC9
+```
 
 Sandbox jobs run on the same autoscaling fleet as sandbox pipeline steps. See [Sandboxes](/concepts/sandboxes) for how hosts are placed, scaled, cached and priced.
 
 ## Requirements
 
-- The Ravion GitHub App is installed on a GitHub **organization** and connected to your Ravion organization. Runners register at the organization level, so personal accounts aren't supported.
-- An execution environment in Ravion. To create one, go to [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments).
-- For sandboxes, the [sandbox AWS permissions](/concepts/sandboxes#get-started).
+- **GitHub App.** The Ravion GitHub App is installed on a GitHub **organization** and connected to your Ravion organization. Runners register at the organization level, so personal accounts aren't supported.
+- **AWS account.** Your AWS account is connected in [**Settings / AWS accounts**](https://app.ravion.com/org/settings/aws-accounts). Sandboxes require AWS account role policy **1.0.52 or later**. See [Update your AWS permissions](/concepts/sandboxes#get-started).
+- **Execution environment.** Create one in that AWS account in [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments). Ravion doesn't create it for you. Its given ID is the label's required `ee` value, and a job whose `ee` doesn't match an execution environment fails. The first sandbox job sets up the environment's sandbox hosts, so there's nothing else to provision.
+
+### Use a dedicated execution environment
+
+Run GitHub Actions in its own execution environment, not the one your production services use. Ideally, put it in a separate AWS account, or at least a different region, from production.
+
+CI jobs run code from every branch and from third-party actions. A separate environment keeps those jobs in their own VPC, away from production resources. A separate AWS account also keeps AWS permissions and service quotas apart, so a busy CI day can't use up capacity production needs.
 
 Ravion creates a runner group named **Ravion** in your GitHub organization the first time it registers a runner. The group is available to all private repositories in the organization.
 
@@ -51,7 +104,7 @@ A Ravion label starts with `ravion/` and is a list of `key=value` segments separ
 ### Sandbox
 
 ```yaml
-runs-on: ravion/ee=ci-builders/type=sandbox/cpu=4/memory=16/disk=60/interruptible=true
+runs-on: ravion/ee=ci-builders/type=sandbox/cpu=4/memory=16/disk=60/interruptible=true/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
 ```
 
 | Key | Required | Default | What it does |
@@ -62,8 +115,8 @@ runs-on: ravion/ee=ci-builders/type=sandbox/cpu=4/memory=16/disk=60/interruptibl
 | `memory` | Yes | None | Memory in GiB. |
 | `disk` | No | 10 GiB per vCPU, at least 14 GiB | GiB of host disk reserved for what the job writes. |
 | `disk_cache` | No | `auto` | Keep the job's disk between runs. See [Disk cache](#disk-cache). |
-| `interruptible` | No | `false` | Allow Spot hosts, and rerun the job from the start if its host is lost. See [Interruptible steps](/concepts/sandboxes#interruptible-steps-and-spot-hosts). |
-| `id` | No | None | A value that makes the label unique to one job. See [Unique labels](#unique-labels). |
+| `interruptible` | No | `false` | Allow Spot hosts, and rerun the job from the start on a new host if its host is lost. See [Interruptible steps](/concepts/sandboxes#interruptible-steps-and-spot-hosts). |
+| `id` | Yes | None | A value that makes the label unique to one job. See [Unique labels](#unique-labels). |
 
 Mark jobs that are safe to run twice as `interruptible=true`, such as tests, lint and builds. Leave it off for jobs that publish, deploy or push.
 
@@ -72,7 +125,7 @@ Sandboxes boot an x86_64 Ubuntu 24.04 image. See [What runs inside a sandbox](/c
 ### EC2
 
 ```yaml
-runs-on: ravion/ee=ci-builders/type=ec2/instance_size=c7i.2xlarge/disk=100
+runs-on: ravion/ee=ci-builders/type=ec2/instance_size=c7i.2xlarge/disk=100/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
 ```
 
 | Key | Required | Default | What it does |
@@ -81,13 +134,13 @@ runs-on: ravion/ee=ci-builders/type=ec2/instance_size=c7i.2xlarge/disk=100
 | `type` | Yes | None | `ec2` for On-Demand, or `ec2-spot` for Spot. |
 | `instance_size` | Yes | None | EC2 instance type. List several in order of preference with `+`, such as `c7i.2xlarge+c6i.2xlarge`. Don't mix x86_64 and ARM types. |
 | `disk` | No | None | Root volume size in GiB. |
-| `id` | No | None | See [Unique labels](#unique-labels). |
+| `id` | Yes | None | See [Unique labels](#unique-labels). |
 
-EC2 runners start a whole instance per job and have no disk cache.
+EC2 runners start a whole instance per job, boot Amazon Linux 2023, and have no disk cache. If AWS reclaims an `ec2-spot` instance, GitHub fails the job.
 
 ### Unique labels
 
-GitHub can hand a queued job to any idle runner whose labels match. Add an `id` that is unique to each job, so a runner Ravion started for one job never picks up another:
+GitHub can hand a queued job to any idle runner whose labels match. Every job needs an `id` that is unique to it, so a runner Ravion started for one job never picks up another. Build it from the run ID, the run attempt, the job's name and its matrix index:
 
 ```yaml
 jobs:
@@ -95,7 +148,7 @@ jobs:
     strategy:
       matrix:
         shard: [1, 2, 3]
-    runs-on: ravion/ee=ci-builders/type=sandbox/cpu=4/memory=16/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index }}
+    runs-on: ravion/ee=ci-builders/type=sandbox/cpu=4/memory=16/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
 ```
 
 ### Invalid labels
@@ -104,7 +157,7 @@ When a label in a private repository is invalid, Ravion fails the job, and the j
 
 ## Disk cache
 
-On sandboxes, `disk_cache=auto` is the default. After a job succeeds, Ravion saves the sandbox's whole disk, and the job's next run starts with it: packages, installed tools, `node_modules`, Docker layers and your checkout. See [Why sandboxes are fast](/concepts/sandboxes#why-sandboxes-are-fast).
+On sandboxes, `disk_cache=auto` is the default. When a job ends, Ravion saves the sandbox's whole disk, and the job's next run starts with it: packages, installed tools, `node_modules`, Docker layers and your checkout. See [Why sandboxes are fast](/concepts/sandboxes#why-sandboxes-are-fast).
 
 | Value | What it does |
 | --- | --- |
@@ -112,9 +165,10 @@ On sandboxes, `disk_cache=auto` is the default. After a job succeeds, Ravion sav
 | A key, such as `web-deps` | Share one disk across every job in the repository that uses the key. |
 | `off` | Start from the base image every run. |
 
-- A run restores the disk saved for its branch. If there's none, it uses the pull request's base branch, then the repository's default branch.
-- A run saves its disk to its own branch only when it succeeds.
+- With `auto`, a run restores the disk saved for its branch. If there's none, it uses the pull request's base branch, then the repository's default branch. It saves to its own branch.
+- A run saves its disk when the job succeeds, or runs to its end and fails. A job that's canceled, loses its host, or writes past its `disk` limit saves nothing.
 - On the default branch, only runs from triggers GitHub trusts for caches, such as `push`, `schedule` and `workflow_dispatch`, save. Runs from `pull_request_target`, `issue_comment` or `workflow_run` only read.
+- A key shares one disk across branches, so only runs from those trusted triggers save to it, on any branch.
 - A job with GitHub's `cache-mode: read` or `cache-mode: none` never saves its disk.
 - Pull requests from forks never restore or save a disk.
 
