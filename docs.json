@@ -140,7 +140,8 @@
           {
             "group": "GitHub Actions",
             "pages": [
-              "github-actions/runners"
+              "github-actions/runners",
+              "github-actions/caching"
             ]
           },
           {

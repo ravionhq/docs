@@ -1,0 +1,65 @@
+---
+title: "Caching for GitHub Actions"
+sidebarTitle: "Caching"
+description: "Use disk cache, Actions cache, and artifacts with Ravion GitHub Actions runners."
+"og:image": "https://www.ravion.com/og/docs/github-actions/caching.png"
+"twitter:image": "https://www.ravion.com/og/docs/github-actions/caching.png"
+---
+
+<Note>
+  GitHub Actions runners are in private preview. [Contact support](/contact-support) to request access.
+</Note>
+
+GitHub Actions workflows on Ravion can use three storage layers:
+
+| Layer | Available on | Stores | Storage |
+| --- | --- | --- | --- |
+| Disk cache | Sandboxes only | The whole disk | S3 in your account |
+| Actions cache | Sandboxes only | `actions/cache` and `setup-*` caching | S3 in your account |
+| Artifacts | All Ravion runners | Workflow artifacts | GitHub |
+
+On sandboxes, the disk cache usually makes path caches unnecessary; keep `actions/cache` steps if you also run the workflow elsewhere.
+
+## Disk cache
+
+On sandboxes, `disk_cache=auto` is the default. When a job ends, Ravion saves the sandbox's whole disk, and the job's next run starts with it: packages, installed tools, `node_modules`, Docker layers and your checkout. See [Why sandboxes are fast](/concepts/sandboxes#why-sandboxes-are-fast).
+
+| Value | What it does |
+| --- | --- |
+| `auto` | Keep this job's own disk, named by its repository, workflow and job. |
+| A key, such as `web-deps` | Share one disk across every job in the repository that uses the key. |
+| `off` | Start from the base image every run. |
+
+- With `auto`, a run restores the disk saved for its branch. If there's none, it uses the pull request's base branch, then the repository's default branch. It saves to its own branch.
+- A run saves its disk when the job succeeds, or runs to its end and fails. A job that's canceled, loses its host, or writes past its `disk` limit saves nothing.
+- On the default branch, only runs from triggers GitHub trusts for caches, such as `push`, `schedule` and `workflow_dispatch`, save. Runs from `pull_request_target`, `issue_comment` or `workflow_run` only read.
+- A key shares one disk across branches, so only runs from those trusted triggers save to it, on any branch.
+- A job with GitHub's `cache-mode: read` or `cache-mode: none` never saves its disk.
+- Pull requests from forks never restore or save a disk.
+
+## Actions cache
+
+On sandboxes, `actions/cache` and actions that use the GitHub Actions cache API work without workflow changes. Ravion stores entries in the `actions-cache/` prefix of an S3 bucket in your account and keeps a hot copy on the host disk.
+
+Cache reads try the job's branch, then the pull request's base branch, then the repository's default branch. Writes go to the job's own branch. On the default branch, only trusted triggers such as `push`, `schedule` and `workflow_dispatch` can write; other events can read only. Existing keys aren't overwritten.
+
+GitHub's `cache-mode` controls whether a job restores or saves entries:
+
+| `cache-mode` | What it does |
+| --- | --- |
+| `none` | Do not restore or save. |
+| `read` | Restore entries but do not save. |
+| `write` | Restore and save entries. This is the default. |
+| `write-only` | Save entries without restoring them. |
+
+Keys can be up to 512 characters. Entries can be up to 10 GiB and expire seven days after their last use. Restores are near-instant when the files are already on the restored disk.
+
+Go builds use the same cache automatically through `GOCACHEPROG` unless you set your own.
+
+Public repositories get a separate cache per repository and can't read private caches. EC2 runners use GitHub's cache.
+
+## Artifacts
+
+Artifacts work on all Ravion runners. Use `actions/upload-artifact` and `actions/download-artifact` as usual. GitHub stores the artifacts, and its retention and limits apply. Ravion stores nothing.
+
+If a sandbox job is rerun after its host is lost, Ravion replaces an artifact uploaded by the earlier attempt of that same job so the rerun's upload succeeds. Other artifact name conflicts are unchanged.

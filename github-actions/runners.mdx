@@ -30,7 +30,7 @@ jobs:
 
 1. GitHub sends Ravion a webhook when a job with a `ravion/...` label is queued.
 2. Ravion registers a just-in-time runner for that job only, and starts a sandbox or EC2 instance for it in your execution environment.
-3. The runner picks up the job, runs it, and is removed when the job ends. Each job gets a fresh runner. On sandboxes, its disk starts from an earlier run's saved disk unless you set `disk_cache=off`. See [Disk cache](#disk-cache).
+3. The runner picks up the job, runs it, and is removed when the job ends. Each job gets a fresh runner. On sandboxes, its disk starts from an earlier run's saved disk unless you set `disk_cache=off`. See [Disk cache](/github-actions/caching#disk-cache).
 
 ```mermaid
 sequenceDiagram
@@ -83,6 +83,22 @@ flowchart TB
 
 Sandbox jobs run on the same autoscaling fleet as sandbox pipeline steps. See [Sandboxes](/concepts/sandboxes) for how hosts are placed, scaled, cached and priced.
 
+## Startup time
+
+In our benchmarks, these are the p50 times from GitHub queueing a job to its first step:
+
+| Host state | Time (p50) |
+| --- | --- |
+| Host already running | ≈ 7–9 s |
+| Parked host woken | ≈ 35 s |
+| New host launched | ≈ 40 s |
+
+Public-repository jobs take a few seconds longer.
+
+For private repositories, Ravion takes the job only once its sandbox is up, so while a host boots the job shows **Queued** in GitHub, not **In progress**. Public-repository jobs are taken right away for identity checks, so they show **In progress** while the host boots.
+
+To avoid boot waits after quiet periods, keep hosts on hand with [sandbox settings](/concepts/sandboxes#sandbox-settings).
+
 ## Requirements
 
 - **GitHub App.** The Ravion GitHub App is installed on a GitHub **organization** and connected to your Ravion organization. Runners register at the organization level, so personal accounts aren't supported.
@@ -114,7 +130,7 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=4/memory=16/disk=60/interrupt
 | `cpu` | Yes | None | vCPUs for the sandbox. |
 | `memory` | Yes | None | Memory in GiB. |
 | `disk` | No | 10 GiB per vCPU, at least 14 GiB | GiB of host disk reserved for what the job writes. |
-| `disk_cache` | No | `auto` | Keep the job's disk between runs. See [Disk cache](#disk-cache). |
+| `disk_cache` | No | `auto` | Keep the job's disk between runs. See [Disk cache](/github-actions/caching#disk-cache). |
 | `interruptible` | No | `false` | Allow Spot hosts, and rerun the job from the start on a new host if its host is lost. See [Interruptible steps](/concepts/sandboxes#interruptible-steps-and-spot-hosts). |
 | `id` | Yes | None | A value that makes the label unique to one job. See [Unique labels](#unique-labels). |
 
@@ -155,24 +171,7 @@ jobs:
 
 When a label in a private repository is invalid, Ravion fails the job, and the job's annotation says which key is wrong. A job whose labels include anything besides its Ravion label stays queued.
 
-## Disk cache
-
-On sandboxes, `disk_cache=auto` is the default. When a job ends, Ravion saves the sandbox's whole disk, and the job's next run starts with it: packages, installed tools, `node_modules`, Docker layers and your checkout. See [Why sandboxes are fast](/concepts/sandboxes#why-sandboxes-are-fast).
-
-| Value | What it does |
-| --- | --- |
-| `auto` | Keep this job's own disk, named by its repository, workflow and job. |
-| A key, such as `web-deps` | Share one disk across every job in the repository that uses the key. |
-| `off` | Start from the base image every run. |
-
-- With `auto`, a run restores the disk saved for its branch. If there's none, it uses the pull request's base branch, then the repository's default branch. It saves to its own branch.
-- A run saves its disk when the job succeeds, or runs to its end and fails. A job that's canceled, loses its host, or writes past its `disk` limit saves nothing.
-- On the default branch, only runs from triggers GitHub trusts for caches, such as `push`, `schedule` and `workflow_dispatch`, save. Runs from `pull_request_target`, `issue_comment` or `workflow_run` only read.
-- A key shares one disk across branches, so only runs from those trusted triggers save to it, on any branch.
-- A job with GitHub's `cache-mode: read` or `cache-mode: none` never saves its disk.
-- Pull requests from forks never restore or save a disk.
-
-On sandboxes, the sandbox host serves the Actions cache (`actions/cache` and `setup-*` caching), and stores it in S3 in your AWS account.
+Disk caching and Actions cache are covered in [Caching for GitHub Actions](/github-actions/caching).
 
 ## Public repositories
 
