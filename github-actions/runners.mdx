@@ -156,7 +156,7 @@ EC2 runners start a whole instance per job, boot Amazon Linux 2023, and have no 
 
 Sandbox jobs boot an x86_64 Ubuntu 24.04 image with git, GitHub CLI (`gh`), build-essential, Node.js 24, Docker, the AWS CLI, `jq`, `curl` and `zstd`. See [What runs inside a sandbox](/concepts/sandboxes#what-runs-inside-a-sandbox).
 
-The image is much smaller than GitHub's hosted runner images. Their `ubuntu-latest` comes with hundreds of preinstalled tools — several versions each of Node.js, Python, Java, Go, Ruby and .NET, plus browsers, databases and cloud SDKs. The Ravion image doesn't. If a job needs something missing, install it natively in a `run` step:
+The image is much smaller than GitHub's hosted runner images. Their `ubuntu-latest` comes with hundreds of preinstalled tools — several versions each of Node.js, Python, Java, Go, Ruby and .NET, plus browsers, databases and cloud tools. The Ravion image doesn't. If a job needs something missing, install it natively in a `run` step:
 
 - System packages with `apt-get`, for example `apt-get update && apt-get install -y python3-pip`. Jobs run as root.
 - Language versions with the usual `setup-*` actions, such as `actions/setup-node`, `actions/setup-python` or `actions/setup-java`.

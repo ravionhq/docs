@@ -186,7 +186,7 @@ Use `ec2` or `ec2-spot` [infrastructure](/pipelines/config-reference#stepinfrast
 
 Every sandbox boots the same x86_64 Ubuntu 24.04 image, with git, GitHub CLI (`gh`), build-essential, Node.js 24, Docker, the AWS CLI, `jq`, `curl` and `zstd`.
 
-The image is much smaller than GitHub's hosted runner images. Their `ubuntu-latest` comes with hundreds of preinstalled tools — several versions each of Node.js, Python, Java, Go, Ruby and .NET, plus browsers, databases and cloud SDKs. The sandbox image doesn't. If a step needs something missing, install it natively:
+The image is much smaller than GitHub's hosted runner images. Their `ubuntu-latest` comes with hundreds of preinstalled tools — several versions each of Node.js, Python, Java, Go, Ruby and .NET, plus browsers, databases and cloud tools. The sandbox image doesn't. If a step needs something missing, install it natively:
 
 - System packages with `apt-get`, for example `apt-get update && apt-get install -y python3-pip`. Steps run as root.
 - Language versions with the usual `setup-*` actions in GitHub Actions jobs, or with version managers and install scripts in pipeline steps.
