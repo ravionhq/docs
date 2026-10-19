@@ -85,7 +85,7 @@ Sandbox jobs run on the same autoscaling fleet as sandbox pipeline steps. See [S
 
 ## Startup time
 
-In our benchmarks, these are the p50 times from GitHub queueing a job to its first step:
+In our benchmarks, these are the p50 times for a sandbox job, from GitHub queueing it to its first step:
 
 | Host state | Time (p50) |
 | --- | --- |
@@ -171,8 +171,6 @@ jobs:
 
 When a label in a private repository is invalid, Ravion fails the job, and the job's annotation says which key is wrong. A job whose labels include anything besides its Ravion label stays queued.
 
-Disk caching and Actions cache are covered in [Caching for GitHub Actions](/github-actions/caching).
-
 ## Public repositories
 
 Jobs from public repositories, including pull requests from forks, run only on sandboxes, and only when you allow them:
@@ -185,6 +183,9 @@ Each public repository gets its own runner group, and its jobs run without a dis
 ## Next steps
 
 <CardGroup cols={2}>
+  <Card title="Caching" icon="database" href="/github-actions/caching">
+    Disk cache, Actions cache and artifacts.
+  </Card>
   <Card title="Sandboxes" icon="box" href="/concepts/sandboxes">
     How the sandbox fleet, disk cache and Spot hosts work.
   </Card>
