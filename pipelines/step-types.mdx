@@ -160,7 +160,7 @@ See [CustomCommandCiStep schema](/pipelines/config-reference#customcommandcistep
 
 #### Git checkout
 
-Ravion partially clones `branch`, including its full commit history and tags, and downloads file contents only when a command needs them. It does not fetch other branches, so `git rev-list --count HEAD` and `git describe --tags` still work.
+Ravion partially clones `branch`, including its full commit history and tags, and downloads file contents only when a command needs them. It does not fetch other branches. Commands such as `git rev-list --count HEAD` and `git describe --tags` still work.
 
 Set `fetch_depth` to fetch only the last N commits for large repositories. Ravion does not fetch tags when you set it. This setting applies to every Git `source` step on sandboxes and EC2 alike.
 
