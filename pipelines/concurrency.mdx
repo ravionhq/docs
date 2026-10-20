@@ -35,18 +35,20 @@ With `value: 2`, a quick burst behaves like this:
 
 If B arrives when A is already 15 seconds old, A stays instead. After either deadline, the policy keeps the oldest run and the newest runs that fit the configured retention window, cancelling intermediate runs. With `value: 2` and no `queue_size`, that means the oldest and newest. Cancelled work still holds its slot until it stops.
 
-Once a built-in `deploy` or `terraform:apply` step starts, `cancel-intermediate` no longer cancels that pipeline run. This protection does not detect publishing or infrastructure changes inside arbitrary shell commands.
+Once a step with `cancellable: false` starts (built-in `deploy` and `terraform:apply` by default), neither cancelling behavior cancels that pipeline run. This protection does not detect publishing or infrastructure changes inside arbitrary shell commands; mark such steps `cancellable: false` yourself.
 
 The replacement windows are part of `cancel-intermediate`; you do not need another setting. Other behaviors stay separate:
 
 - `queue` waits for a slot without cancelling older runs.
 - `skip` skips new work when the limit is reached.
-- `cancel-in-progress` cancels older work without the age limits or deployment protection above. Add `cancel_only` to limit it to runs holding the key at the listed steps.
+- `cancel-in-progress` cancels older work without the age limits above. Both cancelling behaviors respect `cancellable: false` (below).
 - `value: 0` allows unlimited concurrency and does not apply these cancellations.
 
-## Cancel only some holders
+## Steps that must not be cancelled
 
-`cancel_only` narrows `cancel-in-progress` to runs that hold the key at the listed steps. A run holding it at any other step is left alone, and the new run queues behind it. If the cancelled run has already moved past the listed steps when the cancellation arrives, it refuses it. Use this when steps that share a key are not equally safe to interrupt. The excerpt below shows only the concurrency fields; see [step types](/pipelines/step-types) for the rest of each step.
+Set `cancellable: false` on a step's or block's `concurrency` to keep a run holding the key there from being cancelled by a newer run under `cancel-in-progress` or `cancel-intermediate`. The newer run queues behind it instead, and a cancellation that arrives after the step has started is refused. Manual cancellation still works. Built-in `deploy` and `terraform:apply` steps default to `cancellable: false`; every other step defaults to `true`.
+
+Use this when steps that share a key are not equally safe to interrupt. The excerpt below shows only the concurrency fields; see [step types](/pipelines/step-types) for the rest of each step. A newer run's plan cancels an older run's plan on the same stack, but waits for an apply:
 
 ```yaml
 steps:
@@ -57,15 +59,11 @@ steps:
       scope: organization
       value: 1
       behavior: cancel-in-progress
-      cancel_only: [plan]
   - id: apply
     type: terraform:apply
     concurrency:
       key: <<pipeline.input.stack_id>>
       scope: organization
       value: 1
+      cancellable: false
 ```
-
-Here a new run's plan cancels an older run that is still planning, but waits for an older run that is applying. Ravion's own stack pipelines use this.
-
-See [ConcurrencyConfig](/pipelines/config-reference#concurrencyconfig) for `key`, `scope`, `queue_size`, and `cancel_only`. Deployment steps still use their separate deployment-manager lock.
