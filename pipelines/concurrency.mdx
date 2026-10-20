@@ -41,7 +41,31 @@ The replacement windows are part of `cancel-intermediate`; you do not need anoth
 
 - `queue` waits for a slot without cancelling older runs.
 - `skip` skips new work when the limit is reached.
-- `cancel-in-progress` cancels older work without the age limits or deployment protection above.
+- `cancel-in-progress` cancels older work without the age limits or deployment protection above. Add `cancel_only` to limit it to runs holding the key at the listed steps.
 - `value: 0` allows unlimited concurrency and does not apply these cancellations.
 
-See [ConcurrencyConfig](/pipelines/config-reference#concurrencyconfig) for `key`, `scope`, and `queue_size`. Deployment steps still use their separate deployment-manager lock.
+## Cancel only some holders
+
+`cancel_only` narrows `cancel-in-progress` to runs that hold the key at the listed steps. A run holding it at any other step is left alone, and the new run queues behind it. If the cancelled run has already moved past the listed steps when the cancellation arrives, it refuses it. Use this when steps that share a key are not equally safe to interrupt.
+
+```yaml
+steps:
+  - id: plan
+    type: terraform:plan
+    concurrency:
+      key: <<pipeline.input.stack_id>>
+      scope: organization
+      value: 1
+      behavior: cancel-in-progress
+      cancel_only: [plan]
+  - id: apply
+    type: terraform:apply
+    concurrency:
+      key: <<pipeline.input.stack_id>>
+      scope: organization
+      value: 1
+```
+
+Here a new run's plan cancels an older run that is still planning, but waits for an older run that is applying. Ravion's own stack pipelines use this.
+
+See [ConcurrencyConfig](/pipelines/config-reference#concurrencyconfig) for `key`, `scope`, `queue_size`, and `cancel_only`. Deployment steps still use their separate deployment-manager lock.
