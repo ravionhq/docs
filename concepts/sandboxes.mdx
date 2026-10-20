@@ -292,13 +292,13 @@ Leave `interruptible` off for steps with side effects that aren't safe to repeat
 
 ## Choose a region
 
-Spot is where most of the savings come from, so put sandbox execution environments in a region with plenty of Spot capacity. Each Availability Zone that offers the sandbox instance types (`c8id`, `m8id`, `r8id`, `i7i` and `i7ie`) is another Spot pool for Ravion to try before falling back to On-Demand.
+Spot is where most of the savings come from. Each Availability Zone that offers the sandbox instance types (`c8id`, `m8id`, `r8id`, `i7i` and `i7ie`) is another Spot pool for Ravion to try before falling back to On-Demand. A region with more of these zones is more likely to find Spot capacity.
 
-These regions offer every sandbox instance type. Best first:
+These regions offer every sandbox instance type. They're ordered by how many Availability Zones offer those types, then by price:
 
 | Region | Availability Zones | Notes |
 | --- | --- | --- |
-| `us-east-1` | 5 | Recommended default. Most Spot capacity, and closest to GitHub. |
+| `us-east-1` | 5 | Recommended default. Most zones, and closest to GitHub. |
 | `us-west-2` | 4 | |
 | `us-east-2` | 3 | |
 | `eu-central-1` | 3 | |
