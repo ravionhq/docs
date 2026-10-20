@@ -63,6 +63,8 @@ Keep the top-level `pipeline` block in the file. It selects an existing pipeline
 
 See [GitHub integration](/config-as-code/github-integration) for all supported filenames and matching rules. A file named `pipeline.yaml` is not automatically scanned.
 
+To keep fixtures or examples out of automatic plans, applies, and conflict checks, add their paths to a root [`.ravionignore` file](/config-as-code/github-integration#exclude-files-with-ravionignore).
+
 ## Pull and apply with the CLI
 
 Store the config file in your repository and manage it with the CLI.

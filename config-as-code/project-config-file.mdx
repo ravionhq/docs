@@ -68,6 +68,8 @@ Commit a `ravion.yaml` file to a repository connected through the Ravion GitHub 
 
 See [GitHub integration](/config-as-code/github-integration) for supported filenames, matching rules, and approval behavior. The integration requires an existing project; use the CLI steps below to create one if needed.
 
+To keep fixtures or examples out of automatic plans, applies, and conflict checks, add their paths to a root [`.ravionignore` file](/config-as-code/github-integration#exclude-files-with-ravionignore).
+
 ## Pull and apply with the CLI
 
 Store the config file in your repository and manage it with the CLI.
