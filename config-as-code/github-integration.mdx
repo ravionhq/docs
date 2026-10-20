@@ -76,7 +76,7 @@ Only the root `.ravionignore` is read. A `.ravionignore` in a subdirectory has n
 
 ### Changing ignore rules
 
-Ravion reads each commit's own `.ravionignore`. When GitHub returns complete repository trees, a change to this file alone can bring an unchanged config back into the scan: the app plans it on a pull request and applies it on the default branch. Ignoring one file of a conflicting pair also lets the remaining file be reconsidered.
+Ravion reads the `.ravionignore` from each commit. When GitHub returns complete repository trees, a change to this file alone can bring an unchanged config back into the scan: the app plans it on a pull request and applies it on the default branch. Ignoring one file of a conflicting pair also lets the remaining file be reconsidered.
 
 <Note>
   If GitHub truncates a large repository tree, Ravion falls back to the changed-file list. In that case, changing only `.ravionignore` does not trigger a plan or apply for an unchanged config. The config is processed on its next edit, subject to the ignore rules.
