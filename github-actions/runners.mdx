@@ -107,7 +107,7 @@ To avoid boot waits after quiet periods, keep hosts on hand with [sandbox settin
 
 ### Use a dedicated execution environment
 
-Run GitHub Actions in its own execution environment, not the one your production services use. Ideally, put it in a separate AWS account, or at least a different region, from production.
+Run GitHub Actions in its own execution environment, not the one your production services use. Ideally, put it in a separate AWS account, or at least a different region, from production. To pick the region, see [Choose a region](/concepts/sandboxes#choose-a-region).
 
 CI jobs run code from every branch and from third-party actions. A separate environment keeps those jobs in their own VPC, away from production resources. A separate AWS account also keeps AWS permissions and service quotas apart, so a busy CI day can't use up capacity production needs.
 

@@ -290,6 +290,34 @@ To stop using sandboxes, switch your steps and module builds back to EC2. Runnin
 
 Leave `interruptible` off for steps with side effects that aren't safe to repeat, such as database migrations and deploys.
 
+## Choose a region
+
+Spot is where most of the savings come from, so put sandbox execution environments in a region with plenty of Spot capacity. Each Availability Zone that offers the sandbox instance types (`c8id`, `m8id`, `r8id`, `i7i` and `i7ie`) is another Spot pool for Ravion to try before falling back to On-Demand.
+
+These regions offer every sandbox instance type. Best first:
+
+| Region | Availability Zones | Notes |
+| --- | --- | --- |
+| `us-east-1` | 5 | Recommended default. Most Spot capacity, and closest to GitHub. |
+| `us-west-2` | 4 | |
+| `us-east-2` | 3 | |
+| `eu-central-1` | 3 | |
+| `ap-northeast-1` | 3 | |
+| `ap-south-1` | 3 | |
+| `ap-southeast-2` | 3 | |
+| `eu-north-1` | 2 to 3 | |
+| `ca-central-1` | 2 | |
+
+Other regions offer fewer sandbox types. For example, `eu-west-1` and `eu-west-2` have no `c8id`, and most other regions only have `i7i` and `i7ie`.
+
+Choose for Spot capacity first, not for where your team is. CI jobs mostly talk to GitHub and package registries, and an extra region hop barely changes job time.
+
+Pick a region close to your data instead when:
+
+- **Jobs move a lot of data to AWS resources in another region.** For example, pushing images to ECR, or reading from S3 buckets or test databases. AWS charges for [data transfer between regions](https://aws.amazon.com/ec2/pricing/on-demand/), about $0.01 to $0.02 per GB between US regions, and each request takes longer.
+- **Your GitHub is hosted in another region**, such as GitHub Enterprise Cloud with data residency in the EU, Australia or Japan.
+- **Compliance rules** require builds to stay in a region.
+
 ## Disk cache
 
 `disk_cache` controls whether a sandbox keeps its disk between runs. See [Why sandboxes are fast](#why-sandboxes-are-fast) for how it works.
