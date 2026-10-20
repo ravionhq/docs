@@ -6,11 +6,18 @@ description: "Serve an ECS web service on your own domain. Ravion issues and att
 "twitter:image": "https://www.ravion.com/og/docs/guides/custom-domains.png"
 ---
 
-Ravion manages domains for ECS web services. Turn on **Ravion-managed domains** on the ECS cluster, add your domains to each service, and add the DNS records Ravion shows you. Ravion issues the ACM certificates, attaches them to the load balancer, creates the listener rules, and renews the certificates.
+There are two ways to serve your own domain:
 
-For CloudFront, static sites, and NLB services, [bring your own certificate](#bring-your-own-certificate).
+| Path                                                    | Use it for                                                          | What you do                                                    |
+| ------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------- |
+| [Ravion-managed domains](#ravion-managed-domains)       | ECS web services behind the cluster ALB                             | Add domains to the service and add the DNS records Ravion shows |
+| [Bring your own certificate](#bring-your-own-certificate) | CloudFront, static sites, NLB services, and clusters with managed domains off | Create an ACM certificate module and attach it               |
 
-## How it works
+## Ravion-managed domains
+
+Turn on **Ravion-managed domains** on the ECS cluster, add your domains to each service, and add the DNS records Ravion shows you. Ravion issues the ACM certificates, attaches them to the load balancer, creates the listener rules, and renews the certificates.
+
+### How it works
 
 Every service gets a default address under its cluster's domain, like `web.acme.ravion.app`. Ravion owns `ravion.app`, so default addresses work with no DNS setup.
 
@@ -23,7 +30,7 @@ When you add a custom domain like `app.example.com`, it replaces the default add
 
 Ravion shows the routing record only after the certificate issues, so you never send traffic to a load balancer that can't serve HTTPS for the domain yet.
 
-## Requirements
+### Requirements
 
 - `rvn-ecs-cluster` 2.2.0 or later and `rvn-ecs-web` 2.3.0 or later.
 - The cluster has exactly one ALB, public or private, with HTTPS enabled.
@@ -31,23 +38,23 @@ Ravion shows the routing record only after the certificate issues, so you never 
 
 `rvn-eks-addons` 0.17.0 and later has the same **Ravion-managed domains** setting for its shared ALB.
 
-## Step 1: Turn on managed domains on the cluster
+### Step 1: Turn on managed domains on the cluster
 
 On the ECS cluster's **Config** tab, under **Managed domains**:
 
 1. Turn on **Ravion-managed domains**.
-2. Optionally set **Cluster domain**. It defaults to the cluster's module ID, so a cluster named `acme` gets `acme.ravion.app`. The name must be unique across Ravion, and common names like `api`, `app`, and `www` are reserved.
+2. Optionally set **Cluster domain**. It defaults to the cluster's module ID, so a cluster named `acme` gets `acme.ravion.app`. All Ravion users share `ravion.app`, so the name must be unique across every Ravion organization. Ravion rejects a name another organization already uses, and reserves common names like `api`, `app`, and `www`.
 
 Apply the cluster. Ravion issues a wildcard certificate for `*.acme.ravion.app`, sets it as the default certificate on the ALB's HTTPS listener, and points `*.acme.ravion.app` at the ALB. The cluster's **Certificates** tab lists it, along with each service certificate attached to the listener.
 
 The cluster's own certificate inputs and the services' listener rule inputs are hidden while managed domains are on. Ravion creates the listener rules for every service domain.
 
-## Step 2: Add domains to a service
+### Step 2: Add domains to a service
 
 Services on the cluster pick up managed domains automatically. On the service's **Config** tab, under **Domains**:
 
-- **Default Ravion domain** sets the service's address under the cluster domain. It defaults to the service's module ID: `web` becomes `web.acme.ravion.app`.
-- **Custom domains** takes up to five domains you own, like `app.example.com`. When you set any, the service serves only those domains and drops the default address. Remove them all to go back to the default address.
+- **Default Ravion domain** sets the service's address under the cluster domain. It defaults to the service's module ID: `web` becomes `web.acme.ravion.app`. Each domain belongs to one service across all of Ravion, so use a name no other service on the cluster uses.
+- **Custom domains** takes up to five domains you own, like `app.example.com`. A domain can be on only one service across all Ravion organizations. When you set any, the service serves only those domains and drops the default address. Remove them all to go back to the default address.
 
 Apply the service. In the project config file, the same settings look like this:
 
@@ -76,7 +83,7 @@ Apply the service. In the project config file, the same settings look like this:
     # ...
 ```
 
-## Step 3: Add the DNS records
+### Step 3: Add the DNS records
 
 Open the service's **Domains** tab. Each custom domain has a card with its records and two statuses: certificate (**Verified**) and routing (**Configuration valid**).
 
@@ -106,13 +113,13 @@ Keep the validation record after the certificate issues. ACM uses it to renew th
   - Some providers append your zone name. For `_abc123.app.example.com` in the `example.com` zone, enter `_abc123.app`.
 </Note>
 
-## Change domains
+### Change domains
 
 Edit **Custom domains** and apply. Ravion issues a new certificate covering the new list and swaps it onto the listener without downtime. Add the validation record for any new domain; the existing domains keep serving traffic while the new certificate issues.
 
 Before you turn off managed domains on a cluster, turn them off on its services or remove the services. Ravion won't delete the cluster's wildcard certificate while services still use it.
 
-## Move an existing domain
+### Move an existing domain
 
 To move a domain that already serves traffic elsewhere:
 
@@ -128,7 +135,7 @@ To move a domain that already serves traffic elsewhere:
 4. Replace the current record with the routing CNAME. To roll back, point it back at the old target.
 5. Once traffic looks normal in the service's [metrics](/modules/metrics) and [logs](/modules/logs), raise the TTL back to a normal value like 300 seconds.
 
-## Troubleshooting
+### Troubleshooting
 
 | Symptom                                           | Cause                                                       | Fix                                                                                         |
 | ------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
