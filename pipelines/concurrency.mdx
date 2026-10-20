@@ -46,7 +46,7 @@ The replacement windows are part of `cancel-intermediate`; you do not need anoth
 
 ## Cancel only some holders
 
-`cancel_only` narrows `cancel-in-progress` to runs that hold the key at the listed steps. A run holding it at any other step is left alone, and the new run queues behind it. If the cancelled run has already moved past the listed steps when the cancellation arrives, it refuses it. Use this when steps that share a key are not equally safe to interrupt.
+`cancel_only` narrows `cancel-in-progress` to runs that hold the key at the listed steps. A run holding it at any other step is left alone, and the new run queues behind it. If the cancelled run has already moved past the listed steps when the cancellation arrives, it refuses it. Use this when steps that share a key are not equally safe to interrupt. The excerpt below shows only the concurrency fields; see [step types](/pipelines/step-types) for the rest of each step.
 
 ```yaml
 steps:
