@@ -184,9 +184,19 @@ Use `ec2` or `ec2-spot` [infrastructure](/pipelines/config-reference#stepinfrast
 
 ## What runs inside a sandbox
 
-Every sandbox boots the same x86_64 Ubuntu 24.04 image, with git, GitHub CLI (`gh`), build-essential, Node.js 24, Docker, the AWS CLI, `jq`, `curl` and `zstd`. Install anything else with the step's `setup` actions or commands. With `disk_cache` on, what you install stays for later runs.
+Every sandbox boots the same x86_64 Ubuntu 24.04 image, with git, GitHub CLI (`gh`), build-essential, Node.js 24, Docker, the AWS CLI, `jq`, `curl` and `zstd`.
+
+The image is much smaller than GitHub's hosted runner images. Their `ubuntu-latest` comes with hundreds of preinstalled tools — several versions each of Node.js, Python, Java, Go, Ruby and .NET, plus browsers, databases and cloud tools. The sandbox image doesn't. If a step needs something missing, install it natively:
+
+- System packages with `apt-get`, for example `apt-get update && apt-get install -y python3-pip`. Steps run as root.
+- Language versions with the usual `setup-*` actions in GitHub Actions jobs, or with version managers and install scripts in pipeline steps.
+- Anything else by downloading its binary or installer in a command.
+
+With `disk_cache` on, what you install usually stays for later runs — only runs that can write the cache save their disk. See [Disk cache](#disk-cache).
 
 Docker starts in the background when the sandbox boots, and the first `docker` command waits for it. Tools that talk to Docker another way, such as Testcontainers or a Docker SDK, must wait for the daemon themselves.
+
+Sandboxes are in preview. If a step hits a problem you can't explain — a tool that won't install, a kernel feature the microVM doesn't have, or anything unexpected — [contact support](/contact-support).
 
 ## Get started
 
