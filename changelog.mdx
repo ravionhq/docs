@@ -39,12 +39,13 @@ rss: true
 <Update
   label="October 19, 2026"
   rss={{
-    title: "GitHub App config automation, more visible execution environment data, and new infrastructure modules and CLI capabilities",
+    title: "Managed custom domains, GitHub App config automation, more visible execution environment data, and new modules and CLI capabilities",
   }}
 >
 
 ## Platform
 ### Features
+- **[Managed custom domains](https://www.ravion.com/docs/guides/custom-domains#ravion-managed-domains):** Ravion now issues, attaches, and renews the certificates for your ECS web service domains and creates the load balancer rules. You only add two DNS records. Upgrade to `rvn-ecs-cluster` 2.2.0 and `rvn-ecs-web` 2.3.0, then turn on **Ravion-managed domains** on the cluster.
 - **[GitHub config automation](https://www.ravion.com/docs/config-as-code/github-integration):** The Ravion GitHub App plans project and pipeline config changes on pull requests and applies them when they merge to the default branch, so you no longer need your own GitHub Actions workflow to publish Ravion config files. Config files can be YAML, JSON, JSONC, or CUE.
 - **Execution environment visibility:** Execution environment cards now show costs, pipeline minutes, running sandbox jobs, vCPU capacity, and host states.
 - **Execution environment usage:** Report usage and cost for exact UTC time windows, including coverage status.
