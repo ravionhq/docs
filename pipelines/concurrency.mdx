@@ -46,7 +46,7 @@ The replacement windows are part of `cancel-intermediate`; you do not need anoth
 
 ## Shared holders
 
-By default every holder of a key is `exclusive`: it takes one of the `value` slots. Set `mode: shared` on a step's `concurrency` to let it run alongside any number of other shared holders of the same key while still never running alongside an exclusive one. A shared run queues while an exclusive run holds the key, and an exclusive run queues until every shared holder has finished. Waiters are promoted in arrival order, so a queued exclusive run is never overtaken by shared runs that arrive after it.
+By default every holder of a key is `exclusive`: it takes one of the `value` slots. Set `mode: shared` on a step's `concurrency` to let it run alongside any number of other shared holders of the same key while still never running alongside an exclusive one. A shared run queues while an exclusive run holds the key, and an exclusive run queues until every shared holder has finished. Waiters are promoted in arrival order, so a queued exclusive run is never overtaken by shared runs that arrive after it. Steps and blocks of one run that hold the same key at the same time must use the same mode.
 
 With `value: 1` this is a reader/writer lock. Terraform plans only read state, so plans from different branches can run at the same time, while an apply needs the stack to itself:
 
