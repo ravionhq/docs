@@ -161,10 +161,10 @@ A push that changes a recognized config on the existing default branch applies i
 The app reports a **Ravion config apply** check and posts the apply result on the merged pull request when available.
 
 <Warning>
-  Applying a project config auto-approves non-destructive infrastructure changes. A stack run whose Terraform plan only creates or updates resources applies right away. A run whose plan destroys or replaces resources stops at the approval step, so review that plan in Ravion before it applies. A successful config apply check does not mean those stack runs have finished.
+  Config files written by `ravion project config pull` and `ravion project create --file` start with `autoapprove: true`, so stack runs whose Terraform plan only creates or updates resources apply right away. A run whose plan destroys or replaces resources still stops at the approval step: review that plan in Ravion before it applies. A successful config apply check does not mean those stack runs have finished.
 </Warning>
 
-To review every plan before it applies, set `autoapprove: false` at the top level of the config file:
+The app passes the file's top-level `autoapprove` value to every stack change pipeline run the apply starts. To review every plan before it applies, set it to `false` (or remove it):
 
 ```yaml
 autoapprove: false
@@ -173,8 +173,6 @@ project:
 environments:
   # ...
 ```
-
-The app passes that value to every stack change pipeline run the apply starts, so each run waits at the approval step.
 
 ## Conflicts and deleted files
 

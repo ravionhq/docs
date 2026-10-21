@@ -68,7 +68,7 @@ Commit a `ravion.yaml` file to a repository connected through the Ravion GitHub 
 
 See [GitHub integration](/config-as-code/github-integration) for supported filenames, matching rules, and approval behavior. The integration requires an existing project; use the CLI steps below to create one if needed.
 
-Stack runs the app starts apply right away when their plan has no destructive changes; runs that destroy or replace resources wait for approval. Set `autoapprove: false` at the top level of the file to make every run wait for approval.
+Pulled config files include `autoapprove: true` at the top level, so stack runs the app starts apply right away when their plan has no destructive changes; runs that destroy or replace resources still wait for approval. Set `autoapprove: false` to make every run wait.
 
 To keep fixtures or examples out of automatic plans, applies, and conflict checks, add their paths to a root [`.ravionignore` file](/config-as-code/github-integration#exclude-files-with-ravionignore).
 
@@ -129,19 +129,19 @@ Store the config file in your repository and manage it with the CLI.
     ravion project config apply <project-id> --file ravion.yaml
     ```
 
-    Stack change pipeline runs the apply starts autoapprove by default: a run whose Terraform plan has no destructive changes applies without stopping at the approval step, and a run whose plan destroys or replaces resources waits for approval. To review every plan first, pass `--autoapprove=false`:
+    Pulled files set `autoapprove: true` at the top level, and both the CLI and the GitHub App read it: stack change pipeline runs whose Terraform plan has no destructive changes apply without stopping at an approval gate, and runs that destroy or replace resources wait for approval. To review every plan first, pass `--autoapprove=false`:
 
     ```bash
     ravion project config apply <project-id> --file ravion.yaml --autoapprove=false
     ```
 
-    To make that the default for a file, set `autoapprove: false` at its top level; both the CLI and the GitHub App read it. The flag overrides the file, so `--autoapprove` skips the wait for one apply of such a file.
+    The flag overrides the file. Set `autoapprove: false` in the file, or remove the field, to make every plan wait by default; `--autoapprove` then skips the wait for one apply.
 
     Add `--description` to set the description on every stack run the apply creates, for example `--description "https://github.com/acme/app/pull/12"` to link the runs to the pull request that changed the config. Without it, runs keep Ravion's generated description.
 
   </Step>
   <Step title="Review and approve the stack run">
-    Applying a config change starts a [stack change pipeline run](/modules/stack#stacks-change-through-pipelines) when the affected module has a Terraform stack. The stack run creates a Terraform plan, then applies it right away when the plan has no destructive changes. It waits for manual approval when the plan destroys or replaces resources, or when the apply ran with `--autoapprove=false` or the file sets `autoapprove: false`.
+    Applying a config change starts a [stack change pipeline run](/modules/stack#stacks-change-through-pipelines) when the affected module has a Terraform stack. The stack run creates a Terraform plan, then applies it right away when the file sets `autoapprove: true` and the plan has no destructive changes. It waits for manual approval when the plan destroys or replaces resources, when the file does not set `autoapprove: true`, or when the apply ran with `--autoapprove=false`.
 
     The apply prints a `PIPELINE_RUN_ID` for every stack run it starts, plus the wait command for those runs. Follow a run with `wait --watch` instead of polling `pipeline run get`.
 
@@ -254,7 +254,7 @@ ravion module schema <module-type> [version]
 ravion project config apply <project-id> --file ravion.yaml --dry-run
 ```
 
-5. Apply only after the dry run is correct and approved. Stack runs whose plan has no destructive changes go straight through; runs that destroy or replace resources wait at the approval step:
+5. Apply only after the dry run is correct and approved. With the pulled file's `autoapprove: true`, stack runs whose plan has no destructive changes go straight through; runs that destroy or replace resources wait at the approval step:
 
 ```bash
 ravion project config apply <project-id> --file ravion.yaml
@@ -281,7 +281,7 @@ ravion pipeline run wait <pipeline-run-id> --watch --timeout 30m
 ### Helpful hints
 
 - Pull the latest live config anytime with `ravion project config pull <project-id> --file ravion.yaml`.
-- Plans without destructive changes apply without waiting for approval, and plans that destroy or replace resources wait. Pass `--autoapprove=false`, or set `autoapprove: false` at the top of the file, when you want a human to review every Terraform plan.
+- Pulled files set `autoapprove: true`, so plans without destructive changes apply without waiting for approval while plans that destroy or replace resources wait. Pass `--autoapprove=false`, or set `autoapprove: false` in the file, when a human should review every Terraform plan.
 - To iterate on one target, pass `--environment-id`, `--environment-given-id`, `--module-instance-id`, or `--module-given-id`.
 - If a schema check, dry run, or apply fails unexpectedly, file it with `ravion report bug "<what happened>" --command "<the command that failed>"`. Include the exact error text and the project, environment, and module instance IDs involved. See [Report bugs and feedback](/report-bugs-and-feedback).
 
