@@ -161,8 +161,20 @@ A push that changes a recognized config on the existing default branch applies i
 The app reports a **Ravion config apply** check and posts the apply result on the merged pull request when available.
 
 <Warning>
-  Applying a project config does not auto-approve infrastructure changes. The GitHub App leaves stack approval gates in place. Review and approve the Terraform plans in Ravion before the infrastructure changes apply. A successful config apply check does not mean those stack runs have finished.
+  By default, applying a project config does not auto-approve infrastructure changes. The GitHub App leaves stack approval gates in place. Review and approve the Terraform plans in Ravion before the infrastructure changes apply. A successful config apply check does not mean those stack runs have finished.
 </Warning>
+
+To apply non-destructive changes without waiting for approval, set `autoapprove: true` at the top level of the config file:
+
+```yaml
+autoapprove: true
+project:
+  id: proj_123
+environments:
+  # ...
+```
+
+The app passes that value to every stack change pipeline run the apply starts. A run whose Terraform plan only creates or updates resources applies right away. A run whose plan destroys or replaces resources still stops at the approval step, so review that plan in Ravion before it applies.
 
 ## Conflicts and deleted files
 

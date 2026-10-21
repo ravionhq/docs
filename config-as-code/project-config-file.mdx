@@ -68,6 +68,8 @@ Commit a `ravion.yaml` file to a repository connected through the Ravion GitHub 
 
 See [GitHub integration](/config-as-code/github-integration) for supported filenames, matching rules, and approval behavior. The integration requires an existing project; use the CLI steps below to create one if needed.
 
+Stack runs the app starts wait for approval unless the file sets `autoapprove: true` at the top level. With it, runs whose plan has no destructive changes apply right away; runs that destroy or replace resources still wait for approval.
+
 To keep fixtures or examples out of automatic plans, applies, and conflict checks, add their paths to a root [`.ravionignore` file](/config-as-code/github-integration#exclude-files-with-ravionignore).
 
 ## Pull and apply with the CLI
@@ -134,6 +136,8 @@ Store the config file in your repository and manage it with the CLI.
     ```
 
     Omit `--autoapprove` when the apply modifies, replaces, or removes existing infrastructure, so you can review each Terraform plan first.
+
+    To make auto-approval the default for a file, set `autoapprove: true` at its top level. Both the CLI and the GitHub App read it, and an explicit `--autoapprove` flag overrides it. Either way, plans that destroy or replace resources still wait for approval.
 
     Add `--description` to set the description on every stack run the apply creates, for example `--description "https://github.com/acme/app/pull/12"` to link the runs to the pull request that changed the config. Without it, runs keep Ravion's generated description.
 
@@ -279,7 +283,7 @@ ravion pipeline run wait <pipeline-run-id> --watch --timeout 30m
 ### Helpful hints
 
 - Pull the latest live config anytime with `ravion project config pull <project-id> --file ravion.yaml`.
-- Use `--autoapprove` when creating new environments and module instances. Omit it when a change modifies, replaces, or removes existing infrastructure so a human reviews the Terraform plan.
+- Use `--autoapprove` when creating new environments and module instances. Omit it when a change modifies, replaces, or removes existing infrastructure so a human reviews the Terraform plan. A top-level `autoapprove: true` in the file sets the default; the flag overrides it.
 - To iterate on one target, pass `--environment-id`, `--environment-given-id`, `--module-instance-id`, or `--module-given-id`.
 - If a schema check, dry run, or apply fails unexpectedly, file it with `ravion report bug "<what happened>" --command "<the command that failed>"`. Include the exact error text and the project, environment, and module instance IDs involved. See [Report bugs and feedback](/report-bugs-and-feedback).
 
