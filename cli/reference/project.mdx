@@ -33,7 +33,7 @@ ravion project config apply <id> [flags]
 | Flag | Required | Description |
 | --- | --- | --- |
 | `--file <string>` | yes | File to read project config from |
-| `--autoapprove` |  | Pass autoapprove=true to supported stack change pipeline runs; overrides the config file's autoapprove field |
+| `--autoapprove` |  | Pass autoapprove to supported stack change pipeline runs. Overrides the config file's autoapprove field: --autoapprove applies plans without destructive changes right away, --autoapprove=false makes every run wait at its approval gate even when the file sets autoapprove: true |
 | `--description <string>` |  | Description recorded on every stack run this apply creates, for example a link to the pull request or commit that changed the config |
 | `--dry-run` |  | Validate and print planned changes without applying them; IDs of resources that do not exist yet print as (known after apply) |
 | `--environment-given-id <strings>` |  | Environment given ID to include in the apply target set |
