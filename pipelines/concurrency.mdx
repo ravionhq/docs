@@ -44,6 +44,29 @@ The replacement windows are part of `cancel-intermediate`; you do not need anoth
 - `cancel-in-progress` cancels older work without the age limits above. Both cancelling behaviors respect `cancellable: false` (below).
 - `value: 0` allows unlimited concurrency and does not apply these cancellations.
 
+## Shared holders
+
+By default every holder of a key is `exclusive`: it takes one of the `value` slots. Set `mode: shared` on a step's `concurrency` to let it run alongside any number of other shared holders of the same key while still never running alongside an exclusive one. A shared run queues while an exclusive run holds the key, and an exclusive run queues until every shared holder has finished. Waiters are promoted in arrival order, so a queued exclusive run is never overtaken by shared runs that arrive after it. Steps and blocks of one run that hold the same key at the same time must use the same mode.
+
+With `value: 1` this is a reader/writer lock. Terraform plans only read state, so plans from different branches can run at the same time, while an apply needs the stack to itself:
+
+```yaml
+steps:
+  - id: plan
+    type: terraform:plan
+    concurrency:
+      key: <<pipeline.input.stack_id>>
+      scope: organization
+      value: 1
+      mode: shared
+  - id: apply
+    type: terraform:apply
+    concurrency:
+      key: <<pipeline.input.stack_id>>
+      scope: organization
+      value: 1
+```
+
 ## Steps that must not be cancelled
 
 Set `cancellable: false` on a step's or block's `concurrency` to keep a run holding the key there from being cancelled by a newer run under `cancel-in-progress` or `cancel-intermediate`. The newer run queues behind it instead, and a cancellation that arrives after the step has started is refused. Manual cancellation still works. Built-in `deploy` and `terraform:apply` steps default to `cancellable: false`; every other step defaults to `true`.
