@@ -185,6 +185,15 @@ jobs:
 
 When a label in a private repository is invalid, Ravion fails the job, and the job's annotation says which key is wrong. A job whose labels include anything besides its Ravion label stays queued.
 
+## Track cost and usage
+
+Go to [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments) and choose your CI environment.
+
+- **Usage** shows what your jobs cost. In **By pipeline**, expand **GitHub Actions Runner** to see runs, minutes, AWS cost and Ravion cost for each repository, then each workflow. **Time to start** shows how long jobs waited for capacity and for their runner to start. Costs show up about an hour after jobs run.
+- **Sandbox hosts** shows the hosts running now, how many jobs they're running, and each host's CPU and memory use. Hover a host's chart to see the jobs on it.
+
+See [Track cost and hosts](/concepts/sandboxes#track-cost-and-hosts) for everything on these tabs.
+
 ## Public repositories
 
 Jobs from public repositories, including pull requests from forks, run only on sandboxes, and only when you allow them:
