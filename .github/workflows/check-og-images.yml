@@ -19,7 +19,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
+          check-latest: true
 
       - name: Check every page points at the Ravion OG renderer
         run: node scripts/sync-og-images.mjs --check
