@@ -195,7 +195,9 @@ pg_restore
 last_value
 pgx
 plaintext
+proxied
 Fastify
+ALBs
 ALB's
 deregistration
 toomanyrequests
