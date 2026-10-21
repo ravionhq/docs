@@ -107,14 +107,8 @@
                   "module-definitions/catalog/rvn-ecs-web",
                   "module-definitions/catalog/rvn-ecs-worker",
                   "module-definitions/catalog/rvn-efs",
-                  "module-definitions/catalog/rvn-eks-addons",
-                  "module-definitions/catalog/rvn-eks-chart",
-                  "module-definitions/catalog/rvn-eks-cluster",
-                  "module-definitions/catalog/rvn-eks-web",
-                  "module-definitions/catalog/rvn-eks-worker",
                   "module-definitions/catalog/rvn-elasticache",
                   "module-definitions/catalog/rvn-lambda",
-                  "module-definitions/catalog/rvn-planetscale-vitess",
                   "module-definitions/catalog/rvn-rds",
                   "module-definitions/catalog/rvn-rds-proxy",
                   "module-definitions/catalog/rvn-route53",
@@ -135,6 +129,13 @@
               "pipelines/concurrency",
               "pipelines/variants",
               "pipelines/templating"
+            ]
+          },
+          {
+            "group": "GitHub Actions",
+            "pages": [
+              "github-actions/runners",
+              "github-actions/caching"
             ]
           },
           {
@@ -267,6 +268,7 @@
               "cli/reference/logout",
               "cli/reference/logs",
               "cli/reference/membership",
+              "cli/reference/merge-queue",
               "cli/reference/metrics",
               "cli/reference/module",
               "cli/reference/organization",

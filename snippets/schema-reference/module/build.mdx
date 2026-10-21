@@ -62,6 +62,25 @@ Image build configuration for a module.
   See: [InputProperty](/module-definitions/definition-schema/input-types#inputproperty)
 </ResponseField>
 
+<ResponseField name="watch_paths" type="string[] | null">
+  Glob patterns, relative to the repository root, that gate this module's
+  pipeline `build` and `deploy` steps. Usually templated from a module
+  input so each instance sets its own, e.g.
+  `watch_paths: << module.input.watch_paths >>` with a `string_array`
+  input. Unset or empty builds and deploys on every run.
+
+  When set, each pipeline run compares the commit it would build with the
+  commit of the instance's latest successful deployment. If no changed
+  file matches a pattern, the module's build and deploy steps are both
+  skipped with the cause `NO_WATCHED_CHANGES`. Patterns support `*`, `**`,
+  `?`, `[abc]` and `{a,b}`, and match dotfiles; a pattern starting with
+  `!` excludes files. The deploy step must be given `commit_sha` for the
+  deployment to record the commit compared against. Invalid patterns never
+  skip work.
+
+  _(templateable)_
+</ResponseField>
+
 <ResponseField name="source" type="Pipeline.GitSource" required>
   Git source configuration.
 
@@ -147,6 +166,25 @@ step.
   See: [InputProperty](/module-definitions/definition-schema/input-types#inputproperty)
 </ResponseField>
 
+<ResponseField name="watch_paths" type="string[] | null">
+  Glob patterns, relative to the repository root, that gate this module's
+  pipeline `build` and `deploy` steps. Usually templated from a module
+  input so each instance sets its own, e.g.
+  `watch_paths: << module.input.watch_paths >>` with a `string_array`
+  input. Unset or empty builds and deploys on every run.
+
+  When set, each pipeline run compares the commit it would build with the
+  commit of the instance's latest successful deployment. If no changed
+  file matches a pattern, the module's build and deploy steps are both
+  skipped with the cause `NO_WATCHED_CHANGES`. Patterns support `*`, `**`,
+  `?`, `[abc]` and `{a,b}`, and match dotfiles; a pattern starting with
+  `!` excludes files. The deploy step must be given `commit_sha` for the
+  deployment to record the commit compared against. Invalid patterns never
+  skip work.
+
+  _(templateable)_
+</ResponseField>
+
 <ResponseField name="source" type="Pipeline.GitSource" required>
   Git source configuration.
 
@@ -221,6 +259,25 @@ Static build configuration for a module.
   Same types as module inputs — reuses the InputProperty union.
 
   See: [InputProperty](/module-definitions/definition-schema/input-types#inputproperty)
+</ResponseField>
+
+<ResponseField name="watch_paths" type="string[] | null">
+  Glob patterns, relative to the repository root, that gate this module's
+  pipeline `build` and `deploy` steps. Usually templated from a module
+  input so each instance sets its own, e.g.
+  `watch_paths: << module.input.watch_paths >>` with a `string_array`
+  input. Unset or empty builds and deploys on every run.
+
+  When set, each pipeline run compares the commit it would build with the
+  commit of the instance's latest successful deployment. If no changed
+  file matches a pattern, the module's build and deploy steps are both
+  skipped with the cause `NO_WATCHED_CHANGES`. Patterns support `*`, `**`,
+  `?`, `[abc]` and `{a,b}`, and match dotfiles; a pattern starting with
+  `!` excludes files. The deploy step must be given `commit_sha` for the
+  deployment to record the commit compared against. Invalid patterns never
+  skip work.
+
+  _(templateable)_
 </ResponseField>
 
 <ResponseField name="source" type="Pipeline.GitSource" required>
@@ -311,7 +368,9 @@ One of: map&lt;string,[Pipeline.EnvironmentVariable](#pipeline-environmentvariab
 
 ### Pipeline.GitSource
 
-Git source configuration for fetching code
+Git source configuration for fetching code. Ravion partially clones the full history of `branch`
+plus tags, fetching file contents on demand, then checks out `ref` if set. Other branches are not
+fetched. Set `fetch_depth` for a shallow clone.
 
 <ResponseField name="type" type="enum" required>
   Source type identifier
@@ -337,6 +396,12 @@ Git source configuration for fetching code
   Git ref to check out — branch, commit SHA, tag, or other ref. Overrides branch HEAD if set.
 
   _(templateable)_
+</ResponseField>
+
+<ResponseField name="fetch_depth" type="integer | null">
+  Number of commits of history to fetch, ending at the checked-out commit. Tags are not fetched when set.
+
+  _(format:int32,min:1; templateable)_
 </ResponseField>
 
 <ResponseField name="base_path" type="string | null" default=".">

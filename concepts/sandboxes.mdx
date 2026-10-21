@@ -180,13 +180,23 @@ Hosts run in your AWS account, so you pay AWS directly at your own rates. Ravion
 
 Use sandboxes for pipeline steps and module builds by default, including builds, tests, migrations and other scripted tasks.
 
-Use `ec2` or `ec2-spot` [infrastructure](/pipelines/config-reference#stepinfrastructure) only when you need a custom AMI or a dedicated EC2 instance.
+Use `ec2` or `ec2-spot` [infrastructure](/pipelines/config-reference#stepinfrastructure) only when you need a custom AMI or a dedicated EC2 instance. See [EC2 runners](/pipelines/step-types#ec2-runners) for what those images include.
 
 ## What runs inside a sandbox
 
-Every sandbox boots the same x86_64 Ubuntu 24.04 image, with git, GitHub CLI (`gh`), build-essential, Node.js 24, Docker, the AWS CLI, `jq`, `curl` and `zstd`. Install anything else with the step's `setup` actions or commands. With `disk_cache` on, what you install stays for later runs.
+Every sandbox boots the same x86_64 Ubuntu 24.04 image. It has the apt packages [GitHub's `ubuntu-24.04` runner image](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) installs, such as git and Git LFS, build-essential, Clang 18 (`clang-18`, `lld-18`, `lldb-18`, `clang-format-18` and `clang-tidy-18`), `zip`, `rsync`, `wget`, `brotli`, `sqlite3` and the PostgreSQL client. It also has GitHub CLI (`gh`), Node.js 24, Docker with Docker Compose, the AWS CLI, `jq` and `yq`. Like GitHub's images, `apt-get install` doesn't ask for confirmation.
+
+The image is still much smaller than GitHub's hosted runner images. Their `ubuntu-latest` also comes with several versions each of Node.js, Python, Java, Go, Ruby and .NET, plus browsers, databases and cloud tools. The sandbox image doesn't. If a step needs something missing, install it natively:
+
+- System packages with `apt-get`, for example `apt-get update && apt-get install -y python3-pip`. Steps run as root.
+- Language versions with the usual `setup-*` actions in GitHub Actions jobs, or with version managers and install scripts in pipeline steps.
+- Anything else by downloading its binary or installer in a command.
+
+With `disk_cache` on, what you install usually stays for later runs — only runs that can write the cache save their disk. See [Disk cache](#disk-cache).
 
 Docker starts in the background when the sandbox boots, and the first `docker` command waits for it. Tools that talk to Docker another way, such as Testcontainers or a Docker SDK, must wait for the daemon themselves.
+
+Sandboxes are in preview. If a step hits a problem you can't explain — a tool that won't install, a kernel feature the microVM doesn't have, or anything unexpected — [contact support](/contact-support).
 
 ## Get started
 
@@ -199,8 +209,8 @@ Docker starts in the background when the sandbox boots, and the first `docker` c
 
     From the CLI, run `ravion aws account policy-diff <aws-account-id>` to review the change. Then apply it with `aws cloudformation update-stack` and a template URL from `ravion aws account cloudformation-template-url <aws-account-id>`.
   </Step>
-  <Step title="Update your modules">
-    Update your modules to versions released on or after October 10, 2026. Older versions don't support sandboxes.
+  <Step title="Update modules with a build step">
+    This applies to module builds only. Modules that build your code, such as `rvn-ecs-web`, `rvn-lambda` or `rvn-aws-static`, need a version released on or after October 10, 2026; older versions only build on EC2. Modules without a build step, such as `rvn-stack`, need no update, and pipeline steps run in sandboxes regardless of module versions.
   </Step>
   <Step title="Run pipeline steps or module builds in sandboxes">
     Set [pipeline steps](#pipeline-steps) to `type: sandbox`. New [module builds](#module-builds) use sandboxes by default; switch existing modules that still use EC2.
@@ -266,9 +276,24 @@ Go to [**Settings / Execution environments**](https://app.ravion.com/org/setting
 | **Idle hosts to keep running** (ephemeral) / **Stopped hosts to retain** (persistent) | None | Hosts kept for faster starts. **Fixed** keeps a set number. **Peak** matches your busiest minute. **Rolling average** matches your average daily peak. Running hosts incur compute charges. |
 | **Delete stopped hosts after (minutes)** | 1440 | Persistent only. Deletes stopped hosts outside the retained reserve. |
 
-To list an environment's hosts, run `ravion execution-environment sandbox-hosts <id>`.
-
 To stop using sandboxes, switch your steps and module builds back to EC2. Running `ravion execution-environment update <id> --sandboxes null` removes the hosts, but the next sandbox step sets them up again.
+
+## Track cost and hosts
+
+Go to [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments) and choose the environment.
+
+**Usage** shows what the environment cost in a billing period, or any date range up to 93 days. It covers pipeline steps, module builds and GitHub Actions jobs, on sandboxes and EC2:
+
+- **Cost**: a daily chart and totals for compute, disk and storage, network, and Ravion pipeline minutes. AWS amounts are estimates.
+- **Time to start**: median and p95 time spent waiting for capacity and starting the sandbox or runner.
+- **By pipeline**: step runs, minutes, AWS cost and Ravion cost for each pipeline. Expand a pipeline to see its steps. GitHub Actions jobs are under **GitHub Actions Runner**, by repository and then workflow.
+- **By instance type**: hours, compute cost and Spot savings for each EC2 instance type.
+
+Costs show up about an hour after steps run.
+
+**Sandbox hosts** shows the hosts running now: how many jobs and sandboxes are running, vCPU in use, and whether each host is busy, idle, booting, disconnected or parked. Each host lists its instance type, Spot or On-Demand market and Availability Zone, with CPU and memory charts. Hover a chart to see what was running on the host at that time and what each step reserved.
+
+To list an environment's hosts from the terminal, run `ravion execution-environment sandbox-hosts <id>`.
 
 ## Interruptible steps and spot hosts
 
@@ -279,6 +304,34 @@ To stop using sandboxes, switch your steps and module builds back to EC2. Runnin
 - If a step that isn't interruptible loses its host, the step fails.
 
 Leave `interruptible` off for steps with side effects that aren't safe to repeat, such as database migrations and deploys.
+
+## Choose a region
+
+Spot is where most of the savings come from. Each Availability Zone that offers the sandbox instance types (`c8id`, `m8id`, `r8id`, `i7i` and `i7ie`) is another Spot pool for Ravion to try before falling back to On-Demand. A region with more of these zones is more likely to find Spot capacity.
+
+These regions offer every sandbox instance type. They're ordered by how many Availability Zones offer those types, then by price:
+
+| Region | Availability Zones | Notes |
+| --- | --- | --- |
+| `us-east-1` | 5 | Recommended default. Most zones, and closest to GitHub. |
+| `us-west-2` | 4 | |
+| `us-east-2` | 3 | |
+| `eu-central-1` | 3 | |
+| `ap-northeast-1` | 3 | |
+| `ap-south-1` | 3 | |
+| `ap-southeast-2` | 3 | |
+| `eu-north-1` | 2 to 3 | |
+| `ca-central-1` | 2 | |
+
+Other regions offer fewer sandbox types. For example, `eu-west-1` and `eu-west-2` have no `c8id`, and most other regions only have `i7i` and `i7ie`.
+
+Choose for Spot capacity first, not for where your team is. CI jobs mostly talk to GitHub and package registries, and an extra region hop barely changes job time.
+
+Pick a region close to your data instead when:
+
+- **Jobs move a lot of data to AWS resources in another region.** For example, pushing images to ECR, or reading from S3 buckets or test databases. AWS charges for [data transfer between regions](https://aws.amazon.com/ec2/pricing/on-demand/), about $0.01 to $0.02 per GB between US regions, and each request takes longer.
+- **Your GitHub is hosted in another region**, such as GitHub Enterprise Cloud with data residency in the EU, Australia or Japan.
+- **Compliance rules** require builds to stay in a region.
 
 ## Disk cache
 
@@ -293,6 +346,23 @@ Leave `interruptible` off for steps with side effects that aren't safe to repeat
 A run restores the disk saved for its branch. If there's none, it uses the pull request's base branch, then the repository's default branch. A run saves its disk to its own branch only when it succeeds.
 
 To start a run on clean disks, pass `--no-cache` to `ravion pipeline run create` or `ravion pipeline run retry`.
+
+### Delete cached state
+
+To remove cached state after a compromised dependency or a bad build, open [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments), select the environment, then open **Config / Cache**.
+
+Choose an option from the **Delete cache** button and confirm:
+
+- **Delete cache** pauses new sandbox jobs and lets running jobs finish before clearing their caches.
+- **Kill all jobs & delete cache** stops running jobs in this execution environment before clearing their caches.
+
+Both options delete saved disk snapshots, Ravion-hosted Actions cache, and host-local caches by replacing the sandbox hosts, including stopped persistent hosts. This affects every repository using the execution environment. It does not delete deployed images, ECR build caches, your Terraform infrastructure, or caches stored by GitHub itself.
+
+New sandbox jobs resume after cleanup completes. If cleanup fails, they stay paused; resolve the reported problem and retry. Update the connected AWS account's permissions if prompted.
+
+<Warning>
+  Deleting caches cannot be undone. Fix or remove a compromised dependency before running jobs again; deleting its cached files does not make the dependency safe or revoke exposed credentials.
+</Warning>
 
 ## Limits and caveats
 

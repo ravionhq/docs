@@ -36,11 +36,53 @@ Ravion recognizes these filenames in any directory, including nested directories
 | `<name>.ravion-pipeline.yaml` | `deploy.ravion-pipeline.yaml` |
 | `ravion-pipeline.<name>.yaml` | `ravion-pipeline.deploy.yaml` |
 
-All patterns also accept `.yml`, `.json`, `.jsonc`, and `.cue` in place of `.yaml`, for example `ravion.json` or `ravion-pipeline.deploy.cue`. Names are case-sensitive. Files named `pipeline.yaml` or `ravion.yaml.bak` are not scanned.
+All patterns accept `.yaml`, `.yml`, `.json`, `.jsonc`, and `.cue`. For example, use `ravion.jsonc`, `shop.ravion.cue`, or `ravion-pipeline.deploy.json`. Names are case-sensitive. Files named `pipeline.yaml` or `ravion.yaml.bak` are not scanned, and nothing inside a `.github` directory is scanned: a GitHub Actions workflow at `.github/workflows/ravion.yml` is left to GitHub.
+
+The extension selects the parser. JSON must be valid JSON; JSONC also supports comments and trailing commas. CUE files can use definitions, expressions, and standard-library imports, but must evaluate to a concrete config object. Each CUE file is evaluated independently: sibling files, repository-local imports, and external CUE modules are not loaded.
+
+All supported formats use the same validation and automation: pull requests receive a dry-run plan, and merges into the default branch apply the changes. Direct commits to the default branch also apply changes.
 
 The filename makes a file eligible for scanning; its contents determine whether it is a project config or a pipeline config. Ravion compares the top-level fields against the two schemas. Project configs describe `project` and `environments`; pipeline configs describe `steps` and `variants`, with a `pipeline` block identifying their target. A pipeline config can therefore live in a file named `ravion.yaml`, although `ravion-pipeline.yaml` makes its purpose clearer.
 
-Ravion plans or applies changed files, not every file on each push. It also checks other recognized config files for conflicting target references.
+Ravion plans or applies changed files, not every file on each push. It also checks other recognized, non-ignored config files for conflicting target references.
+
+## Exclude files with .ravionignore
+
+Create a `.ravionignore` file at the repository root to exclude config files from the GitHub App's scan. Ignored files are not planned, applied, or counted in conflicts. Use this for test fixtures or examples that reuse a real project's or pipeline's target reference.
+
+```text .ravionignore
+# Ignore test fixtures in any directory
+testdata/
+*.test.ravion.yaml
+
+# Ignore one example config, relative to the repository root
+/examples/ravion.yaml
+
+# Ignore matching files, but keep one config in the scan
+*.demo.ravion.jsonc
+!production.demo.ravion.jsonc
+```
+
+Patterns follow `.gitignore` syntax:
+
+- Blank lines and lines starting with `#` are ignored.
+- A pattern without a leading or middle `/` matches at any depth. A leading or middle `/` anchors it to the repository root.
+- A trailing `/` matches directories only, including the files inside them.
+- `*`, `?`, `[...]`, and `**` are supported.
+- `!` negates a pattern; the last matching rule wins. You cannot re-include a file while its parent directory is ignored. Re-include the directory first, or exclude individual files instead.
+- Backslashes escape special characters, such as a leading `#` or `!`. Trailing spaces are trimmed unless escaped.
+
+Only the root `.ravionignore` is read. A `.ravionignore` in a subdirectory has no effect. Ignore rules filter the supported config filenames; negation does not make an otherwise unrecognized filename eligible for scanning.
+
+### Changing ignore rules
+
+Ravion reads the `.ravionignore` from each commit. When GitHub returns complete repository trees, a change to this file alone can bring an unchanged config back into the scan: the app plans it on a pull request and applies it on the default branch. Ignoring one file of a conflicting pair also lets the remaining file be reconsidered.
+
+<Note>
+  If GitHub truncates a large repository tree, Ravion falls back to the changed-file list. In that case, changing only `.ravionignore` does not trigger a plan or apply for an unchanged config. The config is processed on its next edit, subject to the ignore rules.
+</Note>
+
+Ignoring a config does not delete its project, pipeline, or infrastructure. These rules control the GitHub App's automatic scan, not manual CLI plan or apply commands.
 
 ## How projects are matched
 
@@ -119,12 +161,24 @@ A push that changes a recognized config on the existing default branch applies i
 The app reports a **Ravion config apply** check and posts the apply result on the merged pull request when available.
 
 <Warning>
-  Applying a project config does not auto-approve infrastructure changes. The GitHub App leaves stack approval gates in place. Review and approve the Terraform plans in Ravion before the infrastructure changes apply. A successful config apply check does not mean those stack runs have finished.
+  Config files written by `ravion project config pull` and `ravion project create --file` start with `autoapprove: true`, so stack runs whose Terraform plan only creates or updates resources apply right away. A run whose plan destroys or replaces resources still stops at the approval step: review that plan in Ravion before it applies. A successful config apply check does not mean those stack runs have finished.
 </Warning>
+
+The app passes the file's top-level `autoapprove` value to every stack change pipeline run the apply starts. To review every plan before it applies, set it to `false` (or remove it):
+
+```yaml
+autoapprove: false
+project:
+  id: proj_123
+environments:
+  # ...
+```
+
+The wait on destructive plans comes from Ravion's system change pipeline (`pipe_system_tf_change_pipeline`), whose approval step runs when `autoapprove` is off or the plan destroys or replaces resources. A [custom change pipeline](/modules/stack#system-pipelines-and-customization) sets its own rule in its approval step's `if` condition, so it can auto-approve destructive plans too, or require approval for every plan.
 
 ## Conflicts and deleted files
 
-Keep one config file per project and one per standalone pipeline. When multiple recognized files name the same target reference, Ravion rejects those files together instead of choosing one. An unchanged file can conflict with a changed file. Remove the duplicate or change its target before merging; the remaining file is reconsidered when that conflict is resolved.
+Keep one non-ignored config file per project and one per standalone pipeline. When multiple recognized, non-ignored files name the same target reference, Ravion rejects those files together instead of choosing one. An unchanged file can conflict with a changed file. Remove the duplicate, change its target, or [exclude it with `.ravionignore`](#exclude-files-with-ravionignore) before merging. With complete repository trees, the remaining file is reconsidered when that conflict is resolved; see [Changing ignore rules](#changing-ignore-rules) for the large-repository fallback.
 
 Deleting a config file does not delete its project, pipeline, or infrastructure. This differs from removing a module from a project config, which can plan a destroy. See [Project config file](/config-as-code/project-config-file).
 

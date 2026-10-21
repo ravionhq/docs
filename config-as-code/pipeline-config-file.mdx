@@ -1,11 +1,11 @@
 ---
 title: "Pipeline config file"
-description: "Pull, edit, version-control, and apply a Ravion pipeline's configuration from a single declarative YAML file checked into your repository."
+description: "Pull, edit, version-control, and apply a Ravion pipeline's configuration from a declarative config file checked into your repository."
 "og:image": "https://www.ravion.com/og/docs/config-as-code/pipeline-config-file.png"
 "twitter:image": "https://www.ravion.com/og/docs/config-as-code/pipeline-config-file.png"
 ---
 
-Define a pipeline declaratively in `.yaml`, `.jsonc`, or `.cue`. The config file describes steps, parallel and group blocks, inputs, variants, and triggers. One file describes one workflow — services that build and deploy independently of each other get their own pipeline and config file each, not parallel groups in a shared one. See [One workflow per pipeline](/concepts/pipelines#one-workflow-per-pipeline).
+Define a pipeline declaratively in `.yaml`, `.yml`, `.json`, `.jsonc`, or `.cue`. The config file describes steps, parallel and group blocks, inputs, variants, and triggers. One file describes one workflow — services that build and deploy independently of each other get their own pipeline and config file each, not parallel groups in a shared one. See [One workflow per pipeline](/concepts/pipelines#one-workflow-per-pipeline).
 
 <Accordion title="Example pipeline config">
   A minimal pipeline that builds and deploys the `web-app` module from the [example `ravion.yaml`](/config-as-code/project-config-file). The `build` and `deploy` steps reference the module by given ID with `environmentGivenId.moduleGivenId`. Here the `production` variant ID matches the environment given ID, so `<< pipeline.variant.id >>.web-app` resolves to `production.web-app`.
@@ -62,6 +62,8 @@ Commit a `ravion-pipeline.yaml` file to a repository connected through the Ravio
 Keep the top-level `pipeline` block in the file. It selects an existing pipeline by `pipeline.id`, or by `pipeline.givenId` together with `pipeline.project` (the project's unique ID or given ID). For the example above, create a pipeline with given ID `deploy` in the `demo` project first.
 
 See [GitHub integration](/config-as-code/github-integration) for all supported filenames and matching rules. A file named `pipeline.yaml` is not automatically scanned.
+
+To keep fixtures or examples out of automatic plans, applies, and conflict checks, add their paths to a root [`.ravionignore` file](/config-as-code/github-integration#exclude-files-with-ravionignore).
 
 ## Pull and apply with the CLI
 

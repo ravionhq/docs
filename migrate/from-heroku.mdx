@@ -25,7 +25,7 @@ Steps 1 and 2 are reversible by pointing DNS back at Heroku. After the database 
 | ------------------------------ | ------------------------------------------------------------------------------ |
 | Pipeline                       | [Project](/concepts/projects-and-environments)                                 |
 | Pipeline stage                 | [Environment](/concepts/projects-and-environments)                             |
-| Review apps                    | Preview environments                                                           |
+| Review apps                    | Preview environments (coming soon, see [How Ravion works](/how-ravion-works#8-get-ephemeral-preview-environments-for-pull-requests-or-one-off-testing)) |
 | Web dyno                       | [`rvn-ecs-web`](/module-definitions/catalog/rvn-ecs-web)                       |
 | Worker dyno                    | [`rvn-ecs-worker`](/module-definitions/catalog/rvn-ecs-worker)                 |
 | Heroku Postgres                | [`rvn-rds`](/module-definitions/catalog/rvn-rds) or [`rvn-aurora`](/module-definitions/catalog/rvn-aurora) |
@@ -61,7 +61,7 @@ Steps 1 and 2 are reversible by pointing DNS back at Heroku. After the database 
 
 ## Step 2: Switch production traffic
 
-1. Set up your domain following [Custom domains](/guides/custom-domains): request an `rvn-acm-certificate`, create the validation record, attach the certificate to the ECS cluster load balancer (or CloudFront). None of this moves traffic yet.
+1. Add your domain to the service and add its validation record, following [Custom domains](/guides/custom-domains). None of this moves traffic yet.
 2. Lower the TTL on your existing DNS records to 60 seconds and wait for the old TTL to expire.
 3. Save the current Heroku DNS values, then update the records to the Ravion-provided ones.
 4. Watch error rates and the Ravion logs and metrics tabs. To revert, point DNS back at Heroku.

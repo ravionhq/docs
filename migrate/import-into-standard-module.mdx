@@ -14,7 +14,7 @@ Use this guide to bring infrastructure that already exists — a production S3 b
 
 ## How it works
 
-1. Applying a [project config file](/config-as-code/project-config-file) that adds a stack-backed module creates the instance, its [managed state backend workspace](/modules/stack#state-storage), and starts a [change pipeline run](/modules/stack#stacks-change-through-pipelines) that stops at the approval gate.
+1. Applying a [project config file](/config-as-code/project-config-file) that adds a stack-backed module creates the instance, its [managed state backend workspace](/modules/stack#state-storage), and starts a [change pipeline run](/modules/stack#stacks-change-through-pipelines). Applying with `--autoapprove=false` makes that run stop at the approval gate.
 2. That run's plan enumerates exactly which resource addresses the module manages, so you know what to import. You cancel the run instead of approving it.
 3. `ravion terraform shell` wires your local `terraform`/`tofu` to the managed workspace, so `terraform import` writes directly into the module's state. Import only needs stub resource blocks locally — not the module's real Terraform source.
 4. Applying the config again plans against the imported state. When your module inputs match the real infrastructure, the plan shows no creates — only benign in-place updates such as tags.
@@ -83,14 +83,16 @@ The example below imports an existing AWS RDS PostgreSQL instance into an `rvn-r
               allocated_storage: 20
     ```
 
-    Preview, then apply — without `--autoapprove`:
+    Preview, then apply with `--autoapprove=false`:
 
     ```bash
     ravion project config apply <project-id> --file ravion.yaml --dry-run
-    ravion project config apply <project-id> --file ravion.yaml
+    ravion project config apply <project-id> --file ravion.yaml --autoapprove=false
     ```
 
     The apply creates the module, its managed state workspace, and starts a change run that stops at the approval gate. Nothing is provisioned until a plan is approved.
+
+    `--autoapprove=false` matters here: pulled config files set `autoapprove: true` at the top level, which applies any plan without destructive changes right away. The first plan for an adopted resource is all creates, so without the flag it would create a second copy of your infrastructure instead of waiting for you to import. The flag overrides the file for this one apply: every stack run this apply starts waits for approval, including runs for other modules the file changes. The file stays unchanged, so later applies without the flag go back to applying automatically.
 
     <Note>
       Prefer managing modules through the config file. For a one-off without config as code, `ravion module create --initial-stack-run PLAN` gets you to the same place.
@@ -219,10 +221,10 @@ The example below imports an existing AWS RDS PostgreSQL instance into an `rvn-r
   </Step>
 
   <Step title="Apply again and verify the plan">
-    Apply the config file with your refined inputs — the run it starts is your verification plan:
+    Apply the config file with your refined inputs — the run it starts is your verification plan. Keep `--autoapprove=false` so you can inspect the plan before anything applies:
 
     ```bash
-    ravion project config apply <project-id> --file ravion.yaml
+    ravion project config apply <project-id> --file ravion.yaml --autoapprove=false
     ```
 
     If the config file didn't change since the first apply, start the run manually instead:

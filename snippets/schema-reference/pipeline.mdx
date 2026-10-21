@@ -1473,6 +1473,17 @@ This serialization is independent of trigger/step/block concurrency:
   Allowed values: `deploy`
 </ResponseField>
 
+<ResponseField name="commit_sha" type="string | null">
+  Full git commit SHA of the artifact being deployed, recorded on the
+  module deployment. It is the baseline watch paths compare the next run
+  against. When omitted, nothing is recorded and the next run builds and
+  deploys the module without evaluating its watch paths. In a run that
+  deploys the module without building it, this is also the commit its
+  watch paths are evaluated against; without it that deploy always runs.
+
+  _(templateable)_
+</ResponseField>
+
 <ResponseField name="input" type="map<string,any | null>">
   User-defined deploy parameters passed through to the deploy manager.
   These values are available to module deployment templates via
@@ -1932,7 +1943,9 @@ One of: map&lt;string,[EnvironmentVariable](#environmentvariable)&gt;, string.
 
 ### GitSource
 
-Git source configuration for fetching code
+Git source configuration for fetching code. Ravion partially clones the full history of `branch`
+plus tags, fetching file contents on demand, then checks out `ref` if set. Other branches are not
+fetched. Set `fetch_depth` for a shallow clone.
 
 <ResponseField name="type" type="enum" required>
   Source type identifier
@@ -1958,6 +1971,12 @@ Git source configuration for fetching code
   Git ref to check out — branch, commit SHA, tag, or other ref. Overrides branch HEAD if set.
 
   _(templateable)_
+</ResponseField>
+
+<ResponseField name="fetch_depth" type="integer | null">
+  Number of commits of history to fetch, ending at the checked-out commit. Tags are not fetched when set.
+
+  _(format:int32,min:1; templateable)_
 </ResponseField>
 
 <ResponseField name="base_path" type="string | null" default=".">
