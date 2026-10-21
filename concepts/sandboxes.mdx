@@ -209,8 +209,8 @@ Sandboxes are in preview. If a step hits a problem you can't explain — a tool 
 
     From the CLI, run `ravion aws account policy-diff <aws-account-id>` to review the change. Then apply it with `aws cloudformation update-stack` and a template URL from `ravion aws account cloudformation-template-url <aws-account-id>`.
   </Step>
-  <Step title="Update your modules">
-    Update your modules to versions released on or after October 10, 2026. Older versions don't support sandboxes.
+  <Step title="Update modules with a build step">
+    This applies to module builds only. Modules that build your code, such as `rvn-ecs-web`, `rvn-lambda` or `rvn-aws-static`, need a version released on or after October 10, 2026; older versions only build on EC2. Modules without a build step, such as `rvn-stack`, need no update, and pipeline steps run in sandboxes regardless of module versions.
   </Step>
   <Step title="Run pipeline steps or module builds in sandboxes">
     Set [pipeline steps](#pipeline-steps) to `type: sandbox`. New [module builds](#module-builds) use sandboxes by default; switch existing modules that still use EC2.
