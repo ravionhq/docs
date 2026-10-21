@@ -137,7 +137,7 @@ Store the config file in your repository and manage it with the CLI.
 
     Omit `--autoapprove` when the apply modifies, replaces, or removes existing infrastructure, so you can review each Terraform plan first.
 
-    To make auto-approval the default for a file, set `autoapprove: true` at its top level. Both the CLI and the GitHub App read it, and an explicit `--autoapprove` flag overrides it. Either way, plans that destroy or replace resources still wait for approval.
+    To make auto-approval the default for a file, set `autoapprove: true` at its top level. Both the CLI and the GitHub App read it. The flag overrides the file: pass `--autoapprove=false` to review every plan of one apply even when the file sets `autoapprove: true`. Either way, plans that destroy or replace resources still wait for approval.
 
     Add `--description` to set the description on every stack run the apply creates, for example `--description "https://github.com/acme/app/pull/12"` to link the runs to the pull request that changed the config. Without it, runs keep Ravion's generated description.
 
@@ -283,7 +283,7 @@ ravion pipeline run wait <pipeline-run-id> --watch --timeout 30m
 ### Helpful hints
 
 - Pull the latest live config anytime with `ravion project config pull <project-id> --file ravion.yaml`.
-- Use `--autoapprove` when creating new environments and module instances. Omit it when a change modifies, replaces, or removes existing infrastructure so a human reviews the Terraform plan. A top-level `autoapprove: true` in the file sets the default; the flag overrides it.
+- Use `--autoapprove` when creating new environments and module instances. Omit it when a change modifies, replaces, or removes existing infrastructure so a human reviews the Terraform plan. A top-level `autoapprove: true` in the file sets the default, so with that file pass `--autoapprove=false` to review every plan.
 - To iterate on one target, pass `--environment-id`, `--environment-given-id`, `--module-instance-id`, or `--module-given-id`.
 - If a schema check, dry run, or apply fails unexpectedly, file it with `ravion report bug "<what happened>" --command "<the command that failed>"`. Include the exact error text and the project, environment, and module instance IDs involved. See [Report bugs and feedback](/report-bugs-and-feedback).
 
