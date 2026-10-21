@@ -61,6 +61,55 @@ ravion github-actions latest-runs <codeSourceId> [flags]
 | `--organization-id <string>` |  | organizationId |
 | `-v, --verbose` |  | show full output |
 
+### `ravion github-actions pull-request-comments`
+
+List stored comments for a pull request
+
+```bash
+ravion github-actions pull-request-comments <codeSourceId> <number> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--organization-id <string>` |  | organizationId |
+| `-v, --verbose` |  | show full output |
+
+### `ravion github-actions pull-request-reviews`
+
+List stored reviews for a pull request
+
+```bash
+ravion github-actions pull-request-reviews <codeSourceId> <number> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--organization-id <string>` |  | organizationId |
+| `-v, --verbose` |  | show full output |
+
+### `ravion github-actions pull-requests`
+
+List stored pull requests by number
+
+```bash
+ravion github-actions pull-requests <codeSourceId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--numbers <string>` | yes | numbers |
+| `--json` |  | emit response as JSON |
+| `--organization-id <string>` |  | organizationId |
+| `-v, --verbose` |  | show full output |
+
 ### `ravion github-actions repositories`
 
 List connected GitHub Actions repositories
