@@ -92,7 +92,7 @@ The example below imports an existing AWS RDS PostgreSQL instance into an `rvn-r
 
     The apply creates the module, its managed state workspace, and starts a change run that stops at the approval gate. Nothing is provisioned until a plan is approved.
 
-    `--autoapprove=false` matters here: pulled config files set `autoapprove: true` at the top level, which applies any plan without destructive changes right away. The first plan for an adopted resource is all creates, so without the flag it would create a second copy of your infrastructure instead of waiting for you to import. The flag overrides the file for this one apply and leaves the file unchanged, so other modules keep applying automatically.
+    `--autoapprove=false` matters here: pulled config files set `autoapprove: true` at the top level, which applies any plan without destructive changes right away. The first plan for an adopted resource is all creates, so without the flag it would create a second copy of your infrastructure instead of waiting for you to import. The flag overrides the file for this one apply: every stack run this apply starts waits for approval, including runs for other modules the file changes. The file stays unchanged, so later applies without the flag go back to applying automatically.
 
     <Note>
       Prefer managing modules through the config file. For a one-off without config as code, `ravion module create --initial-stack-run PLAN` gets you to the same place.
