@@ -276,9 +276,24 @@ Go to [**Settings / Execution environments**](https://app.ravion.com/org/setting
 | **Idle hosts to keep running** (ephemeral) / **Stopped hosts to retain** (persistent) | None | Hosts kept for faster starts. **Fixed** keeps a set number. **Peak** matches your busiest minute. **Rolling average** matches your average daily peak. Running hosts incur compute charges. |
 | **Delete stopped hosts after (minutes)** | 1440 | Persistent only. Deletes stopped hosts outside the retained reserve. |
 
-To list an environment's hosts, run `ravion execution-environment sandbox-hosts <id>`.
-
 To stop using sandboxes, switch your steps and module builds back to EC2. Running `ravion execution-environment update <id> --sandboxes null` removes the hosts, but the next sandbox step sets them up again.
+
+## Track cost and hosts
+
+Go to [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments) and choose the environment.
+
+**Usage** shows what the environment cost in a billing period, or any date range up to 93 days. It covers pipeline steps, module builds and GitHub Actions jobs, on sandboxes and EC2:
+
+- **Cost**: a daily chart and totals for compute, disk and storage, network, and Ravion pipeline minutes. AWS amounts are estimates.
+- **Time to start**: median and p95 time spent waiting for capacity and starting the sandbox or runner.
+- **By pipeline**: step runs, minutes, AWS cost and Ravion cost for each pipeline. Expand a pipeline to see its steps. GitHub Actions jobs are under **GitHub Actions Runner**, by repository and then workflow.
+- **By instance type**: hours, compute cost and Spot savings for each EC2 instance type.
+
+Costs show up about an hour after steps run.
+
+**Sandbox hosts** shows the hosts running now: how many jobs and sandboxes are running, vCPU in use, and whether each host is busy, idle, booting, disconnected or parked. Each host lists its instance type, Spot or On-Demand market and Availability Zone, with CPU and memory charts. Hover a chart to see what was running on the host at that time and what each step reserved.
+
+To list an environment's hosts from the terminal, run `ravion execution-environment sandbox-hosts <id>`.
 
 ## Interruptible steps and spot hosts
 
