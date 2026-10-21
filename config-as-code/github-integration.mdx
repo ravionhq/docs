@@ -174,6 +174,8 @@ environments:
   # ...
 ```
 
+The wait on destructive plans comes from Ravion's system change pipeline (`pipe_system_tf_change_pipeline`), whose approval step runs when `autoapprove` is off or the plan destroys or replaces resources. A [custom change pipeline](/modules/stack#system-pipelines-and-customization) sets its own rule in its approval step's `if` condition, so it can auto-approve destructive plans too, or require approval for every plan.
+
 ## Conflicts and deleted files
 
 Keep one non-ignored config file per project and one per standalone pipeline. When multiple recognized, non-ignored files name the same target reference, Ravion rejects those files together instead of choosing one. An unchanged file can conflict with a changed file. Remove the duplicate, change its target, or [exclude it with `.ravionignore`](#exclude-files-with-ravionignore) before merging. With complete repository trees, the remaining file is reconsidered when that conflict is resolved; see [Changing ignore rules](#changing-ignore-rules) for the large-repository fallback.
