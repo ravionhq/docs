@@ -36,7 +36,7 @@ Ravion recognizes these filenames in any directory, including nested directories
 | `<name>.ravion-pipeline.yaml` | `deploy.ravion-pipeline.yaml` |
 | `ravion-pipeline.<name>.yaml` | `ravion-pipeline.deploy.yaml` |
 
-All patterns accept `.yaml`, `.yml`, `.json`, `.jsonc`, and `.cue`. For example, use `ravion.jsonc`, `shop.ravion.cue`, or `ravion-pipeline.deploy.json`. Names are case-sensitive. Files named `pipeline.yaml` or `ravion.yaml.bak` are not scanned.
+All patterns accept `.yaml`, `.yml`, `.json`, `.jsonc`, and `.cue`. For example, use `ravion.jsonc`, `shop.ravion.cue`, or `ravion-pipeline.deploy.json`. Names are case-sensitive. Files named `pipeline.yaml` or `ravion.yaml.bak` are not scanned, and nothing inside a `.github` directory is scanned: a GitHub Actions workflow at `.github/workflows/ravion.yml` is left to GitHub.
 
 The extension selects the parser. JSON must be valid JSON; JSONC also supports comments and trailing commas. CUE files can use definitions, expressions, and standard-library imports, but must evaluate to a concrete config object. Each CUE file is evaluated independently: sibling files, repository-local imports, and external CUE modules are not loaded.
 
