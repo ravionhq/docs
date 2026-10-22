@@ -246,6 +246,7 @@
             "group": "Command reference",
             "boost": 0.5,
             "pages": [
+              "cli/reference/alert",
               "cli/reference/api-key",
               "cli/reference/aws",
               "cli/reference/billing",
