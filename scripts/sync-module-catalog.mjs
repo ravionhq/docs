@@ -424,7 +424,7 @@ function renderInputPage(definition, page) {
   const meta = [
     `**Type:** \`${definition.type}\``,
     `**Latest version:** \`${definition.latestVersion}\``,
-  ].join(" · ");
+  ].join(" / ");
   const mainPage = `/module-definitions/catalog/${definition.type}`;
 
   return [
@@ -458,7 +458,7 @@ function renderPage(definition, version, graph, inputSections, inputPages) {
   const meta = [
     `**Type:** \`${definition.type}\``,
     `**Latest version:** \`${definition.latestVersion}\``,
-  ].join(" · ");
+  ].join(" / ");
 
   const sections = [frontmatter, "", banner, "", meta];
 
