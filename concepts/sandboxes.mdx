@@ -262,7 +262,7 @@ Set `cpu`, `memory` or `disk` to `auto` and Ravion sizes the sandbox from the st
 
 - The first run gets 4 vCPU, 16 GiB of memory and 40 GiB of disk.
 - After each run, Ravion records the step's peak CPU, memory and disk and works out the size for its next run. Sizes are tracked per pipeline step and execution environment.
-- Memory and disk are set to the highest peak of the last 10 runs plus 25% headroom. They grow right away and shrink by at most half per run.
+- Memory and disk are set to the highest peak of the last 10 runs, sized so the peak uses 90% of it. They grow right away and shrink by at most half per run.
 - CPU moves up one size (2, 4, 8, 16, 32 or 64 vCPU) when a step uses nearly all of its vCPUs, and down one size after 5 runs in a row that use less than half.
 - If a step runs out of memory or disk, Ravion doubles that resource for its next run.
 - Sizes never go above what the largest host type in your execution environment can fit.
