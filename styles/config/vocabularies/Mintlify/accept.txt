@@ -214,3 +214,4 @@ cache_from
 NVMe
 prefetches
 toolchains
+Slugify
