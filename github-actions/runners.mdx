@@ -147,7 +147,7 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=auto/memory=auto/disk=auto/in
 - The first run gets 4 vCPU, 16 GiB of memory and 40 GiB of disk.
 - After each run, Ravion records the job's peak CPU, memory and disk, and works out the size for the job's next run. Sizes are tracked per repository, workflow file and job name.
 - Memory and disk are set to the highest peak of the last 10 runs, sized so the peak uses 90% of it, in whole GiB. If a job uses 95% or more of its memory or disk, that resource grows by 25% for the next run. Memory and disk grow right away and shrink by at most half per run.
-- CPU is a whole number of vCPUs from 2 to 64. When a job uses 90% or more of its vCPUs, CPU grows by 25% (at least 1 vCPU). After 5 runs in a row that use less than half, it shrinks to fit the highest of those peaks at 90%, by at most half per run. Jobs of any length count: the sandbox samples CPU every second for the first 30 seconds, then every 5 seconds.
+- CPU is a whole number of vCPUs from 2 to 64. When a job uses 90% or more of its vCPUs, CPU grows by 25% (at least 1 vCPU). After 2 runs in a row that use less than half, it shrinks to fit the highest of those peaks at 90%, by at most half per run. Jobs of any length count: the sandbox samples CPU every second for the first 30 seconds, then every 5 seconds.
 - If a job runs out of memory or disk, Ravion doubles that resource for its next run. Ravion then reruns the failed job automatically at the larger size, up to twice per workflow run. GitHub shows the failed attempt and then the rerun.
 - Sizes never go above what the largest host type in your execution environment can fit.
 
