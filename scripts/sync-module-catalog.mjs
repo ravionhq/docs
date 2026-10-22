@@ -492,7 +492,7 @@ function renderPage(definition, version, graph, inputSections, inputPages) {
   return `${sections.join("\n").trimEnd()}\n`;
 }
 
-function updateDocsJson(pageSlugs, splitInputPages) {
+function updateDocsJson(pageSlugs, splitInputPages, splitInputPageDetails, oldPages) {
   const docsJson = JSON.parse(readFileSync(docsJsonPath, "utf8"));
   const tabs = docsJson.navigation?.tabs ?? [];
   const docTab = tabs.find((t) => t.tab === "Documentation");
@@ -522,7 +522,90 @@ function updateDocsJson(pageSlugs, splitInputPages) {
     pages: standardLibraryPages,
   });
 
+  updateCatalogRedirects(
+    docsJson,
+    pageSlugs,
+    splitInputPages,
+    splitInputPageDetails,
+    oldPages,
+  );
   writeFileSync(docsJsonPath, `${JSON.stringify(docsJson, null, 2)}\n`);
+}
+
+function collectExistingInputPages() {
+  const pages = [];
+  for (const entry of readdirSync(targetDir, {withFileTypes: true})) {
+    if (!entry.isDirectory()) continue;
+
+    const moduleDir = path.join(targetDir, entry.name);
+    for (const file of readdirSync(moduleDir, {withFileTypes: true})) {
+      if (!file.isFile() || !file.name.endsWith(".mdx")) continue;
+
+      const content = readFileSync(path.join(moduleDir, file.name), "utf8");
+      const firstHeading = content.match(/^###\s+(.+?)\s*$/m)?.[1]?.trim() ?? null;
+      pages.push({
+        type: entry.name,
+        slug: path.basename(file.name, ".mdx"),
+        firstHeading,
+      });
+    }
+  }
+  return pages;
+}
+
+function updateCatalogRedirects(
+  docsJson,
+  pageSlugs,
+  splitInputPages,
+  splitInputPageDetails,
+  oldPages,
+) {
+  const livePages = new Set(pageSlugs.map((pagePath) => `/${pagePath}`));
+  for (const pagePaths of splitInputPages.values()) {
+    for (const pagePath of pagePaths) livePages.add(`/${pagePath}`);
+  }
+
+  const redirects = [];
+  const catalogRedirectIndexes = new Map();
+  for (const redirect of docsJson.redirects ?? []) {
+    const source = redirect.source;
+    if (
+      typeof source !== "string" ||
+      !source.startsWith("/module-definitions/catalog/")
+    ) {
+      redirects.push(redirect);
+      continue;
+    }
+    if (livePages.has(source) || catalogRedirectIndexes.has(source)) continue;
+    catalogRedirectIndexes.set(source, redirects.length);
+    redirects.push(redirect);
+  }
+
+  for (const page of oldPages) {
+    const source = `/module-definitions/catalog/${page.type}/${page.slug}`;
+    if (livePages.has(source)) continue;
+
+    const currentPage = (splitInputPageDetails.get(page.type) ?? []).find((candidate) =>
+      candidate.sections.some(
+        (section) =>
+          section.heading === page.firstHeading ||
+          section.displayLabel === page.firstHeading,
+      ),
+    );
+    const destination = currentPage
+      ? `/module-definitions/catalog/${page.type}/${currentPage.slug}`
+      : `/module-definitions/catalog/${page.type}`;
+    const redirect = {source, destination};
+    const existingIndex = catalogRedirectIndexes.get(source);
+    if (existingIndex === undefined) {
+      catalogRedirectIndexes.set(source, redirects.length);
+      redirects.push(redirect);
+    } else {
+      redirects[existingIndex] = redirect;
+    }
+  }
+
+  docsJson.redirects = redirects;
 }
 
 const definitions = ravion([
@@ -546,10 +629,12 @@ if (definitions.length === 0) {
 definitions.sort((a, b) => a.type.localeCompare(b.type));
 
 mkdirSync(targetDir, {recursive: true});
+const oldInputPages = collectExistingInputPages();
 
 const generatedFiles = new Set();
 const pageSlugs = [];
 const splitInputPages = new Map();
+const splitInputPageDetails = new Map();
 const anchorRedirectDocs = [];
 
 // Fetch every version first so the relationship graph can span the whole
@@ -587,6 +672,7 @@ for (const definition of definitions) {
       pagePaths.push(pagePath);
     }
     splitInputPages.set(definition.type, pagePaths);
+    splitInputPageDetails.set(definition.type, inputPages);
     const anchors = {};
     for (const page of inputPages) {
       const pagePath = `${mainPagePath}/${page.slug}`;
@@ -634,5 +720,5 @@ writeFileSync(
   path.join(root, "catalog-anchor-redirects.js"),
   renderAnchorRedirectScript(anchorRedirectDocs),
 );
-updateDocsJson(pageSlugs, splitInputPages);
+updateDocsJson(pageSlugs, splitInputPages, splitInputPageDetails, oldInputPages);
 console.log(`updated docs.json with ${pageSlugs.length} catalog pages`);

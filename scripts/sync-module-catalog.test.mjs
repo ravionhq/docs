@@ -248,6 +248,125 @@ console.log(JSON.stringify(process.argv[3] === "definition" ? definitions : vers
   );
 });
 
+test("catalog sync redirects moved input pages and removes redirects to live pages", (t) => {
+  const root = mkdtempSync(path.join(tmpdir(), "ravion-catalog-moved-"));
+  t.after(() => rmSync(root, {recursive: true, force: true}));
+  mkdirSync(path.join(root, "bin"));
+  mkdirSync(path.join(root, "snippets"));
+
+  const unrelatedRedirect = {
+    source: "/config-as-code/old-path",
+    destination: "/config-as-code/new-path",
+  };
+  const docsJsonPath = path.join(root, "docs.json");
+  writeFileSync(
+    docsJsonPath,
+    JSON.stringify({
+      navigation: {
+        tabs: [{tab: "Documentation", groups: [{group: "Modules", pages: []}]}],
+      },
+      redirects: [unrelatedRedirect],
+    }),
+  );
+
+  const definitions = [
+    {
+      type: "rvn-shifting",
+      name: "Shifting Module",
+      latestVersion: "1.0.0",
+      latestVersionId: "version-shifting",
+      organizationId: null,
+    },
+  ];
+  const versionFor = (counts) => ({
+    config: {
+      inputs: counts.flatMap(([label, count]) => [
+        {id: label.toLowerCase(), type: "section", label},
+        ...Array.from({length: count}, (_, index) => ({
+          id: `${label.toLowerCase()}_${index}`,
+          type: "string",
+        })),
+      ]),
+    },
+  });
+  const versionsPath = path.join(root, "versions.json");
+  writeFileSync(
+    versionsPath,
+    JSON.stringify({
+      "version-shifting": versionFor([
+        ["General", 80],
+        ["Advanced", 40],
+        ["Networking", 40],
+        ["Miscellaneous", 20],
+      ]),
+    }),
+  );
+  writeFileSync(
+    path.join(root, "bin/ravion"),
+    `#!/usr/bin/env node
+const {readFileSync} = require("node:fs");
+const definitions = ${JSON.stringify(definitions)};
+const versions = JSON.parse(readFileSync(${JSON.stringify(versionsPath)}, "utf8"));
+console.log(JSON.stringify(process.argv[3] === "definition" ? definitions : versions[process.argv[5]]));
+`,
+    {mode: 0o755},
+  );
+
+  const runSync = () => execFileSync(process.execPath, [script], {
+    cwd: root,
+    env: {...process.env, PATH: `${path.join(root, "bin")}${path.delimiter}${process.env.PATH}`},
+  });
+  runSync();
+
+  const firstDocsJson = JSON.parse(readFileSync(docsJsonPath, "utf8"));
+  firstDocsJson.redirects.push({
+    source: "/module-definitions/catalog/rvn-shifting/inputs-general",
+    destination: "/module-definitions/catalog/rvn-shifting/old-target",
+  });
+  writeFileSync(docsJsonPath, JSON.stringify(firstDocsJson));
+  writeFileSync(
+    versionsPath,
+    JSON.stringify({
+      "version-shifting": versionFor([
+        ["General", 100],
+        ["Advanced", 30],
+        ["Networking", 30],
+        ["Miscellaneous", 30],
+      ]),
+    }),
+  );
+
+  runSync();
+
+  const docsJson = JSON.parse(readFileSync(docsJsonPath, "utf8"));
+  const movedRedirect = docsJson.redirects.find(
+    (redirect) =>
+      redirect.source === "/module-definitions/catalog/rvn-shifting/inputs-networking",
+  );
+  assert.deepEqual(movedRedirect, {
+    source: "/module-definitions/catalog/rvn-shifting/inputs-networking",
+    destination: "/module-definitions/catalog/rvn-shifting/inputs-advanced",
+  });
+  assert.deepEqual(
+    docsJson.redirects.find((redirect) => redirect.source === unrelatedRedirect.source),
+    unrelatedRedirect,
+  );
+  assert.equal(
+    docsJson.redirects.some(
+      (redirect) =>
+        redirect.source === "/module-definitions/catalog/rvn-shifting/inputs-general",
+    ),
+    false,
+  );
+
+  const livePages = new Set([
+    "/module-definitions/catalog/rvn-shifting",
+    "/module-definitions/catalog/rvn-shifting/inputs-general",
+    "/module-definitions/catalog/rvn-shifting/inputs-advanced",
+  ]);
+  assert.ok(docsJson.redirects.every((redirect) => !livePages.has(redirect.source)));
+});
+
 test("catalog sync rejects an input section that exceeds the page field limit", (t) => {
   const root = mkdtempSync(path.join(tmpdir(), "ravion-catalog-overflow-"));
   t.after(() => rmSync(root, {recursive: true, force: true}));
