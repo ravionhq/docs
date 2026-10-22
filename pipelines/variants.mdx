@@ -43,7 +43,7 @@ Triggering the `production` variant resolves `module_instance` to `production.we
 
 ## Hard-code input values per variant
 
-A variant's `input` map locks specific [pipeline inputs](/pipelines/config-reference#inputs) to fixed values. Locked values cannot be overridden by triggers or at run time — attempting to override one fails validation with `variant_locked_override`.
+A variant's `input` map locks specific [pipeline inputs](/pipelines/config-reference/inputs#inputs) to fixed values. Locked values cannot be overridden by triggers or at run time — attempting to override one fails validation with `variant_locked_override`.
 
 ```yaml
 inputs:
@@ -84,7 +84,7 @@ Use this to guarantee environment-specific settings — the production variant a
 Input values resolve with this precedence:
 
 1. Variant hard-coded `input` values
-2. Values provided when the run starts — manually or from a [trigger's `run` config](/pipelines/config-reference#triggerrunvariantconfig)
+2. Values provided when the run starts — manually or from a [trigger's `run` config](/pipelines/config-reference/triggers#triggerrunvariantconfig)
 3. The input's `default`
 
 <Note>
@@ -115,4 +115,4 @@ Every variant ID in `run` must match a declared variant, and any required input 
 
 ## Schema reference
 
-See [VariantDefinition](/pipelines/config-reference#variantdefinition) for every field.
+See [VariantDefinition](/pipelines/config-reference/variants#variantdefinition) for every field.

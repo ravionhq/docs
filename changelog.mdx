@@ -455,7 +455,7 @@ Update your AWS account connection in [**Settings / AWS accounts**](https://app.
 - The dashboard now uses a scaled desktop layout on phones so content fits the screen.
 - Projects pages now open the only project directly when you enter an organization with one project.
 - Route loading now shows page-specific skeletons instead of a blank dashboard shell.
-- [`instance_size`](https://www.ravion.com/docs/pipelines/config-reference#ec2stepinfrastructure) arrays are now accepted for EC2 infrastructure configuration.
+- [`instance_size`](https://www.ravion.com/docs/pipelines/config-reference/step-infrastructure#ec2stepinfrastructure) arrays are now accepted for EC2 infrastructure configuration.
 
 ### Fixes
 
@@ -717,7 +717,7 @@ Update your AWS account connection in [**Settings / AWS accounts**](https://app.
 
 ### Features
 
-- **SOCI lazy loading:** Set `soci_enabled` on a [`build:image` step](https://www.ravion.com/docs/pipelines/config-reference#buildimagecistep) to use lazy-loaded container images for Fargate. Standard modules will enable it by default after further testing.
+- **SOCI lazy loading:** Set `soci_enabled` on a [`build:image` step](https://www.ravion.com/docs/pipelines/config-reference/ci-steps#buildimagecistep) to use lazy-loaded container images for Fargate. Standard modules will enable it by default after further testing.
 - **Billing and usage settings:** Manage organization plans, add-ons, payment methods, invoices, and usage from the settings pages.
 
 ### Improvements
@@ -1097,7 +1097,7 @@ Update your AWS account connection in [**Settings / AWS accounts**](https://app.
 ### Features
 
 - **Public module catalog:** Browse globally published active modules without signing in. [Module catalog](https://www.ravion.com/docs/module-definitions/catalog)
-- **Nested module references:** Configure module references inside object maps and arrays. [Module definition schema](https://www.ravion.com/docs/module-definitions/definition-schema/inputs#refinputproperty)
+- **Nested module references:** Configure module references inside object maps and arrays. [Module definition schema](https://www.ravion.com/docs/module-definitions/definition-schema/object-input-types#refinputproperty)
 - **Task health graph:** View task health relationships in a dedicated graph.
 
 ### Improvements

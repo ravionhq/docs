@@ -69,7 +69,7 @@ A backslash that should itself stay literal is doubled: `\\<< pipeline.input.x >
 
 | Namespace             | Available in              | Description                                                    |
 | --------------------- | ------------------------- | -------------------------------------------------------------- |
-| `pipeline.input.*`    | steps, variants           | Declared [pipeline inputs](/pipelines/config-reference#inputs) |
+| `pipeline.input.*`    | steps, variants           | Declared [pipeline inputs](/pipelines/config-reference/inputs#inputs) |
 | `pipeline.run.*`      | steps                     | Run metadata: `id`, `description`                              |
 | `pipeline.variant.*`  | steps                     | Current variant: `id`, `name`                                  |
 | `steps.{id}.output.*` | steps                     | Outputs of a previous step                                     |
@@ -121,7 +121,7 @@ References the outputs and inputs of other steps. The step ID must exist in the 
     image_ref: << steps.build_web_app.output.image_digest >>
 ```
 
-Available outputs depend on the step type. For example, [`build` steps](/pipelines/config-reference#buildstep) output `build_ref`, `image_uri`, `image_digest`, and `status`, while [`deploy` steps](/pipelines/config-reference#deploystep) output `deployment_id`, `status`, and `success`. CI steps additionally output `exit_code`, `success`, and `duration_ms`.
+Available outputs depend on the step type. For example, [`build` steps](/pipelines/config-reference/steps#buildstep) output `build_ref`, `image_uri`, `image_digest`, and `status`, while [`deploy` steps](/pipelines/config-reference/steps#deploystep) output `deployment_id`, `status`, and `success`. CI steps additionally output `exit_code`, `success`, and `duration_ms`.
 
 [`custom` steps](/pipelines/step-types#publishing-outputs) can also publish their own outputs: declare names in the step's `outputs` list and have commands append `name=value` lines to the file at `$RAVION_OUTPUT`. Each declared name is then readable as `<< steps.{id}.output.{name} >>`.
 

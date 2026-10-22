@@ -180,7 +180,7 @@ Hosts run in your AWS account, so you pay AWS directly at your own rates. Ravion
 
 Use sandboxes for pipeline steps and module builds by default, including builds, tests, migrations and other scripted tasks.
 
-Use `ec2` or `ec2-spot` [infrastructure](/pipelines/config-reference#stepinfrastructure) only when you need a custom AMI or a dedicated EC2 instance. See [EC2 runners](/pipelines/step-types#ec2-runners) for what those images include.
+Use `ec2` or `ec2-spot` [infrastructure](/pipelines/config-reference/step-infrastructure#stepinfrastructure) only when you need a custom AMI or a dedicated EC2 instance. See [EC2 runners](/pipelines/step-types#ec2-runners) for what those images include.
 
 ## What runs inside a sandbox
 
@@ -254,7 +254,7 @@ Replace `ci-builders` with the ID or given ID of your execution environment. To 
 | `disk_cache` | No | `off` | Keep the sandbox's disk between runs. See [Disk cache](#disk-cache). |
 | `interruptible` | No | `false` | Allow Spot hosts, and rerun the step from the start if its host is lost. See [Interruptible steps](#interruptible-steps-and-spot-hosts). |
 
-Sandboxes don't take `instance_size`, `ami` or `storage`. See [SandboxStepInfrastructure](/pipelines/config-reference#sandboxstepinfrastructure) for the full schema.
+Sandboxes don't take `instance_size`, `ami` or `storage`. See [SandboxStepInfrastructure](/pipelines/config-reference/step-infrastructure#sandboxstepinfrastructure) for the full schema.
 
 ## Module builds
 

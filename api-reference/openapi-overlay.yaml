@@ -11,13 +11,13 @@ actions:
   - target: $.components.schemas['Module.InputProperty']
     update:
       type: object
-      description: "A module input property: the same object as one entry in a module definition's `inputs` list, with its `type` field selecting the input type. See [Input types](https://www.ravion.com/docs/module-definitions/definition-schema/input-types) for every type and its fields."
+      description: "A module input property: the same object as one entry in a module definition's `inputs` list, with its `type` field selecting the input type. See [Input types](https://www.ravion.com/docs/module-definitions/definition-schema/input-types) and [Object input types](https://www.ravion.com/docs/module-definitions/definition-schema/object-input-types) for every type and its fields."
   - target: $.components.schemas.DefaultValueDefinition.properties.schema
     update:
-      description: "Schema describing the value this default accepts. It uses the same format as an entry in a module definition's `inputs` list, and its `type` field picks the input type. See [Input types](https://www.ravion.com/docs/module-definitions/definition-schema/input-types) for every type and its fields."
+      description: "Schema describing the value this default accepts. It uses the same format as an entry in a module definition's `inputs` list, and its `type` field picks the input type. See [Input types](https://www.ravion.com/docs/module-definitions/definition-schema/input-types) and [Object input types](https://www.ravion.com/docs/module-definitions/definition-schema/object-input-types) for every type and its fields."
   - target: $.paths['/default-value-definitions'].post.requestBody.content['application/json'].schema.properties.data.properties.schema
     update:
-      description: "Schema describing the value this default accepts. It uses the same format as an entry in a module definition's `inputs` list, and its `type` field picks the input type. See [Input types](https://www.ravion.com/docs/module-definitions/definition-schema/input-types) for every type and its fields."
+      description: "Schema describing the value this default accepts. It uses the same format as an entry in a module definition's `inputs` list, and its `type` field picks the input type. See [Input types](https://www.ravion.com/docs/module-definitions/definition-schema/input-types) and [Object input types](https://www.ravion.com/docs/module-definitions/definition-schema/object-input-types) for every type and its fields."
   - target: $.paths['/default-value-definitions/{id}'].patch.requestBody.content['application/json'].schema.properties.data.properties.schema
     update:
-      description: "Schema describing the value this default accepts. It uses the same format as an entry in a module definition's `inputs` list, and its `type` field picks the input type. See [Input types](https://www.ravion.com/docs/module-definitions/definition-schema/input-types) for every type and its fields."
+      description: "Schema describing the value this default accepts. It uses the same format as an entry in a module definition's `inputs` list, and its `type` field picks the input type. See [Input types](https://www.ravion.com/docs/module-definitions/definition-schema/input-types) and [Object input types](https://www.ravion.com/docs/module-definitions/definition-schema/object-input-types) for every type and its fields."
