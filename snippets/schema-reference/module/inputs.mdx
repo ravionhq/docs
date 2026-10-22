@@ -14,6 +14,22 @@
 
 Input configuration defining the module's form fields
 
+### InvalidWhenRule
+
+An input value combination that an input rejects
+
+<ResponseField name="all" type="ShowWhen" required>
+  Conditions on input values, matched like show_when; the rule matches when all of them hold. A hidden input counts as unset, and a shown input left empty counts as its default.
+
+  See: [ShowWhen](#showwhen)
+</ResponseField>
+
+<ResponseField name="message" type="string" required>
+  Error shown on the input
+
+  _(minLen:1)_
+</ResponseField>
+
 ### ShowWhen
 
 Conditional visibility mapping; array source values support contains and contains-all matching.

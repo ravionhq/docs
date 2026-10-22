@@ -431,6 +431,7 @@ Note: Additional validation via CEL:
 - every infrastructure type needs exactly one target mode: execution_environment_id, or aws_account_id plus region
 - an instance_size list must not mix x86_64 and ARM64 (Graviton) types
 - a sandbox with disk_cache: auto needs a git source to name its disk by (a github:runner step names it by its job)
+- a sandbox's cache_paths need disk_cache, and are clean absolute directories outside the guest's own
 
 Discriminated union. The `type` field selects which schema applies.
 
@@ -921,6 +922,22 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
   "_" or "-".
 
   _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="cache_paths" type="string[] | null">
+  Directories to keep with the build caches. A sandbox that keeps its disk
+  keeps everything on it between runs. A new version of the pool's base
+  image moves the disk onto the new image at its next run: the build caches
+  go with it, and everything else starts again from the new image. A new
+  major version of the base image starts the build caches again too. Docker's
+  images, layers and volumes, the GitHub Actions tool cache and job
+  workspaces, the checkout and the home directory `/root` are always kept.
+  List another directory here when a step keeps a cache somewhere else,
+  such as a tool under `/opt` or `/usr/local`. Up to 16 absolute
+  directories, outside `/proc`, `/sys`, `/dev`, `/run`, `/tmp`,
+  `/etc/ravion` and `/var/lib/ravion`.
+
+  _(templateable)_
 </ResponseField>
 
 <ResponseField name="interruptible" type="boolean | null">

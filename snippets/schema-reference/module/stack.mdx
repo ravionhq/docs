@@ -349,9 +349,10 @@ Concurrency configuration for controlling parallel execution
   chain, anchored to the original first workflow start, is under 30 seconds.
   Replacements never reset the 30-second cap. Replacements can continue below
   capacity, including at value 1. At either age limit, it preserves the
-  oldest and newest contenders while cancelling intermediates. Built-in
-  deploy and terraform:apply steps cannot be cancelled by this policy after
-  execution starts; manual cancellation and cancel-in-progress are unchanged.
+  oldest and newest contenders while cancelling intermediates. A run is not
+  cancelled by either cancelling behavior once a step with "cancellable:
+  false" (deploy and terraform:apply by default) has started; manual
+  cancellation is unchanged.
   "skip" denies the new contender and ends the run as skipped.
   This controls trigger/step/block admission only and never relaxes the
   separate deployment-manager serialization used by deploy steps.
@@ -387,6 +388,33 @@ Concurrency configuration for controlling parallel execution
   Default: "oldest"
 
   Allowed values: `oldest` | `newest`
+</ResponseField>
+
+<ResponseField name="cancellable" type="boolean">
+  Whether a run holding this key at this step or block may be cancelled by
+  a newer run under "cancel-in-progress" or "cancel-intermediate". With
+  false, the newer run queues behind it instead, and a cancellation that
+  arrives after the step has started is refused. Manual cancellation is
+  unaffected. Defaults to false for deploy and terraform:apply steps and
+  true for everything else. For example, a plan step with
+  "cancel-in-progress" replaces an older run's plan on the same key but
+  queues behind an apply step that shares the key with "cancellable: false".
+</ResponseField>
+
+<ResponseField name="mode" type="enum" default="exclusive">
+  How this holder relates to other holders of the key. "exclusive" takes
+  one of the `value` slots. "shared" runs alongside any number of other
+  shared holders but never alongside an exclusive one: it queues while an
+  exclusive holder has the key, and an exclusive contender queues behind
+  it. Together they form a reader/writer lock, e.g. Terraform plans
+  (shared) run in parallel across branches while an apply (exclusive)
+  has the stack to itself. Waiters are promoted in arrival order, so a
+  queued exclusive run is never starved by later shared arrivals. Steps
+  and blocks of one run that hold the same key at the same time must use
+  the same mode.
+  Default: "exclusive"
+
+  Allowed values: `exclusive` | `shared`
 </ResponseField>
 
 ### Pipeline.TriggerFilter
@@ -490,6 +518,15 @@ Allowed values:
 - `cancel-in-progress`
 - `cancel-intermediate`
 - `skip`
+
+### Pipeline.ConcurrencyMode
+
+How a holder of the key relates to the other holders
+
+Allowed values:
+
+- `exclusive`
+- `shared`
 
 ### Pipeline.ConcurrencyScope
 

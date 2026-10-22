@@ -26,6 +26,14 @@ User-authored project config file consumed by `ravion projects config apply --fi
   See: [Environment](#environment)
 </ResponseField>
 
+<ResponseField name="autoapprove" type="boolean">
+  Pass autoapprove=true to the stack change pipeline runs applying this file starts, so
+  plans without destructive changes apply without waiting at the approval step. Plans that
+  destroy or replace resources still wait for approval. The CLI's `--autoapprove` flag
+  overrides this value in both directions: `--autoapprove=false` makes every run wait at
+  its approval gate even when the file sets `autoapprove: true`.
+</ResponseField>
+
 ## Project
 
 Writable project metadata accepted by project config apply.
