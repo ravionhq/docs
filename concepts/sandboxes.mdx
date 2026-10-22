@@ -345,14 +345,6 @@ Pick a region close to your data instead when:
 
 A run restores the disk saved for its branch. If there's none, it uses the pull request's base branch, then the repository's default branch. A step saves its disk to its own branch when it succeeds or one of its commands fails. It does not save when cancelled, timed out, out of disk, or when its host is lost.
 
-## Shared build cache for pipeline steps
-
-Private pipeline sandbox steps with a [git source](#pipeline-steps) automatically use a shared build cache, independently of `disk_cache`. Ravion configures Go builds through `GOCACHEPROG`. If you already use [sccache](https://github.com/mozilla/sccache), Rust builds use the shared cache through `SCCACHE_WEBDAV_ENDPOINT`.
-
-Ravion scopes cache entries to the repository and branch, and reads from the repository's default branch when the branch has no entry. Pipeline steps share entries with that repository's [GitHub Actions jobs](/github-actions/caching).
-
-Your own `GOCACHEPROG` or sccache settings take precedence. To turn off either cache for a step, set `RAVION_GO_CACHE_PROG=off` or `RAVION_SCCACHE=off` in its environment. The shared build cache does not apply inside [container instructions](#what-runs-inside-a-sandbox) or Docker builds.
-
 To start a run on clean disks, pass `--no-cache` to `ravion pipeline run create` or `ravion pipeline run retry`.
 
 ### Delete cached state
@@ -371,6 +363,14 @@ New sandbox jobs resume after cleanup completes. If cleanup fails, they stay pau
 <Warning>
   Deleting caches cannot be undone. Fix or remove a compromised dependency before running jobs again; deleting its cached files does not make the dependency safe or revoke exposed credentials.
 </Warning>
+
+## Shared build cache for pipeline steps
+
+Private pipeline sandbox steps with a [git source](#pipeline-steps) automatically use a shared build cache, independently of `disk_cache`. Ravion configures Go builds through `GOCACHEPROG`. If you already use [sccache](https://github.com/mozilla/sccache), Rust builds use the shared cache through `SCCACHE_WEBDAV_ENDPOINT`.
+
+Ravion scopes cache entries to the repository and branch, and reads from the repository's default branch when the branch has no entry. Pipeline steps share entries with that repository's [GitHub Actions jobs](/github-actions/caching).
+
+Your own `GOCACHEPROG` or sccache settings take precedence. To turn off either cache for a step, set `RAVION_GO_CACHE_PROG=off` or `RAVION_SCCACHE=off` in its environment. The shared build cache does not apply inside [container instructions](#what-runs-inside-a-sandbox) or Docker builds.
 
 ## Limits and caveats
 

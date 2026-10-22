@@ -49,7 +49,7 @@ Add a `build` step to your pipeline and point it at the module instance:
 - `module_instance` accepts a unique ID (`mi_…`), `environment.module`, or `project.environment.module`.
 - `input` passes build-time values the module accepts, such as a tag, branch, or commit. Check the module's docs or schema (`ravion module schema <module-type>`) for what it takes.
 
-Builds run in your AWS account, so your source code never enters the Ravion control plane. Sandbox builds keep [Docker layer cache](#docker-layer-cache) on disk between successful runs.
+Builds run in your AWS account, so your source code never enters the Ravion control plane. Sandbox builds keep [Docker layer cache](#docker-layer-cache) on disk after a build succeeds or one of its commands fails.
 
 <Note>
   Building something that isn't a module? Use the standalone `build:image` or `build:static` [CI
@@ -66,13 +66,13 @@ The build uses the module's Terraform execution environment unless you set **Bui
 
 Existing module instances keep their saved builder settings when upgraded. To move an existing EC2 build to a sandbox, open **Builder config**, set **Builder capacity type** to **Sandbox**, and choose its CPU and memory. Older module versions may still label this option **Sandbox (preview)**.
 
-Sandbox builds use `disk_cache: auto` to keep dependencies, build output and Docker layers between successful runs. **Interruptible build** is on by default, allowing spot hosts and a restart from the beginning if the host is lost. Turn it off if your build changes external state, such as running [database migrations](/guides/database-migrations).
+Sandbox builds use `disk_cache: auto` to keep dependencies, build output and Docker layers after a build succeeds or one of its commands fails. **Interruptible build** is on by default, allowing spot hosts and a restart from the beginning if the host is lost. Turn it off if your build changes external state, such as running [database migrations](/guides/database-migrations).
 
 See [Sandboxes](/concepts/sandboxes) for pool settings, disk cache and cold-start behavior.
 
 ## Docker layer cache
 
-Sandbox module builds keep Docker's build cache on the sandbox disk. With `disk_cache: auto`, Ravion saves the disk after a successful run and restores it for later runs. Dependencies, build output and Docker layers remain available without configuring a separate cache. See [Disk cache](/concepts/sandboxes#disk-cache) for branch restore rules.
+Sandbox module builds keep Docker's build cache on the sandbox disk. With `disk_cache: auto`, Ravion saves the disk when a build succeeds or one of its commands fails, then restores it for later runs. Dependencies, build output and Docker layers remain available without configuring a separate cache. See [Disk cache](/concepts/sandboxes#disk-cache) for branch restore rules.
 
 Disk caching also benefits static asset and Lambda builds.
 
