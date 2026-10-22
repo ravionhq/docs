@@ -152,7 +152,7 @@ Type: string
 
 A show_when condition.
 
-One of: string \| integer \| boolean \| string \| integer \| boolean[], [ShowWhenNotCondition](#showwhennotcondition).
+One of: string \| integer \| boolean \| string \| integer \| boolean[], [ShowWhenNotCondition](#showwhennotcondition), [ShowWhenPatternsCondition](#showwhenpatternscondition).
 
 ### DynamicValuesRef
 
@@ -254,6 +254,14 @@ Negated show_when condition.
 
 <ResponseField name="not" type="string | integer | boolean | string | integer | boolean[]" required>
   Show the property only when the source value does not match this condition.
+</ResponseField>
+
+### ShowWhenPatternsCondition
+
+Regex condition for string values; holds when the string matches every ECMAScript regular expression in the list, like input patterns.
+
+<ResponseField name="patterns" type="string[]" required>
+  Show the property only when the source string matches every ECMAScript regular expression in this list.
 </ResponseField>
 
 ### ShowWhenValue
