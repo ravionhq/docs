@@ -1,0 +1,14 @@
+overlay: 1.1.0
+info:
+  title: Ravion docs API reference adjustments
+  version: 1.0.0
+extends: https://api.ravion.com/openapi.yaml
+actions:
+  # Module.InputProperty is a recursive 14-type union; inlined on every page that uses it,
+  # it pushes those pages past 1 MB of HTML. Link to the input types reference instead.
+  - target: $.components.schemas['Module.InputProperty'].oneOf
+    remove: true
+  - target: $.components.schemas['Module.InputProperty']
+    update:
+      type: object
+      description: "A module input property: the same object as one entry in a module definition's `inputs` list, with its `type` field selecting the input type. See [Input types](https://www.ravion.com/docs/module-definitions/definition-schema/input-types) for every type and its fields."

@@ -313,7 +313,12 @@
           {
             "group": "API reference",
             "boost": 0.25,
-            "openapi": "https://api.ravion.com/openapi.yaml"
+            "openapi": {
+              "source": "https://api.ravion.com/openapi.yaml",
+              "overlays": [
+                "api-reference/openapi-overlay.yaml"
+              ]
+            }
           }
         ]
       },
