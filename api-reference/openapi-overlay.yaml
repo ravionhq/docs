@@ -21,3 +21,138 @@ actions:
   - target: $.paths['/default-value-definitions/{id}'].patch.requestBody.content['application/json'].schema.properties.data.properties.schema
     update:
       description: "Schema describing the value this default accepts. It uses the same format as an entry in a module definition's `inputs` list, and its `type` field picks the input type. See [Input types](https://www.ravion.com/docs/module-definitions/definition-schema/input-types) and [Object input types](https://www.ravion.com/docs/module-definitions/definition-schema/object-input-types) for every type and its fields."
+  # These payloads inline full resource schemas into Describe's 19-variant union.
+  # Summarize each resource to keep the Describe page below the HTML size limit.
+  # Avoid inlining the API key schema into the Describe response.
+  - target: $.components.schemas.LinkApiKey.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkApiKey.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved API key, in the same shape the API key get endpoint returns."
+  # Avoid inlining the AWS account schema into the Describe response.
+  - target: $.components.schemas.LinkAwsAccount.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkAwsAccount.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved AWS account, in the same shape the AWS account get endpoint returns."
+  # Avoid inlining the code source schema into the Describe response.
+  - target: $.components.schemas.LinkCodeSource.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkCodeSource.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved code source, in the same shape the code source get endpoint returns."
+  # Avoid inlining the default value definition schema into the Describe response.
+  - target: $.components.schemas.LinkDefaultValueDefinition.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkDefaultValueDefinition.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved default value definition, in the same shape the default value definition get endpoint returns."
+  # Avoid inlining the deployment resource schema into the Describe response.
+  - target: $.components.schemas.LinkDeploymentResource.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkDeploymentResource.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved deployment resource, in the same shape the deployment resource get endpoint returns."
+  # Avoid inlining the environment schema into the Describe response.
+  - target: $.components.schemas.LinkEnvironment.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkEnvironment.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved environment, in the same shape the environment get endpoint returns."
+  # Avoid inlining the execution environment schema into the Describe response.
+  - target: $.components.schemas.LinkExecutionEnvironment.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkExecutionEnvironment.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved execution environment, in the same shape the execution environment get endpoint returns."
+  # Avoid inlining the membership schema into the Describe response.
+  - target: $.components.schemas.LinkMembership.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkMembership.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved membership, in the same shape the membership get endpoint returns."
+  # Avoid inlining the module category schema into the Describe response.
+  - target: $.components.schemas.LinkModuleCategory.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkModuleCategory.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved module category, in the same shape the module category get endpoint returns."
+  # Avoid inlining the module definition schema into the Describe response.
+  - target: $.components.schemas.LinkModuleDefinition.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkModuleDefinition.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved module definition, in the same shape the module definition get endpoint returns."
+  # Avoid inlining the module deployment schema into the Describe response.
+  - target: $.components.schemas.LinkModuleDeployment.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkModuleDeployment.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved module deployment, in the same shape the module deployment get endpoint returns."
+  # Avoid inlining the module instance schema into the Describe response.
+  - target: $.components.schemas.LinkModuleInstance.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkModuleInstance.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved module instance, in the same shape the module instance get endpoint returns."
+  # Avoid inlining the organization schema into the Describe response.
+  - target: $.components.schemas.LinkOrganization.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkOrganization.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved organization, in the same shape the organization get endpoint returns."
+  # Avoid inlining the pipeline schema into the Describe response.
+  - target: $.components.schemas.LinkPipeline.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkPipeline.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved pipeline, in the same shape the pipeline get endpoint returns."
+  # Avoid inlining the pipeline run schema into the Describe response.
+  - target: $.components.schemas.LinkPipelineRun.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkPipelineRun.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved pipeline run, in the same shape the pipeline run get endpoint returns."
+  # Avoid inlining the project schema into the Describe response.
+  - target: $.components.schemas.LinkProject.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkProject.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved project, in the same shape the project get endpoint returns."
+  # Avoid inlining the service account schema into the Describe response.
+  - target: $.components.schemas.LinkServiceAccount.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkServiceAccount.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved service account, in the same shape the service account get endpoint returns."
+  # Avoid inlining the stack schema into the Describe response.
+  - target: $.components.schemas.LinkStack.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkStack.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved stack, in the same shape the stack get endpoint returns."
+  # Avoid inlining the step execution schema into the Describe response.
+  - target: $.components.schemas.LinkStepExecution.allOf[0].properties.resource.allOf
+    remove: true
+  - target: $.components.schemas.LinkStepExecution.allOf[0].properties.resource
+    update:
+      type: object
+      description: "The resolved step execution, in the same shape the step execution get endpoint returns."
