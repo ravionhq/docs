@@ -218,7 +218,7 @@ Jobs from public repositories, including pull requests from forks, run only on s
 1. Go to [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments), choose the environment, then open **Config / Sandboxes**.
 2. Turn on **Allow public repositories**.
 
-Each public repository gets its own runner group, and its jobs run without a disk cache. Jobs from public repositories with an invalid label, or that ask for EC2, stay queued.
+Each public repository gets its own runner group, and its jobs run without a disk cache. [Automatic sizing](#automatic-sizing) and its automatic reruns work the same as for private repositories. Jobs from public repositories with an invalid label, or that ask for EC2, stay queued.
 
 ## Next steps
 
