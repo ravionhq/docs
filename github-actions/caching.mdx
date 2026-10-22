@@ -58,6 +58,8 @@ Go builds use the same cache automatically through `GOCACHEPROG` unless you set 
 
 Rust builds that use [sccache](https://github.com/mozilla/sccache) share the same cache too. Ravion sets `SCCACHE_WEBDAV_ENDPOINT` for every sandbox job, so jobs that already set `RUSTC_WRAPPER=sccache` get cache hits without changes. A cache backend set in your workflow, such as `SCCACHE_BUCKET` or `SCCACHE_GHA_ENABLED`, still takes precedence.
 
+Pipeline sandbox steps with a git source use the same build cache; see [shared build cache for pipeline steps](/concepts/sandboxes#shared-build-cache-for-pipeline-steps).
+
 Public repositories get a separate cache per repository and can't read private caches. EC2 runners use GitHub's cache.
 
 ## Artifacts
