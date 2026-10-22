@@ -90,7 +90,14 @@
                 "root": "module-definitions/standard-library",
                 "pages": [
                   "module-definitions/catalog/rvn-acm-certificate",
-                  "module-definitions/catalog/rvn-aurora",
+                  {
+                    "group": "rvn-aurora",
+                    "root": "module-definitions/catalog/rvn-aurora",
+                    "pages": [
+                      "module-definitions/catalog/rvn-aurora/inputs-inputs",
+                      "module-definitions/catalog/rvn-aurora/inputs-misc"
+                    ]
+                  },
                   "module-definitions/catalog/rvn-aws-alb",
                   "module-definitions/catalog/rvn-aws-alternat",
                   "module-definitions/catalog/rvn-aws-ami",
@@ -102,15 +109,61 @@
                   "module-definitions/catalog/rvn-aws-secret",
                   "module-definitions/catalog/rvn-aws-static",
                   "module-definitions/catalog/rvn-cloudfront",
-                  "module-definitions/catalog/rvn-ec2-service",
-                  "module-definitions/catalog/rvn-ecs-cluster",
-                  "module-definitions/catalog/rvn-ecs-nlb",
-                  "module-definitions/catalog/rvn-ecs-web",
-                  "module-definitions/catalog/rvn-ecs-worker",
+                  {
+                    "group": "rvn-ec2-service",
+                    "root": "module-definitions/catalog/rvn-ec2-service",
+                    "pages": [
+                      "module-definitions/catalog/rvn-ec2-service/inputs"
+                    ]
+                  },
+                  {
+                    "group": "rvn-ecs-cluster",
+                    "root": "module-definitions/catalog/rvn-ecs-cluster",
+                    "pages": [
+                      "module-definitions/catalog/rvn-ecs-cluster/inputs"
+                    ]
+                  },
+                  {
+                    "group": "rvn-ecs-nlb",
+                    "root": "module-definitions/catalog/rvn-ecs-nlb",
+                    "pages": [
+                      "module-definitions/catalog/rvn-ecs-nlb/inputs-ecs-cluster",
+                      "module-definitions/catalog/rvn-ecs-nlb/inputs-iam-roles-and-policies"
+                    ]
+                  },
+                  {
+                    "group": "rvn-ecs-web",
+                    "root": "module-definitions/catalog/rvn-ecs-web",
+                    "pages": [
+                      "module-definitions/catalog/rvn-ecs-web/inputs-ecs-cluster",
+                      "module-definitions/catalog/rvn-ecs-web/inputs-pre-and-post-deploy"
+                    ]
+                  },
+                  {
+                    "group": "rvn-ecs-worker",
+                    "root": "module-definitions/catalog/rvn-ecs-worker",
+                    "pages": [
+                      "module-definitions/catalog/rvn-ecs-worker/inputs-ecs-cluster",
+                      "module-definitions/catalog/rvn-ecs-worker/inputs-networking-and-deployment"
+                    ]
+                  },
                   "module-definitions/catalog/rvn-efs",
                   "module-definitions/catalog/rvn-elasticache",
-                  "module-definitions/catalog/rvn-lambda",
-                  "module-definitions/catalog/rvn-rds",
+                  {
+                    "group": "rvn-lambda",
+                    "root": "module-definitions/catalog/rvn-lambda",
+                    "pages": [
+                      "module-definitions/catalog/rvn-lambda/inputs-aws-account-region",
+                      "module-definitions/catalog/rvn-lambda/inputs-image-registry-lifecycle"
+                    ]
+                  },
+                  {
+                    "group": "rvn-rds",
+                    "root": "module-definitions/catalog/rvn-rds",
+                    "pages": [
+                      "module-definitions/catalog/rvn-rds/inputs"
+                    ]
+                  },
                   "module-definitions/catalog/rvn-rds-proxy",
                   "module-definitions/catalog/rvn-route53",
                   "module-definitions/catalog/rvn-s3",
