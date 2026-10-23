@@ -64,6 +64,13 @@
             ]
           },
           {
+            "group": "Access control",
+            "pages": [
+              "access-control/rbac",
+              "access-control/custom-roles"
+            ]
+          },
+          {
             "group": "Migrate",
             "pages": [
               "migrate/from-flightcontrol",

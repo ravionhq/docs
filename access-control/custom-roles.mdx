@@ -1,0 +1,174 @@
+---
+title: "Custom roles"
+description: "Create custom roles with fine-grained policy statements, scoped to projects, environments, or resource attributes. Requires the Security and compliance bundle."
+"og:image": "https://www.ravion.com/og/docs/access-control/custom-roles.png"
+"twitter:image": "https://www.ravion.com/og/docs/access-control/custom-roles.png"
+---
+
+Custom roles let you define exactly what a principal can do, beyond the [system-managed roles](/access-control/rbac#system-managed-roles). Use them to grant access to one project, let developers deploy to every environment except production, or deny a specific action.
+
+<Note>
+Custom roles require the **Security and compliance bundle**. System-managed roles and [API key permission limits](/access-control/rbac#limit-api-key-permissions) are available on every plan.
+</Note>
+
+## Enable custom roles
+
+Custom roles are part of the compliance controls in the **Security and compliance bundle**. The bundle also includes SAML SSO, SCIM provisioning, and a standard BAA.
+
+1. Go to **Settings** → **Billing**.
+2. Under add-ons, turn on **Security and compliance bundle**.
+3. Confirm the change.
+
+Add-ons attach to a paid Team plan. They aren't available on the Free plan or during a trial. You need a role that can manage billing, such as **Owner** or **Billing**, to turn on the bundle.
+
+To create and assign custom roles, you also need the **Manager** or **Owner** role.
+
+### What happens if you turn off the bundle
+
+- You can't turn off the bundle while your organization has custom roles. Delete them first.
+- Once the bundle is scheduled to end, you can no longer create, edit, or assign custom roles.
+- You can always list, unassign, and delete custom roles, even without the bundle.
+
+## How a custom role is built
+
+A custom role is a named set of **statements**. A role grants nothing until you assign it. When you change a role's statements, every assignment picks up the change.
+
+Each statement has:
+
+| Field | Description |
+| --- | --- |
+| `effect` | `allow` or `deny`. A matching deny overrides every allow, from any role. |
+| `actions` | Actions on the resource type: `read`, `create`, `update`, or `delete`, as registered for that type in the authorization catalog. |
+| `resource` | The resource `type`, for example `moduleInstance`, and optional exact `ids`. Omit `ids` to select every resource of that type. |
+| `within` | Optional. Limits the statement to resources under a project, an environment, or another parent, for example `{"type": "project", "id": "..."}`. Omit for the whole organization. |
+| `conditions` | Optional. Resource attribute conditions, all of which must match. |
+| `givenId` | Optional. A name for the statement, unique within the role. |
+
+### Resource types
+
+Ravion checks actions on these resource types. Resources inherit scope from their parent: a module instance belongs to an environment, which belongs to a project, which belongs to the organization.
+
+`organization`, `project`, `environment`, `pipeline`, `pipelineRun`, `pipelineStepExecution`, `pipelineApproval`, `stack`, `moduleInstance`, `moduleDeployment`, `deploymentResource`, `terraformResource`, `infrastructureEvent`, `log`, `metric`, `codeSource`, `moduleDefinition`, `defaultValueDefinition`, `defaultValue`, `cloudAccount`, `domain`, `certificate`, `executionEnvironment`, `sandbox`, `app`, `credential`, `membership`, `serviceAccount`, `authorizationPolicy`, `billing`
+
+Get the full catalog, including the actions each type supports, from the [authorization catalog endpoint](/api-reference/overview) (`GET /authorization/catalog`).
+
+### Conditions
+
+A condition compares a resource attribute with one or more values. Attributes inherit from the nearest parent, and a value set directly on a resource overrides the inherited one.
+
+| Field | Description |
+| --- | --- |
+| `attribute` | Attribute key, for example `environment` or `moduleDefinitionId`. Case-sensitive. |
+| `operator` | `equal` takes one value. `in` takes one or more. |
+| `values` | Accepted values. Case-sensitive. |
+
+## Create a custom role
+
+Manage custom roles through the [Ravion API](/api-reference/overview). Every policy change includes the current policy revision as `expectedRevision`, so two people can't overwrite each other's changes.
+
+<Steps>
+<Step title="Get the current policy revision">
+
+```bash
+curl https://api.ravion.com/authorization/state \
+  -H "Authorization: Bearer $RAVION_API_KEY"
+```
+
+Use the returned revision as `expectedRevision` in the next request.
+
+</Step>
+<Step title="Create the role">
+
+This role lets developers read everything in one project and deploy its module instances, but never delete them:
+
+```bash
+curl -X POST https://api.ravion.com/authorization/roles \
+  -H "Authorization: Bearer $RAVION_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "key": "checkout-developer",
+    "name": "Checkout developer",
+    "description": "Deploys the checkout project",
+    "expectedRevision": 42,
+    "statements": [
+      {
+        "givenId": "read-project",
+        "effect": "allow",
+        "actions": ["read"],
+        "resource": {"type": "project"},
+        "within": [{"type": "project", "id": "<project-id>"}]
+      },
+      {
+        "givenId": "deploy-modules",
+        "effect": "allow",
+        "actions": ["read", "update"],
+        "resource": {"type": "moduleInstance"},
+        "within": [{"type": "project", "id": "<project-id>"}]
+      },
+      {
+        "givenId": "never-delete",
+        "effect": "deny",
+        "actions": ["delete"],
+        "resource": {"type": "moduleInstance"}
+      }
+    ]
+  }'
+```
+
+The role `key` must be unique in your organization and can't reuse a system-managed role key.
+
+</Step>
+<Step title="Assign the role">
+
+Give the role to a member or a service account with `--roles`, which takes system-managed role keys and custom role IDs:
+
+```bash
+ravion membership update <membership-id> --roles read-only,<custom-role-id>
+```
+
+You can also create an assignment with `POST /authorization/assignments` and a `roleId`.
+
+</Step>
+</Steps>
+
+## Start from a system-managed role
+
+To adjust a system-managed role, duplicate it and edit the copy:
+
+```bash
+curl -X POST https://api.ravion.com/authorization/system-roles/operator/duplicate \
+  -H "Authorization: Bearer $RAVION_API_KEY"
+```
+
+The copy is independent. Later changes to the system-managed role don't reach it, and existing assignments of the system-managed role don't change.
+
+## Example: deploy everywhere except production
+
+Pair **Operator** with a custom role that denies changes to production resources. The deny overrides the allows that Operator grants:
+
+```json
+{
+  "givenId": "no-production-changes",
+  "effect": "deny",
+  "actions": ["create", "update", "delete"],
+  "resource": {"type": "moduleInstance"},
+  "conditions": [
+    {"attribute": "environment", "operator": "equal", "values": ["production"]}
+  ]
+}
+```
+
+## Edit or delete a custom role
+
+| Task | Endpoint |
+| --- | --- |
+| List custom roles | `GET /authorization/roles` |
+| Get a custom role | `GET /authorization/roles/{id}` |
+| Rename it or replace its statements | `PATCH /authorization/roles/{id}` |
+| Delete it | `DELETE /authorization/roles/{id}` |
+
+When you replace statements, send back a statement's `id` to keep it and omit `id` to add a new one.
+
+Deleting a role fails while it's assigned. Set `detach` to `true` to delete its assignments too.
+
+See the [API reference](/api-reference/overview) for request and response details.
