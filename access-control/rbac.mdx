@@ -22,7 +22,7 @@ Ravion maintains these roles and updates them as new features ship. They're avai
 | --- | --- | --- |
 | Owner | `owner` | Full access to everything, including billing and deleting the organization. |
 | Platform Admin | `platform-admin` | Manage the module catalog, cloud accounts, execution environments, code sources, default value definitions, and service accounts. Doesn't include Operator. |
-| Operator | `operator` | Manage projects, environments, pipelines, runs, approvals, module instances, deployments, domains, certificates, credentials, default values, and service accounts, including deleting them. Uses, but doesn't manage, modules, cloud accounts, and execution environments. |
+| Operator | `operator` | Manage projects, environments, pipelines, module instances, domains, certificates, credentials, default values, and service accounts, including deleting them. Start and act on pipeline runs, approve steps, and deploy. Uses, but doesn't manage, modules, cloud accounts, and execution environments. |
 | Manager | `manager` | Manage members, roles, and role assignments. Can only give permissions they already hold. |
 | Read only | `read-only` | See everything except billing and who has which permissions. |
 | Billing | `billing` | See and manage billing. |
@@ -97,7 +97,7 @@ Each table lists the actions a resource type supports and what each role can do 
 | Organization (`organization`) | read, update, delete | Manage | Read | Read | Read | Read | Read |
 | Billing (`billing`) | read, update | Manage | — | — | — | — | Manage |
 
-Reading a credential or a secret default value returns its metadata, never the secret value. Only members can delete the organization, so a service account can't, even when it holds a role that allows it.
+Reading a credential or a secret default value returns its metadata, never the secret value. Only members can delete the organization. A service account can't hold **Owner** or any role that allows deleting the organization.
 
 ### Common combinations
 
