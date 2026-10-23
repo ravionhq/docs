@@ -152,7 +152,7 @@ The copy is independent. Later changes to the system-managed role don't reach it
 
 ## Example: deploy everywhere except production
 
-Pair **Operator** with a custom role that denies changes to production resources. The deny overrides the allows that Operator grants:
+Pair **Operator** with a custom role that denies changes to production resources. The `environment` attribute holds the environment's given ID, the `id` you set for it in your project config, such as `production`. The deny overrides the allows that Operator grants:
 
 ```json
 {
