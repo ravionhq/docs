@@ -122,7 +122,9 @@ The role `key` must be unique in your organization and can't reuse a system-mana
 </Step>
 <Step title="Assign the role">
 
-Give the role to a member or a service account with `--roles`, which takes system-managed role keys and custom role IDs:
+In the dashboard, go to **Settings** → **Members** (or **Service Accounts**), select the principal, click **Add role**, and choose the custom role.
+
+From the CLI, use `--roles`, which takes system-managed role keys and custom role IDs:
 
 ```bash
 ravion membership update <membership-id> --roles <custom-role-id>

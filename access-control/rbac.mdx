@@ -47,7 +47,13 @@ Operators can start pipeline runs and deploy modules without administering cloud
 
 A member holds at least one role. Setting a member's roles replaces the whole set.
 
-To change a member's roles in the dashboard, go to **Settings** → **Members** and select the member.
+To assign roles in the dashboard:
+
+1. Go to **Settings** → **Members**.
+2. Select the member. To give roles to someone new, click **Invite member** and pick their **Roles** in the invite dialog.
+3. Under **Roles**, click **Add role** and choose a role, or remove one the member holds.
+
+The role list includes your organization's [custom roles](/access-control/custom-roles). It only offers roles whose permissions you already hold.
 
 To change them from the CLI, use [`ravion membership`](/cli/reference/membership) with `--roles`:
 
@@ -66,6 +72,8 @@ Service accounts hold roles the same way members do, with a few limits:
 - A service account holds at least one role.
 - To create a key for a service account, or to widen what a key can do, you must hold every action that the key could perform.
 
+To assign roles in the dashboard, go to **Settings** → **Service Accounts** and select the service account.
+
 ```bash
 ravion service-account assignable-roles
 ravion service-account update <service-account-id> --roles operator
@@ -78,6 +86,17 @@ See [`ravion service-account`](/cli/reference/service-account) for every flag.
 An API key acts as its owner. You can give a key a permission limit so it does less than its owner can. A key can do something only when both its limit and its owner allow it, so a limit narrows the owner's permissions but never widens them.
 
 Permissions are `type:action` pairs from the authorization catalog, for example `project:read` or `pipelineRun:create`.
+
+To set a key's limit in the dashboard:
+
+1. Go to **Settings** → **API keys** and select the key, or click **API key** to create one. You can also create a key for a member from their page under **Settings** → **Members**.
+2. Under **Permissions**, choose one:
+   - **Same as** the owner: the key follows its owner's permissions, including any the owner gets later.
+   - **Read only**: the key can only read the resource types you check, where its owner has access.
+   - **Custom**: the key can do only what you check, and only where its owner can too. Permissions the owner doesn't have are greyed out.
+3. Save the key.
+
+From the CLI:
 
 ```bash
 # List the permissions a key can have
