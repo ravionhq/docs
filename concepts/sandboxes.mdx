@@ -246,13 +246,27 @@ Replace `ci-builders` with the ID or given ID of your execution environment. To 
 | --- | --- | --- | --- |
 | `execution_environment_id` | One target | None | ID or given ID of the execution environment to run in. |
 | `aws_account_id` + `region` | One target | None | Run in this account and region's execution environment instead. See [Limits](#limits-and-caveats). |
-| `cpu` | Yes | None | vCPUs for the sandbox. |
-| `memory` | Yes | None | Memory in GiB. |
-| `disk` | No | 8 | GiB of host disk reserved for what the sandbox writes. |
+| `cpu` | Yes | None | vCPUs for the sandbox, or `auto`. See [Automatic sizing](#automatic-sizing). |
+| `memory` | Yes | None | Memory in GiB, or `auto`. |
+| `disk` | No | 8 | GiB of host disk reserved for what the sandbox writes, or `auto`. |
 | `disk_cache` | No | `off` | Keep the sandbox's disk between runs. See [Disk cache](#disk-cache). |
 | `interruptible` | No | `false` | Allow Spot hosts, and rerun the step from the start if its host is lost. See [Interruptible steps](#interruptible-steps-and-spot-hosts). |
 
 Sandboxes don't take `instance_size`, `ami` or `storage`. See [SandboxStepInfrastructure](/pipelines/config-reference/step-infrastructure#sandboxstepinfrastructure) for the full schema.
+
+### Automatic sizing
+
+Set `cpu`, `memory` or `disk` to `auto` and Ravion sizes the sandbox from the step's earlier runs. `auto` needs `interruptible: true` on the same step; a step without it must set fixed values, and the pipeline won't save otherwise.
+
+- The first run gets 4 vCPU, 16 GiB of memory and 40 GiB of disk.
+- After each run, Ravion records the step's peak CPU, memory and disk and works out the size for its next run. Sizes are tracked per pipeline step and execution environment.
+- Memory and disk are set to the highest peak of the last 10 runs, sized so the peak uses 90% of it, in whole GiB. If a step uses 95% or more of its memory or disk, that resource grows by 25% for the next run. Memory and disk grow right away and shrink by at most half per run.
+- CPU is a whole number of vCPUs from 2 to 64. When a step uses 90% or more of its vCPUs, CPU grows by 25% (at least 1 vCPU). After 2 runs in a row that use less than half, it shrinks to fit the highest of those peaks at 90%, by at most half per run.
+- If a step runs out of memory or disk, Ravion doubles that resource and retries the step in the same pipeline run at the larger size, up to twice per step. The step's log shows each retry.
+- If Java (`java.lang.OutOfMemoryError: Java heap space`) or Node (`JavaScript heap out of memory`) runs out of heap, memory grows by 25% and the step is retried. If it happens again on the next attempt, memory doesn't grow again: the limit is probably set in your command with `-Xmx` (Java) or `--max-old-space-size` (Node), so raise it there.
+- Sizes never go above what the largest host type in your execution environment can fit.
+
+The step's log shows the size Ravion picked and the peaks it was based on. For GitHub Actions jobs, see [Automatic sizing](/github-actions/runners#automatic-sizing).
 
 ## Module builds
 
