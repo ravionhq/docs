@@ -216,3 +216,10 @@ NVMe
 prefetches
 toolchains
 Slugify
+ccache
+sccache
+Bazel
+Bazelisk
+CMake's
+Turborepo
+Nx
