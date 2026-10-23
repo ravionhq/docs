@@ -146,9 +146,9 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=auto/memory=auto/disk=auto/id
 
 - The first run gets 4 vCPU, 16 GiB of memory and 40 GiB of disk.
 - Sizes are tracked per repository, workflow file and job name. After each run, Ravion records guest memory, CPU and disk peaks and recommends a size for the next run.
-- Memory and disk stay the same when usage is between 70% and 90% of the allocation. Above 90%, they grow directly to a size that uses about 80% of the allocation. At 95% or higher, Ravion also applies a 25% growth floor.
+- Memory and disk stay the same when usage is between 70% and 90% of the allocation. Above 90%, they grow directly to a size that uses about 80% of the allocation.
 - Below 70% usage, memory and disk can shrink toward a size that uses about 80% of the allocation. Each passing run closes half the gap to that target, by at least 1 GiB. Failed runs can grow sizes, but never shrink them.
-- CPU doubles while each step makes the job at least 10% faster. When a step doesn't help, it tries sizes in between (halfway each time) and settles on the fastest worthwhile size, usually within about 3 runs. It looks again only after those runs drop out of the last 10. After a passing run with low CPU use, Ravion can shrink CPU toward 70% usage. Each passing run closes half the gap to the target, by at least 1 vCPU.
+- When a job uses nearly all of its vCPUs (98% or more), CPU doubles while each step makes the job at least 10% faster. Between 90% and 98%, it grows by 1 vCPU or 12.5%, whichever is more. When a step doesn't help, it tries sizes in between (halfway each time) and settles on the fastest worthwhile size, usually within about 3 runs. It looks again only after those runs drop out of the last 10. After a passing run with low CPU use, Ravion can shrink CPU toward 70% usage. Each passing run closes half the gap to the target, by at least 1 vCPU.
 - If a run exhausts memory or disk, Ravion doubles that resource and can rerun the job automatically, up to twice per workflow run. The highest saved recommendation from runs that exhausted a resource remains a minimum for that resource while those runs are among the last 10 runs. GitHub shows the failed attempt and then the rerun.
 - Sizes never go above what the largest host type in your execution environment can fit.
 
