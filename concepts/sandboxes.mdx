@@ -256,6 +256,10 @@ Sandboxes don't take `instance_size`, `ami` or `storage`. See [SandboxStepInfras
 
 ### Automatic sizing
 
+<Note>
+  Automatic sizing is in preview. [Contact support](/contact-support) to share feedback.
+</Note>
+
 Set `cpu`, `memory` or `disk` to `auto` and Ravion sizes the sandbox from the step's earlier runs. `auto` needs `interruptible: true` on the same step; a step without it must set fixed values, and the pipeline won't save otherwise.
 
 - The first run gets 4 vCPU, 16 GiB of memory and 40 GiB of disk.
