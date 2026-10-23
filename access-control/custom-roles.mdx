@@ -79,39 +79,41 @@ Use the returned revision as `expectedRevision` in the next request.
 </Step>
 <Step title="Create the role">
 
-This role lets developers read everything in one project and deploy its module instances, but never delete them:
+Request bodies wrap their fields in `data`. This role lets developers read one project and deploy its module instances, but never delete them:
 
 ```bash
 curl -X POST https://api.ravion.com/authorization/roles \
   -H "Authorization: Bearer $RAVION_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "key": "checkout-developer",
-    "name": "Checkout developer",
-    "description": "Deploys the checkout project",
-    "expectedRevision": 42,
-    "statements": [
-      {
-        "givenId": "read-project",
-        "effect": "allow",
-        "actions": ["read"],
-        "resource": {"type": "project"},
-        "within": [{"type": "project", "id": "<project-id>"}]
-      },
-      {
-        "givenId": "deploy-modules",
-        "effect": "allow",
-        "actions": ["read", "update"],
-        "resource": {"type": "moduleInstance"},
-        "within": [{"type": "project", "id": "<project-id>"}]
-      },
-      {
-        "givenId": "never-delete",
-        "effect": "deny",
-        "actions": ["delete"],
-        "resource": {"type": "moduleInstance"}
-      }
-    ]
+    "data": {
+      "key": "checkout-developer",
+      "name": "Checkout developer",
+      "description": "Deploys the checkout project",
+      "expectedRevision": 42,
+      "statements": [
+        {
+          "givenId": "read-project",
+          "effect": "allow",
+          "actions": ["read"],
+          "resource": {"type": "project"},
+          "within": [{"type": "project", "id": "<project-id>"}]
+        },
+        {
+          "givenId": "deploy-modules",
+          "effect": "allow",
+          "actions": ["read", "update"],
+          "resource": {"type": "moduleInstance"},
+          "within": [{"type": "project", "id": "<project-id>"}]
+        },
+        {
+          "givenId": "never-delete",
+          "effect": "deny",
+          "actions": ["delete"],
+          "resource": {"type": "moduleInstance"}
+        }
+      ]
+    }
   }'
 ```
 
@@ -123,8 +125,10 @@ The role `key` must be unique in your organization and can't reuse a system-mana
 Give the role to a member or a service account with `--roles`, which takes system-managed role keys and custom role IDs:
 
 ```bash
-ravion membership update <membership-id> --roles read-only,<custom-role-id>
+ravion membership update <membership-id> --roles <custom-role-id>
 ```
+
+Roles combine their grants, so don't pair a scoped custom role with **Read only** or another system-managed role unless you want the member to have that organization-wide access too. Add an `allow` statement to the custom role for each resource type the member needs to read.
 
 You can also create an assignment with `POST /authorization/assignments` and a `roleId`.
 
@@ -137,7 +141,9 @@ To adjust a system-managed role, duplicate it and edit the copy:
 
 ```bash
 curl -X POST https://api.ravion.com/authorization/system-roles/operator/duplicate \
-  -H "Authorization: Bearer $RAVION_API_KEY"
+  -H "Authorization: Bearer $RAVION_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"data": {"key": "operator-custom", "name": "Custom operator", "expectedRevision": 42}}'
 ```
 
 The copy is independent. Later changes to the system-managed role don't reach it, and existing assignments of the system-managed role don't change.
@@ -165,10 +171,10 @@ Pair **Operator** with a custom role that denies changes to production resources
 | List custom roles | `GET /authorization/roles` |
 | Get a custom role | `GET /authorization/roles/{id}` |
 | Rename it or replace its statements | `PATCH /authorization/roles/{id}` |
-| Delete it | `DELETE /authorization/roles/{id}` |
+| Delete it | `DELETE /authorization/roles/{id}?expectedRevision=42` |
 
 When you replace statements, send back a statement's `id` to keep it and omit `id` to add a new one.
 
-Deleting a role fails while it's assigned. Set `detach` to `true` to delete its assignments too.
+Deleting a role fails while it's assigned. Add `detach=true` to the query to delete its assignments too.
 
 See the [API reference](/api-reference/overview) for request and response details.

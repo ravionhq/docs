@@ -81,7 +81,7 @@ Permissions are `type:action` pairs from the authorization catalog, for example 
 
 ```bash
 # List the permissions a key can have
-ravion api-key permissions
+ravion api-key permissions --owner-id <membership-id> --owner-type MEMBERSHIP
 
 # Limit a key to reading projects and starting pipeline runs
 ravion api-key update <api-key-id> --permissions project:read,pipelineRun:create
