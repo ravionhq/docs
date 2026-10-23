@@ -1,0 +1,60 @@
+---
+title: "ravion alert"
+sidebarTitle: "alert"
+description: "Manage alerts"
+"og:image": "https://www.ravion.com/og/docs/cli/reference/alert.png"
+"twitter:image": "https://www.ravion.com/og/docs/cli/reference/alert.png"
+---
+
+{/* This page is generated from the Ravion CLI source. Do not edit by hand. */}
+
+## `ravion alert`
+
+Manage alerts
+
+**Aliases:** `alerts`
+
+### `ravion alert create`
+
+Create an alert
+
+```bash
+ravion alert create [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--data <string>` | yes | Request data as JSON |
+| `--json` |  | emit response as JSON |
+
+### `ravion alert end`
+
+End an alert
+
+```bash
+ravion alert end <alertId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+### `ravion alert list`
+
+List active alerts
+
+```bash
+ravion alert list [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `-v, --verbose` |  | show full output |
+

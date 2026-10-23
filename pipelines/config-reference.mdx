@@ -6,7 +6,7 @@ description: "Complete reference for the Ravion pipeline configuration schema, i
 "twitter:image": "https://www.ravion.com/og/docs/pipelines/config-reference.png"
 ---
 
-import PipelineSchemaReference from "/snippets/schema-reference/pipeline.mdx";
+import PipelineSchemaIndex from "/snippets/schema-reference/pipeline-index.mdx";
 
 Pipeline configuration defines steps, parallel and group blocks, inputs, variants, and triggers. Use this reference when you write pipeline config files or validate generated pipeline definitions.
 
@@ -18,11 +18,4 @@ For a compact, machine-readable version, fetch [https://api.ravion.com/pipelines
   Pipeline builder configs still include `nixpacks` for existing pipelines, but it is deprecated. Use `railpack` for new `build:image` and `build:static` steps.
 </Note>
 
-<Visibility for="agents">
-  > The full rendered schema reference is omitted from this Markdown view to save tokens.
-  > Fetch [https://api.ravion.com/pipelines/schema.md](https://api.ravion.com/pipelines/schema.md) for the complete pipeline schema in a compact, machine-readable format.
-</Visibility>
-
-<Visibility for="humans">
-  <PipelineSchemaReference />
-</Visibility>
+<PipelineSchemaIndex />

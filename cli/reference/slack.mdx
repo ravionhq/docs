@@ -1,0 +1,48 @@
+---
+title: "ravion slack"
+sidebarTitle: "slack"
+description: "Manage slacks"
+"og:image": "https://www.ravion.com/og/docs/cli/reference/slack.png"
+"twitter:image": "https://www.ravion.com/og/docs/cli/reference/slack.png"
+---
+
+{/* This page is generated from the Ravion CLI source. Do not edit by hand. */}
+
+## `ravion slack`
+
+Manage slacks
+
+**Aliases:** `slacks`
+
+### `ravion slack callback`
+
+Slack OAuth callback
+
+```bash
+ravion slack callback [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--code <string>` |  | OAuth authorization code |
+| `--error <string>` |  | Error code if the workspace admin declined the install |
+| `--json` |  | emit response as JSON |
+| `--state <string>` |  | CSRF protection state |
+
+### `ravion slack install`
+
+Start Slack OAuth install
+
+```bash
+ravion slack install [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--redirect-url <string>` |  | URL to redirect to once the install completes |
+

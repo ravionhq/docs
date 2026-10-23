@@ -1,5 +1,6 @@
 import {existsSync, mkdirSync, readFileSync, rmSync, writeFileSync} from "node:fs";
 import path from "node:path";
+import {renderAnchorRedirectScript} from "./anchor-redirects.mjs";
 
 const root = process.cwd();
 const sourceDir = path.resolve(
@@ -10,18 +11,18 @@ const sourceDir = path.resolve(
 const snippetDir = path.join(root, "snippets/schema-reference");
 const docsJsonPath = path.join(root, "docs.json");
 
-// Rendering hundreds of <ResponseField> components on a single page makes the
-// page multiple megabytes of HTML, which locks up mobile browsers. Reference
-// docs above this many fields are split across several pages.
-const maxFieldsPerPage = 220;
+// This cap keeps pages well under 1 MB of HTML, the limit SEO crawlers flag.
+const maxFieldsPerPage = 120;
 
-const singlePageDocs = ["pipeline", "project-config"];
+const singlePageDocs = ["project-config"];
 
 const splitDocs = [
   {
     name: "module",
     pageDir: "module-definitions/definition-schema",
     indexSnippet: "snippets/schema-reference/module-index.mdx",
+    schemaName: "module definition schema",
+    navGroup: "Definition schema",
     boost: 0.5,
     compactSchemaUrl: "https://api.ravion.com/module-definitions/schema.md",
     describe: (titles) =>
@@ -30,17 +31,31 @@ const splitDocs = [
     // describe rather than sliced into anonymous parts. Groups are listed in
     // page order; the one without a `match` collects everything else.
     sectionGroups: {
+      Build: [
+        {title: "Build"},
+        {
+          title: "Build configs",
+          match: /^Pipeline\.(\w*BuildConfig|EcrDestination|S3Destination|GitSource|CacheFromConfig)$/,
+        },
+      ],
       Deploy: [
         {title: "Deploy"},
         {
           title: "ECS deployments",
           match: /^Ecs(ModuleDeployment|Deploy|RunTaskOverrides|Canary|Linear|Pause|CapacityProvider|ContainerOverride|EphemeralStorage|NetworkConfiguration|Placement|Tag$|TaskVolumeConfiguration|AwsVpc)/,
         },
+        {
+          title: "ECS container definitions",
+          match: /^Ecs(ContainerDefinition|ContainerDependency|FirelensConfiguration|HealthCheck|LinuxParameters|LinuxCapabilities|LogConfiguration|MountPoint|PortMapping|RepositoryCredentials|Secret|SystemControl|VolumeFrom|Tmpfs|EnvironmentFile|EnvironmentVariable|ResourceRequirement)$/,
+        },
         {title: "ECS task definitions", match: /^Ecs/},
+        {title: "EKS deployments", match: /^(Eks|Helm)/},
+        {title: "Lambda deployments", match: /^Lambda/},
       ],
       Inputs: [
         {title: "Inputs"},
-        {title: "Input types", match: /InputProperty$/},
+        {title: "Input types", match: /^(?!Object|Compound|Ref)\w*InputProperty$/},
+        {title: "Object input types", match: /^(Object|Compound|Ref)\w*InputProperty$/},
       ],
     },
     standaloneSections: ["Template expressions"],
@@ -68,7 +83,31 @@ const splitDocs = [
         title: "Module schema: ECS task definitions",
         sidebarTitle: "ECS task definitions",
         description:
-          "Configure ECS task definitions for containers, resources, networking, volumes, secrets, logging, health checks, and other runtime behavior.",
+          "Configure ECS task definitions, including CPU and memory, networking, volumes, placement constraints, proxy settings, and runtime platform.",
+      },
+      "build-configs": {
+        title: "Module schema: Build configs",
+        sidebarTitle: "Build configs",
+        description:
+          "Configure how module builds produce images, static assets, and Lambda packages with Railpack, Dockerfile, or Nixpacks, plus sources and caching.",
+      },
+      "ecs-container-definitions": {
+        title: "Module schema: ECS container definitions",
+        sidebarTitle: "ECS container definitions",
+        description:
+          "Configure ECS container definitions, including ports, health checks, environment variables, secrets, logging, mounts, and Linux parameters.",
+      },
+      "eks-deployments": {
+        title: "Module schema: EKS deployments",
+        sidebarTitle: "EKS deployments",
+        description:
+          "Configure how modules deploy to Amazon EKS with Helm charts from Git, HTTP, or OCI sources, plus registry credentials and infrastructure.",
+      },
+      "lambda-deployments": {
+        title: "Module schema: Lambda deployments",
+        sidebarTitle: "Lambda deployments",
+        description:
+          "Configure how modules deploy AWS Lambda functions, including image and zip packages, function settings, VPC access, logging, and tracing.",
       },
       inputs: {
         title: "Module definition schema: Inputs",
@@ -80,7 +119,13 @@ const splitDocs = [
         title: "Module definition schema: Input types",
         sidebarTitle: "Input types",
         description:
-          "Reference every module input type — string, number, boolean, object, array, map, compound, section, git repo, and ref — with its fields and options.",
+          "Reference module input types for single values and lists: string, text, number, boolean, array, string array, key-value, git repo, and section.",
+      },
+      "object-input-types": {
+        title: "Module definition schema: Object input types",
+        sidebarTitle: "Object input types",
+        description:
+          "Reference module input types that hold nested fields: object, object array, object map, compound, and ref inputs, plus ref fallback types.",
       },
       module: {
         title: "Module definition schema: Module",
@@ -105,6 +150,93 @@ const splitDocs = [
         sidebarTitle: "UI",
         description:
           "Configure the module definition’s dashboard presentation, readme content, links, and input guidance so users can operate instances effectively.",
+      },
+    },
+  },
+  {
+    name: "pipeline",
+    pageDir: "pipelines/config-reference",
+    indexSnippet: "snippets/schema-reference/pipeline-index.mdx",
+    schemaName: "pipeline schema",
+    navGroup: "Configuration",
+    compactSchemaUrl: "https://api.ravion.com/pipelines/schema.md",
+    describe: (titles) =>
+      `Reference for the ${joinTitles(titles)} section${titles.length > 1 ? "s" : ""} of the Ravion pipeline configuration schema.`,
+    sectionGroups: {
+      Steps: [
+        {title: "Steps"},
+        {title: "CI steps", match: /CiStep$/},
+        {
+          title: "Build configs",
+          match: /^(\w*BuildConfig|EcrDestination|S3Destination|GitSource|CacheFromConfig)$/,
+        },
+        {
+          title: "Step infrastructure",
+          match: /^(\w*StepInfrastructure|AwsPermissions\w*|InstanceSize|StorageConfig|EbsVolumeType|ExecutionEnvironmentOverrides|SetupAction)$/,
+        },
+      ],
+    },
+    standaloneSections: ["Template expressions"],
+    pageMetadata: {
+      pipelineconfig: {
+        title: "Pipeline configuration: Top-level fields",
+        sidebarTitle: "Pipeline config",
+        description:
+          "Reference the top-level fields of a Ravion pipeline config, including triggers, inputs, variants, and the ordered list of steps.",
+      },
+      triggers: {
+        title: "Pipeline configuration: Triggers",
+        sidebarTitle: "Triggers",
+        description:
+          "Configure what starts a Ravion pipeline run, such as git events and other triggers, and which variants each trigger runs.",
+      },
+      inputs: {
+        title: "Pipeline configuration: Inputs",
+        sidebarTitle: "Inputs",
+        description:
+          "Define pipeline inputs that users and triggers supply at run time, with types, defaults, allowed values, and validation rules.",
+      },
+      variants: {
+        title: "Pipeline configuration: Variants",
+        sidebarTitle: "Variants",
+        description:
+          "Define pipeline variants that reuse one pipeline config with different input values for environments, regions, or other targets.",
+      },
+      steps: {
+        title: "Pipeline configuration: Steps",
+        sidebarTitle: "Steps",
+        description:
+          "Reference pipeline step types such as build, deploy, rollback, approval, sleep, trigger pipeline, and parallel and group blocks.",
+      },
+      "ci-steps": {
+        title: "Pipeline configuration: CI steps",
+        sidebarTitle: "CI steps",
+        description:
+          "Configure CI steps for image and static builds, custom commands, and Terraform plan and apply, including their sources and outputs.",
+      },
+      "build-configs": {
+        title: "Pipeline configuration: Build configs",
+        sidebarTitle: "Build configs",
+        description:
+          "Configure how pipeline steps build images and static assets with Railpack, Dockerfile, or Nixpacks, plus sources, destinations, and caching.",
+      },
+      "step-infrastructure": {
+        title: "Pipeline configuration: Step infrastructure",
+        sidebarTitle: "Step infrastructure",
+        description:
+          "Choose where pipeline steps run, including sandbox, EC2, and EC2 Spot infrastructure, instance sizes, storage, and AWS permissions.",
+      },
+      "other-types": {
+        title: "Pipeline configuration: Other types",
+        sidebarTitle: "Other types",
+        description:
+          "Reference the target fields that identify which pipeline a config file applies to.",
+      },
+      "template-expressions": {
+        title: "Pipeline configuration: Template expressions",
+        sidebarTitle: "Template expressions",
+        description:
+          "Use template expressions in pipeline configs to reference inputs, variants, step outputs, and other values resolved at run time.",
       },
     },
   },
@@ -295,12 +427,12 @@ function syncSplitDoc(config) {
     const sidebarTitle = metadata?.sidebarTitle ?? page.title;
     const description = metadata?.description ?? config.describe(page.titles);
     const body = [...preamble, ...page.blocks].map((block) => block.text).join("\n\n");
+    const renderedBody = rewriteAnchorLinks(body, page.slug, anchorPages, config.pageDir);
     writeFileSync(
       path.join(partsDir, `${page.slug}.mdx`),
-      `${generatedBy(config.name)}\n\n${rewriteAnchorLinks(body, page.slug, anchorPages, config.pageDir)}\n`,
+      `${generatedBy(config.name)}\n\n${renderedBody}\n`,
     );
 
-    const componentName = `SchemaReferencePart`;
     writeFileSync(
       path.join(pageDir, `${page.slug}.mdx`),
       [
@@ -308,22 +440,20 @@ function syncSplitDoc(config) {
         `title: ${JSON.stringify(title)}`,
         `sidebarTitle: ${JSON.stringify(sidebarTitle)}`,
         `description: ${JSON.stringify(description)}`,
-        `boost: ${config.boost}`,
+        ...(config.boost === undefined ? [] : [`boost: ${config.boost}`]),
         `"og:image": "https://www.ravion.com/og/docs/${config.pageDir}/${page.slug}.png"`,
         `"twitter:image": "https://www.ravion.com/og/docs/${config.pageDir}/${page.slug}.png"`,
         "---",
         "",
         generatedBy(config.name),
         "",
-        `import ${componentName} from "/snippets/schema-reference/${config.name}/${page.slug}.mdx";`,
-        "",
         '<Visibility for="agents">',
         "  > The full rendered schema reference is omitted from this Markdown view to save tokens.",
-        `  > Fetch [${config.compactSchemaUrl}](${config.compactSchemaUrl}) for the complete module definition schema in a compact, machine-readable format.`,
+        `  > Fetch [${config.compactSchemaUrl}](${config.compactSchemaUrl}) for the complete ${config.schemaName} in a compact, machine-readable format.`,
         "</Visibility>",
         "",
         '<Visibility for="humans">',
-        `  <${componentName} />`,
+        renderedBody,
         "</Visibility>",
         "",
       ].join("\n"),
@@ -342,6 +472,15 @@ function syncSplitDoc(config) {
   console.log(
     `split ${config.name} schema reference into ${pages.length} pages under ${config.pageDir}/`,
   );
+  return {
+    pages: [
+      `/${config.pageDir}`,
+      ...pages.map((page) => `/${config.pageDir}/${page.slug}`),
+    ],
+    anchors: Object.fromEntries(
+      [...anchorPages].map(([anchor, slug]) => [anchor, `/${config.pageDir}/${slug}`]),
+    ),
+  };
 }
 
 /** Replaces the reference page entry in docs.json with a group of split pages. */
@@ -358,7 +497,7 @@ function updateNavigation(config, pages) {
           entry === rootPage || (entry !== null && typeof entry === "object" && entry.root === rootPage);
         if (isEntry) {
           node[index] = {
-            group: typeof entry === "object" && entry.group ? entry.group : "Definition schema",
+            group: config.navGroup,
             root: rootPage,
             pages: pagePaths,
           };
@@ -392,9 +531,14 @@ for (const name of singlePageDocs) {
   );
 }
 
+const anchorRedirectDocs = [];
 for (const config of splitDocs) {
-  syncSplitDoc(config);
+  anchorRedirectDocs.push(syncSplitDoc(config));
 }
+writeFileSync(
+  path.join(root, "schema-anchor-redirects.js"),
+  renderAnchorRedirectScript(anchorRedirectDocs),
+);
 
 // Remove the pre-split snippet if it is still around from an older sync.
 for (const config of splitDocs) {

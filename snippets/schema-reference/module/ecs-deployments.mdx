@@ -572,7 +572,7 @@ https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ContainerOverride.
 <ResponseField name="environment" type="EcsEnvironmentVariable[] | null">
   Environment variables merged on top of the task definition's.
 
-  See: [EcsEnvironmentVariable](/module-definitions/definition-schema/ecs-task-definitions#ecsenvironmentvariable)
+  See: [EcsEnvironmentVariable](/module-definitions/definition-schema/ecs-container-definitions#ecsenvironmentvariable)
 
   _(templateable)_
 </ResponseField>
@@ -580,7 +580,7 @@ https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ContainerOverride.
 <ResponseField name="environment_files" type="EcsEnvironmentFile[] | null">
   Environment files (S3 references) layered on top of `environment`.
 
-  See: [EcsEnvironmentFile](/module-definitions/definition-schema/ecs-task-definitions#ecsenvironmentfile)
+  See: [EcsEnvironmentFile](/module-definitions/definition-schema/ecs-container-definitions#ecsenvironmentfile)
 
   _(templateable)_
 </ResponseField>
@@ -606,7 +606,7 @@ https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ContainerOverride.
 <ResponseField name="resource_requirements" type="EcsResourceRequirement[] | null">
   GPU / InferenceAccelerator requirements override.
 
-  See: [EcsResourceRequirement](/module-definitions/definition-schema/ecs-task-definitions#ecsresourcerequirement)
+  See: [EcsResourceRequirement](/module-definitions/definition-schema/ecs-container-definitions#ecsresourcerequirement)
 
   _(templateable)_
 </ResponseField>

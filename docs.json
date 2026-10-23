@@ -2,6 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Ravion Docs",
+  "description": "Fast, powerful building blocks for CI/CD pipelines, deploys, and Terraform automation. An open module system and one canvas connect them for your team and agents, in your own cloud.",
   "colors": {
     "primary": "#FE6104",
     "light": "#FE6104",
@@ -89,7 +90,14 @@
                 "root": "module-definitions/standard-library",
                 "pages": [
                   "module-definitions/catalog/rvn-acm-certificate",
-                  "module-definitions/catalog/rvn-aurora",
+                  {
+                    "group": "rvn-aurora",
+                    "root": "module-definitions/catalog/rvn-aurora",
+                    "pages": [
+                      "module-definitions/catalog/rvn-aurora/inputs-inputs",
+                      "module-definitions/catalog/rvn-aurora/inputs-misc"
+                    ]
+                  },
                   "module-definitions/catalog/rvn-aws-alb",
                   "module-definitions/catalog/rvn-aws-alternat",
                   "module-definitions/catalog/rvn-aws-ami",
@@ -101,15 +109,61 @@
                   "module-definitions/catalog/rvn-aws-secret",
                   "module-definitions/catalog/rvn-aws-static",
                   "module-definitions/catalog/rvn-cloudfront",
-                  "module-definitions/catalog/rvn-ec2-service",
-                  "module-definitions/catalog/rvn-ecs-cluster",
-                  "module-definitions/catalog/rvn-ecs-nlb",
-                  "module-definitions/catalog/rvn-ecs-web",
-                  "module-definitions/catalog/rvn-ecs-worker",
+                  {
+                    "group": "rvn-ec2-service",
+                    "root": "module-definitions/catalog/rvn-ec2-service",
+                    "pages": [
+                      "module-definitions/catalog/rvn-ec2-service/inputs"
+                    ]
+                  },
+                  {
+                    "group": "rvn-ecs-cluster",
+                    "root": "module-definitions/catalog/rvn-ecs-cluster",
+                    "pages": [
+                      "module-definitions/catalog/rvn-ecs-cluster/inputs"
+                    ]
+                  },
+                  {
+                    "group": "rvn-ecs-nlb",
+                    "root": "module-definitions/catalog/rvn-ecs-nlb",
+                    "pages": [
+                      "module-definitions/catalog/rvn-ecs-nlb/inputs-ecs-cluster",
+                      "module-definitions/catalog/rvn-ecs-nlb/inputs-iam-roles-and-policies"
+                    ]
+                  },
+                  {
+                    "group": "rvn-ecs-web",
+                    "root": "module-definitions/catalog/rvn-ecs-web",
+                    "pages": [
+                      "module-definitions/catalog/rvn-ecs-web/inputs-ecs-cluster",
+                      "module-definitions/catalog/rvn-ecs-web/inputs-pre-and-post-deploy"
+                    ]
+                  },
+                  {
+                    "group": "rvn-ecs-worker",
+                    "root": "module-definitions/catalog/rvn-ecs-worker",
+                    "pages": [
+                      "module-definitions/catalog/rvn-ecs-worker/inputs-ecs-cluster",
+                      "module-definitions/catalog/rvn-ecs-worker/inputs-networking-and-deployment"
+                    ]
+                  },
                   "module-definitions/catalog/rvn-efs",
                   "module-definitions/catalog/rvn-elasticache",
-                  "module-definitions/catalog/rvn-lambda",
-                  "module-definitions/catalog/rvn-rds",
+                  {
+                    "group": "rvn-lambda",
+                    "root": "module-definitions/catalog/rvn-lambda",
+                    "pages": [
+                      "module-definitions/catalog/rvn-lambda/inputs-aws-account-region",
+                      "module-definitions/catalog/rvn-lambda/inputs-image-registry-lifecycle"
+                    ]
+                  },
+                  {
+                    "group": "rvn-rds",
+                    "root": "module-definitions/catalog/rvn-rds",
+                    "pages": [
+                      "module-definitions/catalog/rvn-rds/inputs"
+                    ]
+                  },
                   "module-definitions/catalog/rvn-rds-proxy",
                   "module-definitions/catalog/rvn-route53",
                   "module-definitions/catalog/rvn-s3",
@@ -124,7 +178,22 @@
               "concepts/pipelines",
               "concepts/sandboxes",
               "pipelines/examples",
-              "pipelines/config-reference",
+              {
+                "group": "Configuration",
+                "root": "pipelines/config-reference",
+                "pages": [
+                  "pipelines/config-reference/pipelineconfig",
+                  "pipelines/config-reference/triggers",
+                  "pipelines/config-reference/inputs",
+                  "pipelines/config-reference/variants",
+                  "pipelines/config-reference/steps",
+                  "pipelines/config-reference/ci-steps",
+                  "pipelines/config-reference/build-configs",
+                  "pipelines/config-reference/step-infrastructure",
+                  "pipelines/config-reference/other-types",
+                  "pipelines/config-reference/template-expressions"
+                ]
+              },
               "pipelines/step-types",
               "pipelines/concurrency",
               "pipelines/variants",
@@ -177,11 +246,16 @@
                   "module-definitions/definition-schema/module",
                   "module-definitions/definition-schema/inputs",
                   "module-definitions/definition-schema/input-types",
+                  "module-definitions/definition-schema/object-input-types",
                   "module-definitions/definition-schema/stack",
                   "module-definitions/definition-schema/build",
+                  "module-definitions/definition-schema/build-configs",
                   "module-definitions/definition-schema/deploy",
                   "module-definitions/definition-schema/ecs-deployments",
+                  "module-definitions/definition-schema/ecs-container-definitions",
                   "module-definitions/definition-schema/ecs-task-definitions",
+                  "module-definitions/definition-schema/eks-deployments",
+                  "module-definitions/definition-schema/lambda-deployments",
                   "module-definitions/definition-schema/ui",
                   "module-definitions/definition-schema/other-types",
                   "module-definitions/definition-schema/template-expressions"
@@ -246,7 +320,10 @@
             "group": "Command reference",
             "boost": 0.5,
             "pages": [
+              "cli/reference/activity",
+              "cli/reference/alert",
               "cli/reference/api-key",
+              "cli/reference/app",
               "cli/reference/aws",
               "cli/reference/billing",
               "cli/reference/bug",
@@ -271,13 +348,19 @@
               "cli/reference/merge-queue",
               "cli/reference/metrics",
               "cli/reference/module",
+              "cli/reference/notification-destination",
+              "cli/reference/notification-dispatch",
+              "cli/reference/notification-event",
+              "cli/reference/notification-rule",
               "cli/reference/organization",
               "cli/reference/pipeline",
               "cli/reference/project",
               "cli/reference/report",
+              "cli/reference/sandbox",
               "cli/reference/service-account",
               "cli/reference/shell-completion",
               "cli/reference/signup",
+              "cli/reference/slack",
               "cli/reference/stack",
               "cli/reference/switch",
               "cli/reference/terraform",
@@ -312,7 +395,12 @@
           {
             "group": "API reference",
             "boost": 0.25,
-            "openapi": "https://api.ravion.com/openapi.yaml"
+            "openapi": {
+              "source": "https://api.ravion.com/openapi.yaml",
+              "overlays": [
+                "api-reference/openapi-overlay.yaml"
+              ]
+            }
           }
         ]
       },

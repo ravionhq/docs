@@ -1,0 +1,41 @@
+---
+title: "ravion notification-dispatch"
+sidebarTitle: "notification-dispatch"
+description: "Manage notification dispatches"
+"og:image": "https://www.ravion.com/og/docs/cli/reference/notification-dispatch.png"
+"twitter:image": "https://www.ravion.com/og/docs/cli/reference/notification-dispatch.png"
+---
+
+{/* This page is generated from the Ravion CLI source. Do not edit by hand. */}
+
+## `ravion notification-dispatch`
+
+Manage notification dispatches
+
+**Aliases:** `notification-dispatches`
+
+### `ravion notification-dispatch list`
+
+List notification dispatches
+
+```bash
+ravion notification-dispatch list [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--catalog-id <strings>` |  | Filter to dispatches of any of these event catalog ids. |
+| `--created-at-after <string>` |  | Only dispatches created at or after this time. |
+| `--created-at-before <string>` |  | Only dispatches created at or before this time. |
+| `--cursor <string>` |  | cursor |
+| `--destination-id <strings>` |  | Filter to dispatches sent to any of these notification destinations. |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | limit |
+| `--rule-id <ruleIds>` |  | Filter to dispatches attributed to any of these notification rules. A dispatch's ruleIds can list more than one contributing rule; this matches a dispatch if any of them is in the given list. A rule test-send's dispatches have no rule attribution and never match. |
+| `--status <strings>` |  | Filter to dispatches in any of these statuses. |
+| `--subject-id <subjectType>` |  | Filter to dispatches whose event's subject is this entity id. Pair with subjectType to disambiguate ids that are only unique within their entity kind. |
+| `--subject-type <subjectId>` |  | Filter to dispatches whose event's subject is this entity kind, e.g. "pipeline_run". Pair with subjectId to scope to one specific entity. |
+| `-v, --verbose` |  | show full output |
+

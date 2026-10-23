@@ -84,7 +84,7 @@ Image build configuration for a module.
 <ResponseField name="source" type="Pipeline.GitSource" required>
   Git source configuration.
 
-  See: [Pipeline.GitSource](#pipeline-gitsource)
+  See: [Pipeline.GitSource](/module-definitions/definition-schema/build-configs#pipeline-gitsource)
 
   _(templateable)_
 </ResponseField>
@@ -92,7 +92,7 @@ Image build configuration for a module.
 <ResponseField name="builder" type="Pipeline.ImageBuildConfig" required>
   Builder configuration — dockerfile, nixpacks, or railpack settings.
 
-  See: [Pipeline.ImageBuildConfig](#pipeline-imagebuildconfig)
+  See: [Pipeline.ImageBuildConfig](/module-definitions/definition-schema/build-configs#pipeline-imagebuildconfig)
 
   _(templateable)_
 </ResponseField>
@@ -122,7 +122,7 @@ Image build configuration for a module.
 <ResponseField name="destinations" type="Pipeline.EcrDestination[]" required>
   ECR destinations where the built Docker image will be pushed.
 
-  See: [Pipeline.EcrDestination](#pipeline-ecrdestination)
+  See: [Pipeline.EcrDestination](/module-definitions/definition-schema/build-configs#pipeline-ecrdestination)
 
   _(minItems:1; templateable)_
 </ResponseField>
@@ -188,7 +188,7 @@ step.
 <ResponseField name="source" type="Pipeline.GitSource" required>
   Git source configuration.
 
-  See: [Pipeline.GitSource](#pipeline-gitsource)
+  See: [Pipeline.GitSource](/module-definitions/definition-schema/build-configs#pipeline-gitsource)
 
   _(templateable)_
 </ResponseField>
@@ -199,7 +199,7 @@ step.
   shape so module builds and free-form CI builds stay structurally
   identical.
 
-  See: [Pipeline.LambdaBuildConfig](#pipeline-lambdabuildconfig)
+  See: [Pipeline.LambdaBuildConfig](/module-definitions/definition-schema/build-configs#pipeline-lambdabuildconfig)
 
   _(templateable)_
 </ResponseField>
@@ -223,7 +223,7 @@ step.
   uploaded. At least one is required; the resulting key is passed to
   the deploy step as `deploy.input.s3_key`.
 
-  See: [Pipeline.S3Destination](#pipeline-s3destination)
+  See: [Pipeline.S3Destination](/module-definitions/definition-schema/build-configs#pipeline-s3destination)
 
   _(minItems:1; templateable)_
 </ResponseField>
@@ -283,7 +283,7 @@ Static build configuration for a module.
 <ResponseField name="source" type="Pipeline.GitSource" required>
   Git source configuration.
 
-  See: [Pipeline.GitSource](#pipeline-gitsource)
+  See: [Pipeline.GitSource](/module-definitions/definition-schema/build-configs#pipeline-gitsource)
 
   _(templateable)_
 </ResponseField>
@@ -291,7 +291,7 @@ Static build configuration for a module.
 <ResponseField name="builder" type="Pipeline.StaticBuildConfig" required>
   Builder configuration — dockerfile, nixpacks, or railpack settings.
 
-  See: [Pipeline.StaticBuildConfig](#pipeline-staticbuildconfig)
+  See: [Pipeline.StaticBuildConfig](/module-definitions/definition-schema/build-configs#pipeline-staticbuildconfig)
 
   _(templateable)_
 </ResponseField>
@@ -313,7 +313,7 @@ Static build configuration for a module.
 <ResponseField name="destinations" type="Pipeline.S3Destination[]" required>
   S3 destinations where the built static assets will be uploaded.
 
-  See: [Pipeline.S3Destination](#pipeline-s3destination)
+  See: [Pipeline.S3Destination](/module-definitions/definition-schema/build-configs#pipeline-s3destination)
 
   _(minItems:1; templateable)_
 </ResponseField>
@@ -322,36 +322,6 @@ Static build configuration for a module.
   Execution environment configuration used for the build.
 
   See: [Pipeline.StepInfrastructure](#pipeline-stepinfrastructure)
-
-  _(templateable)_
-</ResponseField>
-
-### Pipeline.EcrDestination
-
-ECR destination for image builds
-
-<ResponseField name="id" type="string" required>
-  Unique destination identifier within the build step
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="type" type="enum" required>
-  ECR destination type
-
-  Allowed values: `ecr`
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="repository_arn" type="string" required>
-  ECR repository ARN
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="tags" type="string[] | null">
-  Docker image tags to apply in ECR after the build finishes
 
   _(templateable)_
 </ResponseField>
@@ -365,63 +335,6 @@ Supports either:
 - a full template block like &lt;&lt; pipeline.input.env_variables &gt;&gt; that resolves to such a map.
 
 One of: map&lt;string,[Pipeline.EnvironmentVariable](#pipeline-environmentvariable)&gt;, string.
-
-### Pipeline.GitSource
-
-Git source configuration for fetching code. Ravion partially clones the full history of `branch`
-plus tags, fetching file contents on demand, then checks out `ref` if set. Other branches are not
-fetched. Set `fetch_depth` for a shallow clone.
-
-<ResponseField name="type" type="enum" required>
-  Source type identifier
-
-  Allowed values: `git`
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="repo" type="string" required>
-  Full repository URL including host
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="branch" type="string" required>
-  Branch to check out
-
-  _(minLen:1; templateable)_
-</ResponseField>
-
-<ResponseField name="ref" type="string | null">
-  Git ref to check out — branch, commit SHA, tag, or other ref. Overrides branch HEAD if set.
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="fetch_depth" type="integer | null">
-  Number of commits of history to fetch, ending at the checked-out commit. Tags are not fetched when set.
-
-  _(format:int32,min:1; templateable)_
-</ResponseField>
-
-<ResponseField name="base_path" type="string | null" default=".">
-  Base path within the repository to use as the working root
-
-  _(templateable)_
-</ResponseField>
-
-### Pipeline.ImageBuildConfig
-
-Image build configuration — discriminated by build method
-
-Discriminated union. The `type` field selects which schema applies.
-
-| `type` value | Schema                                                                      |
-| ------------ | --------------------------------------------------------------------------- |
-| `disabled`   | [Pipeline.DisabledBuildConfig](#pipeline-disabledbuildconfig)               |
-| `dockerfile` | [Pipeline.ImageDockerfileBuildConfig](#pipeline-imagedockerfilebuildconfig) |
-| `nixpacks`   | [Pipeline.ImageNixpacksBuildConfig](#pipeline-imagenixpacksbuildconfig)     |
-| `railpack`   | [Pipeline.ImageRailpackBuildConfig](#pipeline-imagerailpackbuildconfig)     |
 
 ### Pipeline.StepInfrastructure
 
@@ -441,252 +354,11 @@ Discriminated union. The `type` field selects which schema applies.
 | `ec2-spot`   | [Pipeline.Ec2SpotStepInfrastructure](#pipeline-ec2spotstepinfrastructure) |
 | `sandbox`    | [Pipeline.SandboxStepInfrastructure](#pipeline-sandboxstepinfrastructure) |
 
-### Pipeline.LambdaBuildConfig
-
-Lambda build configuration — discriminated by build method
-
-Discriminated union. The `type` field selects which schema applies.
-
-| `type` value | Schema                                                                        |
-| ------------ | ----------------------------------------------------------------------------- |
-| `disabled`   | [Pipeline.DisabledBuildConfig](#pipeline-disabledbuildconfig)                 |
-| `dockerfile` | [Pipeline.LambdaDockerfileBuildConfig](#pipeline-lambdadockerfilebuildconfig) |
-| `nixpacks`   | [Pipeline.LambdaNixpacksBuildConfig](#pipeline-lambdanixpacksbuildconfig)     |
-
-### Pipeline.S3Destination
-
-S3 destination for build artifacts
-
-<ResponseField name="id" type="string" required>
-  Unique destination identifier within the build step
-
-  _(minLen:1; templateable)_
-</ResponseField>
-
-<ResponseField name="type" type="enum" required>
-  S3 destination type
-
-  Allowed values: `s3`
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="bucket" type="string" required>
-  S3 bucket name where built assets will be uploaded
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="directory" type="string | null">
-  S3 directory override for the uploaded build output.
-  When omitted, the build step generates a flat directory from the step ID,
-  commit short SHA, and pipeline run ID.
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="region" type="string" required>
-  AWS region for the destination S3 bucket
-
-  _(templateable)_
-</ResponseField>
-
-### Pipeline.StaticBuildConfig
-
-Static build configuration — discriminated by build method
-
-Discriminated union. The `type` field selects which schema applies.
-
-| `type` value | Schema                                                                        |
-| ------------ | ----------------------------------------------------------------------------- |
-| `dockerfile` | [Pipeline.StaticDockerfileBuildConfig](#pipeline-staticdockerfilebuildconfig) |
-| `nixpacks`   | [Pipeline.StaticNixpacksBuildConfig](#pipeline-staticnixpacksbuildconfig)     |
-| `railpack`   | [Pipeline.StaticRailpackBuildConfig](#pipeline-staticrailpackbuildconfig)     |
-
 ### Pipeline.EnvironmentVariable
 
 Environment variable — can be a plain string, Parameter Store reference, or Secrets Manager reference
 
 One of: string \| null, [Pipeline.ParameterStoreEnvVar](#pipeline-parameterstoreenvvar), [Pipeline.SecretsManagerEnvVar](#pipeline-secretsmanagerenvvar).
-
-### Pipeline.DisabledBuildConfig
-
-Disabled build configuration. Valid only for module-driven builds.
-
-<ResponseField name="type" type="enum" required>
-  Build method — disables module build execution
-
-  Allowed values: `disabled`
-
-  _(templateable)_
-</ResponseField>
-
-### Pipeline.ImageDockerfileBuildConfig
-
-Dockerfile configuration for image builds
-
-<ResponseField name="type" type="enum" required>
-  Build method — use a custom Dockerfile
-
-  Allowed values: `dockerfile`
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="dockerfile" type="string | null" default="Dockerfile">
-  Path to Dockerfile relative to source.base_path
-
-  _(minLen:1; templateable)_
-</ResponseField>
-
-<ResponseField name="context" type="string | null" default=".">
-  Docker build context path relative to source.base_path
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="build_args" type="map<string,string> | null">
-  Explicit Docker build args passed to buildx without adding declarations to the Dockerfile.
-  Values can be literal strings or pipeline templates.
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="inject_env_variables_in_dockerfile" type="boolean | null">
-  Whether to inject environment variables as ARG and ENV declarations after every FROM
-  in the Dockerfile. Changing injected values invalidates every following layer, and the ENV
-  declarations persist those values in the image. Prefer build_args when you need explicit
-  control over ARG placement, and use BuildKit secrets for credentials.
-  Accepts either a boolean literal or a full template token
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="cache_from" type="Pipeline.CacheFromConfig">
-  Docker layer cache configuration
-
-  See: [Pipeline.CacheFromConfig](#pipeline-cachefromconfig)
-
-  _(templateable)_
-</ResponseField>
-
-### Pipeline.ImageNixpacksBuildConfig
-
-Nixpacks configuration for image builds
-
-<ResponseField name="type" type="enum" required>
-  Build method — use Nixpacks auto-detection
-
-  Allowed values: `nixpacks`
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="nixpacks_version" type="string | null">
-  Nixpacks version to use
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="build_path" type="string | null">
-  Directory to run the Nixpacks build from, relative to the repository root
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="config_file_path" type="string | null">
-  Path to the Nixpacks configuration file relative to the repository root
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="nix_pkgs" type="string[] | null">
-  Additional Nix packages to install
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="apt_pkgs" type="string[] | null">
-  Additional apt packages to install
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="nix_libs" type="string[] | null">
-  Additional Nix libraries to install
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="install_cmd" type="string | null">
-  Custom install command
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="build_cmd" type="string | null">
-  Custom build command
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="start_cmd" type="string | null">
-  Application start command
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="cache_from" type="Pipeline.CacheFromConfig">
-  Docker layer cache configuration
-
-  See: [Pipeline.CacheFromConfig](#pipeline-cachefromconfig)
-
-  _(templateable)_
-</ResponseField>
-
-### Pipeline.ImageRailpackBuildConfig
-
-Railpack configuration for image builds
-
-<ResponseField name="type" type="enum" required>
-  Build method — use Railpack auto-detection
-
-  Allowed values: `railpack`
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="railpack_version" type="string | null">
-  Railpack version to use
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="install_cmd" type="string | null">
-  Custom install command
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="build_cmd" type="string | null">
-  Custom build command
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="start_cmd" type="string | null">
-  Application start command
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="cache_from" type="Pipeline.CacheFromConfig">
-  Docker layer cache configuration
-
-  See: [Pipeline.CacheFromConfig](#pipeline-cachefromconfig)
-
-  _(templateable)_
-</ResponseField>
 
 ### Pipeline.Ec2SpotStepInfrastructure
 
@@ -963,289 +635,6 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
   _(templateable)_
 </ResponseField>
 
-### Pipeline.LambdaDockerfileBuildConfig
-
-Dockerfile configuration for Lambda builds
-
-<ResponseField name="type" type="enum" required>
-  Build method — use a custom Dockerfile
-
-  Allowed values: `dockerfile`
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="dockerfile" type="string | null" default="Dockerfile">
-  Path to Dockerfile relative to source.base_path
-
-  _(minLen:1; templateable)_
-</ResponseField>
-
-<ResponseField name="context" type="string | null" default=".">
-  Docker build context path relative to source.base_path
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="build_args" type="map<string,string> | null">
-  Explicit Docker build args passed to buildx without adding declarations to the Dockerfile.
-  Values can be literal strings or pipeline templates.
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="inject_env_variables_in_dockerfile" type="boolean | null">
-  Whether to inject environment variables as ARG and ENV declarations after every FROM
-  in the Dockerfile. Changing injected values invalidates every following layer, and the ENV
-  declarations persist those values in the image. Prefer build_args when you need explicit
-  control over ARG placement, and use BuildKit secrets for credentials.
-  Accepts either a boolean literal or a full template token
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="output_directory" type="string" required>
-  Directory inside the built image containing the Lambda package contents
-
-  _(minLen:1; templateable)_
-</ResponseField>
-
-<ResponseField name="max_zip_size" type="integer | null" default="52428800">
-  Maximum allowed zip size in bytes — build fails if exceeded
-
-  _(format:int32; templateable)_
-</ResponseField>
-
-### Pipeline.LambdaNixpacksBuildConfig
-
-Nixpacks configuration for Lambda builds
-
-<ResponseField name="type" type="enum" required>
-  Build method — use Nixpacks auto-detection
-
-  Allowed values: `nixpacks`
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="nixpacks_version" type="string | null">
-  Nixpacks version to use
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="build_path" type="string | null">
-  Directory to run the Nixpacks build from, relative to the repository root
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="config_file_path" type="string | null">
-  Path to the Nixpacks configuration file relative to the repository root
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="nix_pkgs" type="string[] | null">
-  Additional Nix packages to install
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="apt_pkgs" type="string[] | null">
-  Additional apt packages to install
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="nix_libs" type="string[] | null">
-  Additional Nix libraries to install
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="install_cmd" type="string | null">
-  Custom install command
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="build_cmd" type="string | null">
-  Custom build command
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="start_cmd" type="string | null">
-  Application start command
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="output_directory" type="string" required>
-  Directory inside the built image containing the Lambda package contents
-
-  _(minLen:1; templateable)_
-</ResponseField>
-
-<ResponseField name="max_zip_size" type="integer | null" default="52428800">
-  Maximum allowed zip size in bytes — build fails if exceeded
-
-  _(format:int32; templateable)_
-</ResponseField>
-
-### Pipeline.StaticDockerfileBuildConfig
-
-Dockerfile configuration for static builds
-
-<ResponseField name="type" type="enum" required>
-  Build method — use a custom Dockerfile
-
-  Allowed values: `dockerfile`
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="dockerfile" type="string | null" default="Dockerfile">
-  Path to Dockerfile relative to source.base_path
-
-  _(minLen:1; templateable)_
-</ResponseField>
-
-<ResponseField name="context" type="string | null" default=".">
-  Docker build context path relative to source.base_path
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="build_args" type="map<string,string> | null">
-  Explicit Docker build args passed to buildx without adding declarations to the Dockerfile.
-  Values can be literal strings or pipeline templates.
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="inject_env_variables_in_dockerfile" type="boolean | null">
-  Whether to inject environment variables as ARG and ENV declarations after every FROM
-  in the Dockerfile. Changing injected values invalidates every following layer, and the ENV
-  declarations persist those values in the image. Prefer build_args when you need explicit
-  control over ARG placement, and use BuildKit secrets for credentials.
-  Accepts either a boolean literal or a full template token
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="output_directory" type="string" required>
-  Directory inside the built image containing the static assets to upload
-  This path is resolved relative to source.base_path
-
-  _(minLen:1; templateable)_
-</ResponseField>
-
-### Pipeline.StaticNixpacksBuildConfig
-
-Nixpacks configuration for static builds
-
-<ResponseField name="type" type="enum" required>
-  Build method — use Nixpacks auto-detection
-
-  Allowed values: `nixpacks`
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="nixpacks_version" type="string | null">
-  Nixpacks version to use
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="build_path" type="string | null">
-  Directory to run the Nixpacks build from, relative to the repository root
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="config_file_path" type="string | null">
-  Path to the Nixpacks configuration file relative to the repository root
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="nix_pkgs" type="string[] | null">
-  Additional Nix packages to install
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="apt_pkgs" type="string[] | null">
-  Additional apt packages to install
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="nix_libs" type="string[] | null">
-  Additional Nix libraries to install
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="install_cmd" type="string | null">
-  Custom install command
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="build_cmd" type="string | null">
-  Custom build command
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="output_directory" type="string" required>
-  Directory inside the built image containing the static assets to upload
-  This path is resolved relative to source.base_path
-
-  _(minLen:1; templateable)_
-</ResponseField>
-
-### Pipeline.StaticRailpackBuildConfig
-
-Railpack configuration for static builds
-
-<ResponseField name="type" type="enum" required>
-  Build method — use Railpack auto-detection
-
-  Allowed values: `railpack`
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="railpack_version" type="string | null">
-  Railpack version to use
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="install_cmd" type="string | null">
-  Custom install command
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="build_cmd" type="string | null">
-  Custom build command
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="output_directory" type="string" required>
-  Directory inside the built image containing the static assets to upload
-  This path is resolved relative to source.base_path
-
-  _(minLen:1; templateable)_
-</ResponseField>
-
 ### Pipeline.ParameterStoreEnvVar
 
 Environment variable from AWS Parameter Store
@@ -1266,22 +655,6 @@ Environment variable from AWS Secrets Manager
   Secrets Manager reference
 
   See: [Pipeline.SecretsManagerReferenceValue](#pipeline-secretsmanagerreferencevalue)
-
-  _(templateable)_
-</ResponseField>
-
-### Pipeline.CacheFromConfig
-
-Configuration for Docker layer cache source from ECR
-
-<ResponseField name="digest" type="string | null">
-  Specific image digest to use for cache
-
-  _(templateable)_
-</ResponseField>
-
-<ResponseField name="tag" type="string | null">
-  Specific image tag to use for cache
 
   _(templateable)_
 </ResponseField>

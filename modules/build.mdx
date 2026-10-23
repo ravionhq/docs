@@ -64,7 +64,7 @@ Use sandboxes unless your build needs a custom AMI or direct access to a dedicat
 
 The build uses the module's Terraform execution environment unless you set **Builder execution environment**. In **Builder config**, you can adjust **Builder vCPUs**, **Builder memory (GiB)** and **Builder disk (GiB)**.
 
-Existing module instances keep their saved builder settings when upgraded. To move an existing EC2 build to a sandbox, open **Builder config**, set **Builder capacity type** to **Sandbox**, and choose its CPU and memory. Older module versions may still label this option **Sandbox (preview)**.
+Existing module instances keep their saved builder settings when upgraded. To move an existing EC2 build to a sandbox, open **Builder config**, set **Builder capacity type** to **Sandbox**, and choose its CPU and memory.
 
 Sandbox builds use `disk_cache: auto` to keep dependencies, build output and Docker layers between successful runs. **Interruptible build** is on by default, allowing spot hosts and a restart from the beginning if the host is lost. Turn it off if your build changes external state, such as running [database migrations](/guides/database-migrations).
 
@@ -114,7 +114,7 @@ This example uses `ci-builders` as an execution environment given ID; replace it
     execution_environment_id: ci-builders
 ```
 
-Both `tag` and `digest` are optional, accept template tokens, and resolve against the step's first ECR destination — so the tag or digest you name has to exist in that repo. `digest` wins if you set both. Omit `cache_from` entirely and the step falls back to the most recent image in that repo. See [`CacheFromConfig`](/pipelines/config-reference#cachefromconfig) for the full field list.
+Both `tag` and `digest` are optional, accept template tokens, and resolve against the step's first ECR destination — so the tag or digest you name has to exist in that repo. `digest` wins if you set both. Omit `cache_from` entirely and the step falls back to the most recent image in that repo. See [`CacheFromConfig`](/pipelines/config-reference/build-configs#cachefromconfig) for the full field list.
 
 ## Inspecting builds
 
