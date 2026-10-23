@@ -12,6 +12,21 @@ description: "Browse GitHub Actions workflows, runs, jobs, and logs"
 
 Browse GitHub Actions workflows, runs, jobs, and logs
 
+### `ravion github-actions approve-run`
+
+Approve a workflow run
+
+```bash
+ravion github-actions approve-run <codeSourceId> <runId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--organization-id <string>` |  | organizationId |
+
 ### `ravion github-actions job-logs`
 
 Get bounded logs for a workflow job
