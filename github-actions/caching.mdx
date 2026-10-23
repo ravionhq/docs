@@ -58,6 +58,20 @@ Go builds use the same cache automatically through `GOCACHEPROG` unless you set 
 
 Rust builds that use [sccache](https://github.com/mozilla/sccache) share the same cache too. Ravion sets `SCCACHE_WEBDAV_ENDPOINT` for every sandbox job, so jobs that already set `RUSTC_WRAPPER=sccache` get cache hits without changes. A cache backend set in your workflow, such as `SCCACHE_BUCKET` or `SCCACHE_GHA_ENABLED`, still takes precedence.
 
+C and C++ builds that use [ccache](https://ccache.dev) 4.4 or later share the same cache. The sandbox image includes ccache, and Ravion points its remote storage at the cache for every sandbox job. Builds still have to call the compiler through ccache, for example with `CC="ccache gcc"` or CMake's `CMAKE_C_COMPILER_LAUNCHER=ccache`. A `remote_storage` or `secondary_storage` setting in your `ccache.conf`, or a `CCACHE_REMOTE_STORAGE`, `CCACHE_SECONDARY_STORAGE` or `CCACHE_CONFIGPATH2` variable, still takes precedence.
+
+[Gradle](https://docs.gradle.org/current/userguide/build_cache.html) builds that enable the build cache, with `--build-cache` or `org.gradle.caching=true`, share the same cache. Ravion adds it as the remote build cache unless your settings already configure one. Builds that don't enable the build cache are unchanged.
+
+[Bazel](https://bazel.build/remote/caching) builds can use the same cache by passing the URL Ravion sets in `RAVION_BAZEL_REMOTE_CACHE`:
+
+```yaml
+- run: bazel build //... --remote_cache=$RAVION_BAZEL_REMOTE_CACHE
+```
+
+Ravion doesn't add the flag for you, because Bazel fails when an HTTP cache is combined with a remote executor in your `.bazelrc`. The sandbox image includes Bazelisk as `bazel`, which runs the Bazel version in your `.bazelversion`. Outside a sandbox the variable is empty, and an empty `--remote_cache` turns remote caching off.
+
+If the cache is unreachable, these tools build without it. Turborepo and Nx remote caches aren't filled in, because their cache keys can miss inputs you haven't declared, such as environment variables, and a shared cache could then serve another branch's output.
+
 Public repositories get a separate cache per repository and can't read private caches. EC2 runners use GitHub's cache.
 
 ## Artifacts

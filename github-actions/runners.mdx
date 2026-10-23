@@ -154,7 +154,7 @@ EC2 runners start a whole instance per job, boot Amazon Linux 2023, and have no 
 
 ### The runner image
 
-Sandbox jobs boot an x86_64 Ubuntu 24.04 image. It has the apt packages [GitHub's `ubuntu-24.04` runner image](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) installs, such as git and Git LFS, build-essential, Clang 18 (`clang-18`, `lld-18`, `lldb-18`, `clang-format-18` and `clang-tidy-18`), `zip`, `rsync`, `wget`, `brotli`, `sqlite3` and the PostgreSQL client. It also has GitHub CLI (`gh`), Node.js 24, Docker with Docker Compose, the AWS CLI, `jq` and `yq`. Like GitHub's images, `apt-get install` doesn't ask for confirmation. See [What runs inside a sandbox](/concepts/sandboxes#what-runs-inside-a-sandbox).
+Sandbox jobs boot an x86_64 Ubuntu 24.04 image. It has the apt packages [GitHub's `ubuntu-24.04` runner image](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) installs, such as git and Git LFS, build-essential, Clang 18 (`clang-18`, `lld-18`, `lldb-18`, `clang-format-18` and `clang-tidy-18`), `zip`, `rsync`, `wget`, `brotli`, `sqlite3` and the PostgreSQL client. It also has GitHub CLI (`gh`), Node.js 24, Docker with Docker Compose, the AWS CLI, `jq`, `yq`, ccache, sccache and Bazelisk (as `bazel`). Like GitHub's images, `apt-get install` doesn't ask for confirmation. See [What runs inside a sandbox](/concepts/sandboxes#what-runs-inside-a-sandbox).
 
 The image is still much smaller than GitHub's hosted runner images. Their `ubuntu-latest` also comes with several versions each of Node.js, Python, Java, Go, Ruby and .NET, plus browsers, databases and cloud tools. The Ravion image doesn't. If a job needs something missing, install it natively in a `run` step:
 
