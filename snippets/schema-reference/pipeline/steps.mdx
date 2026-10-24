@@ -140,6 +140,16 @@ Approval action step — pauses pipeline execution until a user explicitly appro
   Allowed values: `approval`
 </ResponseField>
 
+<ResponseField name="approvers" type="string[] | null">
+  Email addresses of the organization members allowed to approve this step.
+  When set, an approval from anyone else is refused, and the APPROVERS
+  notification audience resolves to exactly these members. When omitted,
+  any organization member can approve and APPROVERS resolves to every
+  active member.
+
+  _(templateable)_
+</ResponseField>
+
 ### BuildStep
 
 General-purpose build action step — triggers a build based on the module's build config.
