@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   check:
-    runs-on: ravion/ee=github-actions-other/type=sandbox/cpu=2/memory=4/disk_cache=auto/id=${{ github.run_id }}-check-og-images-check/interruptible=true
+    runs-on: ravion/ee=github-actions-other/type=sandbox/cpu=auto/memory=auto/disk=auto/disk_cache=auto/id=${{ github.run_id }}-check-og-images-check/interruptible=true
     steps:
       - uses: actions/checkout@v4
 
