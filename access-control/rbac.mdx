@@ -35,60 +35,60 @@ Operators can start pipeline runs and deploy modules without administering cloud
 
 ### Permissions by role
 
-Each table shows what each role can do with a resource. **Manage** means full access, and **Read** means view only. A dash means no access. **Owner** can do everything, so it isn't listed. To write your own rules, see [custom roles](/access-control/custom-roles).
+Each table shows what each role can do with a resource. **Manage** means full access, and **Read** means view only. A dash means no access. **Owner** can do everything, so it isn't listed. **Billing** can only access the organization and billing, so it appears only in the last table. To write your own rules, see [custom roles](/access-control/custom-roles).
 
 #### Projects and environments
 
-| Resource | Platform Admin | Operator | Manager | Read only | Billing |
-| --- | --- | --- | --- | --- | --- |
-| Projects | Read | Manage | Read | Read | — |
-| Environments | Read | Manage | Read | Read | — |
-| Stacks | Read | Manage | Read | Read | — |
-| Module instances | Read | Manage | Read | Read | — |
-| Apps | Read | Manage | Read | Read | — |
-| Sandboxes | Read | Manage | Read | Read | — |
-| Domains | Read | Manage | Read | Read | — |
-| Certificates | Read | Manage | Read | Read | — |
+| Resource | Platform Admin | Operator | Manager | Read only |
+| --- | --- | --- | --- | --- |
+| Projects | Read | Manage | Read | Read |
+| Environments | Read | Manage | Read | Read |
+| Stacks | Read | Manage | Read | Read |
+| Module instances | Read | Manage | Read | Read |
+| Apps | Read | Manage | Read | Read |
+| Sandboxes | Read | Manage | Read | Read |
+| Domains | Read | Manage | Read | Read |
+| Certificates | Read | Manage | Read | Read |
 
 #### Pipelines and deployments
 
-| Resource | Platform Admin | Operator | Manager | Read only | Billing |
-| --- | --- | --- | --- | --- | --- |
-| Pipelines | Read | Manage | Read | Read | — |
-| Pipeline runs | Read | Manage | Read | Read | — |
-| Pipeline steps | Read | Read | Read | Read | — |
-| Pipeline approvals | Read | Manage | Read | Read | — |
-| Module deployments | Read | Manage | Read | Read | — |
-| Deployment resources | Read | Manage | Read | Read | — |
-| Terraform resources | Read | Read | Read | Read | — |
-| Infrastructure events | Read | Read | Read | Read | — |
-| Logs | Read | Read | Read | Read | — |
-| Metrics | Read | Read | Read | Read | — |
+| Resource | Platform Admin | Operator | Manager | Read only |
+| --- | --- | --- | --- | --- |
+| Pipelines | Read | Manage | Read | Read |
+| Pipeline runs | Read | Manage | Read | Read |
+| Pipeline steps | Read | Read | Read | Read |
+| Pipeline approvals | Read | Manage | Read | Read |
+| Module deployments | Read | Manage | Read | Read |
+| Deployment resources | Read | Manage | Read | Read |
+| Terraform resources | Read | Read | Read | Read |
+| Infrastructure events | Read | Read | Read | Read |
+| Logs | Read | Read | Read | Read |
+| Metrics | Read | Read | Read | Read |
 
 #### Credentials and default values
 
-| Resource | Platform Admin | Operator | Manager | Read only | Billing |
-| --- | --- | --- | --- | --- | --- |
-| Credentials | Read | Manage | Read | Read | — |
-| Default values | Read | Manage | Read | Read | — |
-| Default value definitions | Manage | Read | Read | Read | — |
+| Resource | Platform Admin | Operator | Manager | Read only |
+| --- | --- | --- | --- | --- |
+| Credentials | Read | Manage | Read | Read |
+| Default values | Read | Manage | Read | Read |
+| Default value definitions | Manage | Read | Read | Read |
 
 #### Platform
 
-| Resource | Platform Admin | Operator | Manager | Read only | Billing |
-| --- | --- | --- | --- | --- | --- |
-| Module definitions | Manage | Read | Read | Read | — |
-| Cloud accounts | Manage | Read | Read | Read | — |
-| Execution environments | Manage | Read | Read | Read | — |
-| Code sources | Manage | Read | Read | Read | — |
+| Resource | Platform Admin | Operator | Manager | Read only |
+| --- | --- | --- | --- | --- |
+| Module definitions | Manage | Read | Read | Read |
+| Cloud accounts | Manage | Read | Read | Read |
+| Execution environments | Manage | Read | Read | Read |
+| Code sources | Manage | Read | Read | Read |
 
 #### Access
 
-| Resource | Platform Admin | Operator | Manager | Read only | Billing |
-| --- | --- | --- | --- | --- | --- |
-| Members | Read | Read | Manage | Read | — |
-| Service accounts | Manage | Manage | Read | Read | — |
-| Roles and role assignments | — | — | Manage | — | — |
+| Resource | Platform Admin | Operator | Manager | Read only |
+| --- | --- | --- | --- | --- |
+| Members | Read | Read | Manage | Read |
+| Service accounts | Manage | Manage | Read | Read |
+| Roles and role assignments | — | — | Manage | — |
 
 #### Organization and billing
 
