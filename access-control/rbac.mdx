@@ -22,7 +22,7 @@ Ravion maintains these roles and updates them as new features ship. They're avai
 | --- | --- | --- |
 | Owner | `owner` | Full access to everything, including billing and deleting the organization. |
 | Platform Admin | `platform-admin` | Manage the module catalog, cloud accounts, execution environments, code sources, default value definitions, and service accounts. Doesn't include Operator. |
-| Operator | `operator` | Manage projects, environments, pipelines, runs, approvals, module instances, deployments, domains, certificates, credentials, default values, and service accounts, including deleting them. Uses, but doesn't manage, modules, cloud accounts, and execution environments. |
+| Operator | `operator` | Manage projects, environments, pipelines, module instances, domains, certificates, credentials, default values, and service accounts, including deleting them. Start and act on pipeline runs, approve steps, and deploy. Uses, but doesn't manage, modules, cloud accounts, and execution environments. |
 | Manager | `manager` | Manage members, roles, and role assignments. Can only give permissions they already hold. |
 | Read only | `read-only` | See everything except billing and who has which permissions. |
 | Billing | `billing` | See and manage billing. |
@@ -32,6 +32,72 @@ Every role except **Billing** can read everything in the organization except bil
 <Tip>
 Operators can start pipeline runs and deploy modules without administering cloud accounts or execution environments. They only need to read those resources to use them.
 </Tip>
+
+### Permissions by role
+
+Each table shows what each role can do with a resource. **Manage** means full access, and **Read** means view only. A dash means no access. **Owner** can do everything, and **Read only** can read everything except roles and billing, so neither is listed. **Billing** only appears in the last table, since it has no other access. To write your own rules, see [custom roles](/access-control/custom-roles).
+
+#### Projects and environments
+
+| Resource | Platform Admin | Operator | Manager |
+| --- | --- | --- | --- |
+| Projects | Read | Manage | Read |
+| Environments | Read | Manage | Read |
+| Stacks | Read | Manage | Read |
+| Module instances | Read | Manage | Read |
+| Apps | Read | Manage | Read |
+| Sandboxes | Read | Manage | Read |
+| Domains | Read | Manage | Read |
+| Certificates | Read | Manage | Read |
+
+#### Pipelines and deployments
+
+| Resource | Platform Admin | Operator | Manager |
+| --- | --- | --- | --- |
+| Pipelines | Read | Manage | Read |
+| Pipeline runs | Read | Manage | Read |
+| Pipeline steps | Read | Read | Read |
+| Pipeline approvals | Read | Manage | Read |
+| Module deployments | Read | Manage | Read |
+| Deployment resources | Read | Manage | Read |
+| Terraform resources | Read | Read | Read |
+| Infrastructure events | Read | Read | Read |
+| Logs | Read | Read | Read |
+| Metrics | Read | Read | Read |
+
+#### Credentials and default values
+
+| Resource | Platform Admin | Operator | Manager |
+| --- | --- | --- | --- |
+| Credentials | Read | Manage | Read |
+| Default values | Read | Manage | Read |
+| Default value definitions | Manage | Read | Read |
+
+#### Platform
+
+| Resource | Platform Admin | Operator | Manager |
+| --- | --- | --- | --- |
+| Module definitions | Manage | Read | Read |
+| Cloud accounts | Manage | Read | Read |
+| Execution environments | Manage | Read | Read |
+| Code sources | Manage | Read | Read |
+
+#### Access
+
+| Resource | Platform Admin | Operator | Manager |
+| --- | --- | --- | --- |
+| Members | Read | Read | Manage |
+| Service accounts | Manage | Manage | Read |
+| Roles and role assignments | — | — | Manage |
+
+#### Organization and billing
+
+| Resource | Platform Admin | Operator | Manager | Billing |
+| --- | --- | --- | --- | --- |
+| Organization | Read | Read | Read | Read |
+| Billing | — | — | — | Manage |
+
+Reading a credential or a secret default value returns its metadata, never the secret value. Only members can delete the organization. A service account can't hold **Owner** or any role that allows deleting the organization.
 
 ### Common combinations
 
