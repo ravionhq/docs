@@ -8,7 +8,7 @@ description: "Run pipeline steps and module builds in Firecracker microVMs on an
 
 A sandbox runs one pipeline step or module build in its own [Firecracker](https://firecracker-microvm.github.io/) microVM, on EC2 hosts in your AWS account.
 
-You set the CPU, memory and disk a step needs. Ravion launches, packs, scales and retires the hosts. On a running host, a sandbox boots in one to two seconds, and the [disk cache](#disk-cache) brings back the whole disk from the last successful run.
+You set the CPU, memory and disk a step needs. Ravion launches, packs, scales and retires the hosts. On a running host, a sandbox boots in one to two seconds, and the [disk cache](#disk-cache) brings back the whole disk from the last saved run.
 
 ## How the fleet works
 
@@ -111,11 +111,11 @@ For faster starts after quiet periods, you can keep a few hosts on hand: running
 
 ## Why sandboxes are fast
 
-A cold CI job spends much of its time getting back to where the last one was: installing tools, restoring caches and pulling Docker layers. A sandbox skips that. It boots in one to two seconds with the whole disk from the last successful run already attached.
+A cold CI job spends much of its time getting back to where the last one was: installing tools, restoring caches and pulling Docker layers. A sandbox skips that. It boots in one to two seconds with the whole disk from the last saved run already attached.
 
 ### The whole disk is the cache
 
-When `disk_cache` is on, Ravion saves the sandbox's entire root disk after a successful run. You don't list cache paths. Everything the step left behind comes back next time:
+When `disk_cache` is on, Ravion saves the sandbox's entire root disk when a step succeeds or one of its commands fails. You don't list cache paths. Everything the step left behind comes back next time:
 
 - Packages installed with `apt`, `setup` actions or install scripts
 - `node_modules`, `~/.cache`, `~/.m2`, Go and Cargo build caches, `.next/cache`, `.turbo`
@@ -134,7 +134,7 @@ The size of the disk doesn't change the boot time, and the step rarely waits on 
 
 ### Saves upload only what changed
 
-While the step runs, the host uploads changed chunks in the background. When the step succeeds, only the remaining chunks are left to upload. Unchanged chunks are never uploaded again, and empty chunks cost nothing.
+While the step runs, the host uploads changed chunks in the background. When the step succeeds or one of its commands fails, only the remaining chunks are left to upload. Ravion does not save a disk when a step is cancelled, times out, runs out of disk, or loses its host. Unchanged chunks are never uploaded again, and empty chunks cost nothing.
 
 ```mermaid
 sequenceDiagram
@@ -147,7 +147,7 @@ sequenceDiagram
   Store-->>Host: Prefetch what the last run read
   VM->>Host: Read blocks (served from NVMe cache)
   Host->>Store: Upload changed chunks while the step runs
-  VM->>Host: Step succeeds
+  VM->>Host: Step succeeds or a command fails
   Host->>Store: Upload the rest and save for the branch
 ```
 
@@ -355,9 +355,9 @@ Pick a region close to your data instead when:
 | --- | --- |
 | `off` | Start from the base image every run. Default for pipeline steps. |
 | `auto` | Keep this step's own disk, named by its git source and step. Needs a git `source`. |
-| A key, such as `web-deps` | Share one disk across every step in the repository that uses the key. The last successful run to finish saves it. Keys are up to 64 lowercase letters, digits, `.`, `_` or `-`. |
+| A key, such as `web-deps` | Share one disk across every step in the repository that uses the key. The last eligible run to finish saves it. Keys are up to 64 lowercase letters, digits, `.`, `_` or `-`. |
 
-A run restores the disk saved for its branch. If there's none, it uses the pull request's base branch, then the repository's default branch. A run saves its disk to its own branch only when it succeeds.
+A run restores the disk saved for its branch. If there's none, it uses the pull request's base branch, then the repository's default branch. A step saves its disk to its own branch when it succeeds or one of its commands fails. It does not save when cancelled, timed out, out of disk, or when its host is lost.
 
 To start a run on clean disks, pass `--no-cache` to `ravion pipeline run create` or `ravion pipeline run retry`.
 
@@ -377,6 +377,14 @@ New sandbox jobs resume after cleanup completes. If cleanup fails, they stay pau
 <Warning>
   Deleting caches cannot be undone. Fix or remove a compromised dependency before running jobs again; deleting its cached files does not make the dependency safe or revoke exposed credentials.
 </Warning>
+
+## Shared build cache for pipeline steps
+
+Private pipeline sandbox steps with a [git source](#pipeline-steps) automatically use a shared build cache, independently of `disk_cache`. Ravion configures Go builds through `GOCACHEPROG`. If you already use [sccache](https://github.com/mozilla/sccache), Rust builds use the shared cache through `SCCACHE_WEBDAV_ENDPOINT`.
+
+Ravion scopes cache entries to the repository and branch, and reads from the repository's default branch when the branch has no entry. Pipeline steps share entries with that repository's [GitHub Actions jobs](/github-actions/caching).
+
+Your own `GOCACHEPROG` or sccache settings take precedence. To turn off either cache for a step, set `RAVION_GO_CACHE_PROG=off` or `RAVION_SCCACHE=off` in its environment. The shared build cache does not apply inside [container instructions](#what-runs-inside-a-sandbox) or Docker builds.
 
 ## Limits and caveats
 

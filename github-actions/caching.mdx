@@ -72,6 +72,8 @@ Ravion doesn't add the flag for you, because Bazel fails when an HTTP cache is c
 
 If the cache is unreachable, these tools build without it. Turborepo and Nx remote caches aren't filled in, because their cache keys can miss inputs you haven't declared, such as environment variables, and a shared cache could then serve another branch's output.
 
+Pipeline sandbox steps with a git source use the same cache for Go and Rust builds; see [shared build cache for pipeline steps](/concepts/sandboxes#shared-build-cache-for-pipeline-steps).
+
 Public repositories get a separate cache per repository and can't read private caches. EC2 runners use GitHub's cache.
 
 ## Artifacts
