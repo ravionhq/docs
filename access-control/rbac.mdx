@@ -35,67 +35,67 @@ Operators can start pipeline runs and deploy modules without administering cloud
 
 ### Permissions by role
 
-Each table shows what each role can do with a resource. **Manage** means full access, and **Read** means view only. A dash means no access. **Owner** can do everything, so it isn't listed. To write your own rules, see [custom roles](/access-control/custom-roles).
+Each table shows what each role can do with a resource. **Manage** means full access, and **Read** means view only. A dash means no access. **Owner** can do everything, and **Read only** can read everything except roles and billing, so neither is listed. To write your own rules, see [custom roles](/access-control/custom-roles).
 
 #### Projects and environments
 
-| Resource | Platform Admin | Operator | Manager | Read only | Billing |
-| --- | --- | --- | --- | --- | --- |
-| Projects | Read | Manage | Read | Read | — |
-| Environments | Read | Manage | Read | Read | — |
-| Stacks | Read | Manage | Read | Read | — |
-| Module instances | Read | Manage | Read | Read | — |
-| Apps | Read | Manage | Read | Read | — |
-| Sandboxes | Read | Manage | Read | Read | — |
-| Domains | Read | Manage | Read | Read | — |
-| Certificates | Read | Manage | Read | Read | — |
+| Resource | Platform Admin | Operator | Manager | Billing |
+| --- | --- | --- | --- | --- |
+| Projects | Read | Manage | Read | — |
+| Environments | Read | Manage | Read | — |
+| Stacks | Read | Manage | Read | — |
+| Module instances | Read | Manage | Read | — |
+| Apps | Read | Manage | Read | — |
+| Sandboxes | Read | Manage | Read | — |
+| Domains | Read | Manage | Read | — |
+| Certificates | Read | Manage | Read | — |
 
 #### Pipelines and deployments
 
-| Resource | Platform Admin | Operator | Manager | Read only | Billing |
-| --- | --- | --- | --- | --- | --- |
-| Pipelines | Read | Manage | Read | Read | — |
-| Pipeline runs | Read | Manage | Read | Read | — |
-| Pipeline steps | Read | Read | Read | Read | — |
-| Pipeline approvals | Read | Manage | Read | Read | — |
-| Module deployments | Read | Manage | Read | Read | — |
-| Deployment resources | Read | Manage | Read | Read | — |
-| Terraform resources | Read | Read | Read | Read | — |
-| Infrastructure events | Read | Read | Read | Read | — |
-| Logs | Read | Read | Read | Read | — |
-| Metrics | Read | Read | Read | Read | — |
+| Resource | Platform Admin | Operator | Manager | Billing |
+| --- | --- | --- | --- | --- |
+| Pipelines | Read | Manage | Read | — |
+| Pipeline runs | Read | Manage | Read | — |
+| Pipeline steps | Read | Read | Read | — |
+| Pipeline approvals | Read | Manage | Read | — |
+| Module deployments | Read | Manage | Read | — |
+| Deployment resources | Read | Manage | Read | — |
+| Terraform resources | Read | Read | Read | — |
+| Infrastructure events | Read | Read | Read | — |
+| Logs | Read | Read | Read | — |
+| Metrics | Read | Read | Read | — |
 
 #### Credentials and default values
 
-| Resource | Platform Admin | Operator | Manager | Read only | Billing |
-| --- | --- | --- | --- | --- | --- |
-| Credentials | Read | Manage | Read | Read | — |
-| Default values | Read | Manage | Read | Read | — |
-| Default value definitions | Manage | Read | Read | Read | — |
+| Resource | Platform Admin | Operator | Manager | Billing |
+| --- | --- | --- | --- | --- |
+| Credentials | Read | Manage | Read | — |
+| Default values | Read | Manage | Read | — |
+| Default value definitions | Manage | Read | Read | — |
 
 #### Platform
 
-| Resource | Platform Admin | Operator | Manager | Read only | Billing |
-| --- | --- | --- | --- | --- | --- |
-| Module definitions | Manage | Read | Read | Read | — |
-| Cloud accounts | Manage | Read | Read | Read | — |
-| Execution environments | Manage | Read | Read | Read | — |
-| Code sources | Manage | Read | Read | Read | — |
+| Resource | Platform Admin | Operator | Manager | Billing |
+| --- | --- | --- | --- | --- |
+| Module definitions | Manage | Read | Read | — |
+| Cloud accounts | Manage | Read | Read | — |
+| Execution environments | Manage | Read | Read | — |
+| Code sources | Manage | Read | Read | — |
 
 #### Access
 
-| Resource | Platform Admin | Operator | Manager | Read only | Billing |
-| --- | --- | --- | --- | --- | --- |
-| Members | Read | Read | Manage | Read | — |
-| Service accounts | Manage | Manage | Read | Read | — |
-| Roles and role assignments | — | — | Manage | — | — |
+| Resource | Platform Admin | Operator | Manager | Billing |
+| --- | --- | --- | --- | --- |
+| Members | Read | Read | Manage | — |
+| Service accounts | Manage | Manage | Read | — |
+| Roles and role assignments | — | — | Manage | — |
 
 #### Organization and billing
 
-| Resource | Platform Admin | Operator | Manager | Read only | Billing |
-| --- | --- | --- | --- | --- | --- |
-| Organization | Read | Read | Read | Read | Read |
-| Billing | — | — | — | — | Manage |
+| Resource | Platform Admin | Operator | Manager | Billing |
+| --- | --- | --- | --- | --- |
+| Organization | Read | Read | Read | Read |
+| Billing | — | — | — | Manage |
 
 Reading a credential or a secret default value returns its metadata, never the secret value. Only members can delete the organization. A service account can't hold **Owner** or any role that allows deleting the organization.
 
