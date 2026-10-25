@@ -127,14 +127,36 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=4/memory=16/disk=60/interrupt
 | --- | --- | --- | --- |
 | `ee` | Yes | None | Given ID of the execution environment to run in. |
 | `type` | Yes | None | `sandbox`. |
-| `cpu` | Yes | None | vCPUs for the sandbox. |
-| `memory` | Yes | None | Memory in GiB. |
-| `disk` | No | 10 GiB per vCPU, at least 14 GiB | GiB of host disk reserved for what the job writes. |
+| `cpu` | Yes | None | vCPUs for the sandbox, or `auto`. See [Automatic sizing](#automatic-sizing). |
+| `memory` | Yes | None | Memory in GiB, or `auto`. |
+| `disk` | No | 10 GiB per vCPU, at least 14 GiB | GiB of host disk reserved for what the job writes, or `auto`. |
 | `disk_cache` | No | `auto` | Keep the job's disk between runs. See [Disk cache](/github-actions/caching#disk-cache). |
 | `interruptible` | No | `false` | Allow Spot hosts, and rerun the job from the start on a new host if its host is lost. See [Interruptible steps](/concepts/sandboxes#interruptible-steps-and-spot-hosts). |
 | `id` | Yes | None | A value that makes the label unique to one job. See [Unique labels](#unique-labels). |
 
 Mark jobs that are safe to run twice as `interruptible=true`, such as tests, lint and builds. Leave it off for jobs that publish, deploy or push.
+
+### Automatic sizing
+
+<Note>
+  Automatic sizing is in preview. [Contact support](/contact-support) to share feedback.
+</Note>
+
+Stop guessing machine sizes. Set `cpu`, `memory` or `disk` to `auto` and Ravion sizes the sandbox for you.
+
+```yaml
+runs-on: ravion/ee=github-actions/type=sandbox/cpu=auto/memory=auto/disk=auto/interruptible=true/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
+```
+
+Every run teaches Ravion what the job needs. Sizes grow fast when a job needs more, come down gradually when it needs less, then settle. Each job runs on the right machine at the right cost.
+
+- `auto` needs `interruptible=true` on the same label. Mix it with fixed values, like `cpu=4/memory=auto/interruptible=true`.
+- The first run gets 4 vCPU, 16 GiB of memory and 40 GiB of disk.
+- Sizes are learned per repository, workflow file and job name.
+- If a job runs out of memory or disk, Ravion gives it more and reruns it automatically, up to twice per workflow run. GitHub shows the failed attempt, then the rerun.
+- Sizes never go above what the largest host in your execution environment can fit.
+
+The job's log shows the size Ravion picked and why.
 
 ### EC2
 
@@ -201,7 +223,7 @@ Jobs from public repositories, including pull requests from forks, run only on s
 1. Go to [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments), choose the environment, then open **Config / Sandboxes**.
 2. Turn on **Allow public repositories**.
 
-Each public repository gets its own runner group, and its jobs run without a disk cache. Jobs from public repositories with an invalid label, or that ask for EC2, stay queued.
+Each public repository gets its own runner group, and its jobs run without a disk cache. [Automatic sizing](#automatic-sizing) and its automatic reruns work the same as for private repositories. Jobs from public repositories with an invalid label, or that ask for EC2, stay queued.
 
 ## Next steps
 

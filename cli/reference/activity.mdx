@@ -1,0 +1,176 @@
+---
+title: "ravion activity"
+sidebarTitle: "activity"
+description: "Manage activities"
+"og:image": "https://www.ravion.com/og/docs/cli/reference/activity.png"
+"twitter:image": "https://www.ravion.com/og/docs/cli/reference/activity.png"
+---
+
+{/* This page is generated from the Ravion CLI source. Do not edit by hand. */}
+
+## `ravion activity`
+
+Manage activities
+
+**Aliases:** `activities`
+
+### `ravion activity catalog`
+
+List the activity catalog
+
+```bash
+ravion activity catalog [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `-v, --verbose` |  | show full output |
+
+### `ravion activity export`
+
+Export activity
+
+```bash
+ravion activity export [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--format <string>` | yes | The file format. Available values: csv, jsonl. |
+| `--occurred-after <string>` | yes | Only entries recorded at or after this time. Required: every Activity read is bounded in time, and it may be at most as far back as Activity is kept, 60 days by default. |
+| `--category <access>` |  | Categories to include. Omitted means every category you may read. Naming access without permission to update the organization is refused with 403. |
+| `--client <strings>` |  | Clients to include. |
+| `--correlation-id <string>` |  | Only the entries one action caused, including work Ravion finished later on its own. |
+| `--environment-id <strings>` |  | Environments to include. |
+| `--event <listActivityCatalog>` |  | Activity catalog ids to include, exactly as listActivityCatalog returns them. An id outside the activity catalog is refused with 400. |
+| `--exclude-client <strings>` |  | Clients to leave out. |
+| `--exclude-environment-id <strings>` |  | Environments to leave out. |
+| `--exclude-event <strings>` |  | Activity catalog ids to leave out. |
+| `--exclude-identity <strings>` |  | Identities to leave out. |
+| `--exclude-identity-type <strings>` |  | Kinds of identity to leave out. |
+| `--exclude-ip <strings>` |  | Source IP addresses to leave out. |
+| `--exclude-pipeline-id <strings>` |  | Pipelines to leave out. |
+| `--exclude-project-id <strings>` |  | Projects to leave out. |
+| `--exclude-resource-name <strings>` |  | Resource names to leave out, compared case-insensitively. |
+| `--identity <strings>` |  | Identities to include. |
+| `--identity-type <strings>` |  | Kinds of identity to include. |
+| `--ip <strings>` |  | Source IP addresses to include, exactly as recorded. |
+| `--json` |  | emit response as JSON |
+| `--module-instance-id <strings>` |  | Module instances to include: entries about the module instance itself, its deployments, and the pipeline runs and steps that act on it. |
+| `--occurred-before <string>` |  | Only entries recorded before this time. Defaults to now. |
+| `--pipeline-id <strings>` |  | Pipelines to include. |
+| `--project-id <strings>` |  | Projects to include. |
+| `--q <strings>` |  | Free-text words, compared case-insensitively. An entry matches when every word appears in who acted, its catalog id, the resource name, the project, environment or pipeline name, or the source IP address. |
+| `--request-id <strings>` |  | Request ids to include, as returned in the responses of the requests that caused each entry. |
+| `--resource-name <strings>` |  | Resource names to include, as they were when each entry was recorded, compared case-insensitively. Entries keep the name a resource had, so a renamed or deleted resource is still found by its old name. |
+| `--status <strings>` |  | Outcomes to include. |
+| `--subject-id <subjectType>` |  | Only entries about the resource with this id. Pair it with subjectType. |
+| `--subject-type <pipeline_run>` |  | Only entries about one kind of resource, for example pipeline_run. Pair it with `subjectId` to read one resource's history. |
+
+### `ravion activity facets`
+
+Count activity by category, event and place
+
+```bash
+ravion activity facets [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--occurred-after <string>` | yes | Only entries recorded at or after this time. Required: every Activity read is bounded in time, and it may be at most as far back as Activity is kept, 60 days by default. |
+| `--category <access>` |  | Categories to include. Omitted means every category you may read. Naming access without permission to update the organization is refused with 403. |
+| `--client <strings>` |  | Clients to include. |
+| `--correlation-id <string>` |  | Only the entries one action caused, including work Ravion finished later on its own. |
+| `--environment-id <strings>` |  | Environments to include. |
+| `--event <listActivityCatalog>` |  | Activity catalog ids to include, exactly as listActivityCatalog returns them. An id outside the activity catalog is refused with 400. |
+| `--exclude-client <strings>` |  | Clients to leave out. |
+| `--exclude-environment-id <strings>` |  | Environments to leave out. |
+| `--exclude-event <strings>` |  | Activity catalog ids to leave out. |
+| `--exclude-identity <strings>` |  | Identities to leave out. |
+| `--exclude-identity-type <strings>` |  | Kinds of identity to leave out. |
+| `--exclude-ip <strings>` |  | Source IP addresses to leave out. |
+| `--exclude-pipeline-id <strings>` |  | Pipelines to leave out. |
+| `--exclude-project-id <strings>` |  | Projects to leave out. |
+| `--exclude-resource-name <strings>` |  | Resource names to leave out, compared case-insensitively. |
+| `--identity <strings>` |  | Identities to include. |
+| `--identity-type <strings>` |  | Kinds of identity to include. |
+| `--ip <strings>` |  | Source IP addresses to include, exactly as recorded. |
+| `--json` |  | emit response as JSON |
+| `--module-instance-id <strings>` |  | Module instances to include: entries about the module instance itself, its deployments, and the pipeline runs and steps that act on it. |
+| `--occurred-before <string>` |  | Only entries recorded before this time. Defaults to now. |
+| `--pipeline-id <strings>` |  | Pipelines to include. |
+| `--project-id <strings>` |  | Projects to include. |
+| `--q <strings>` |  | Free-text words, compared case-insensitively. An entry matches when every word appears in who acted, its catalog id, the resource name, the project, environment or pipeline name, or the source IP address. |
+| `--request-id <strings>` |  | Request ids to include, as returned in the responses of the requests that caused each entry. |
+| `--resource-name <strings>` |  | Resource names to include, as they were when each entry was recorded, compared case-insensitively. Entries keep the name a resource had, so a renamed or deleted resource is still found by its old name. |
+| `--status <strings>` |  | Outcomes to include. |
+| `--subject-id <subjectType>` |  | Only entries about the resource with this id. Pair it with subjectType. |
+| `--subject-type <pipeline_run>` |  | Only entries about one kind of resource, for example pipeline_run. Pair it with `subjectId` to read one resource's history. |
+| `-v, --verbose` |  | show full output |
+
+### `ravion activity get`
+
+Get an activity entry
+
+```bash
+ravion activity get <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+### `ravion activity list`
+
+List activity
+
+```bash
+ravion activity list [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--occurred-after <string>` | yes | Only entries recorded at or after this time. Required: every Activity read is bounded in time, and it may be at most as far back as Activity is kept, 60 days by default. |
+| `--category <access>` |  | Categories to include. Omitted means every category you may read. Naming access without permission to update the organization is refused with 403. |
+| `--client <strings>` |  | Clients to include. |
+| `--correlation-id <string>` |  | Only the entries one action caused, including work Ravion finished later on its own. |
+| `--cursor <string>` |  | cursor |
+| `--environment-id <strings>` |  | Environments to include. |
+| `--event <listActivityCatalog>` |  | Activity catalog ids to include, exactly as listActivityCatalog returns them. An id outside the activity catalog is refused with 400. |
+| `--exclude-client <strings>` |  | Clients to leave out. |
+| `--exclude-environment-id <strings>` |  | Environments to leave out. |
+| `--exclude-event <strings>` |  | Activity catalog ids to leave out. |
+| `--exclude-identity <strings>` |  | Identities to leave out. |
+| `--exclude-identity-type <strings>` |  | Kinds of identity to leave out. |
+| `--exclude-ip <strings>` |  | Source IP addresses to leave out. |
+| `--exclude-pipeline-id <strings>` |  | Pipelines to leave out. |
+| `--exclude-project-id <strings>` |  | Projects to leave out. |
+| `--exclude-resource-name <strings>` |  | Resource names to leave out, compared case-insensitively. |
+| `--identity <strings>` |  | Identities to include. |
+| `--identity-type <strings>` |  | Kinds of identity to include. |
+| `--ip <strings>` |  | Source IP addresses to include, exactly as recorded. |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | limit |
+| `--module-instance-id <strings>` |  | Module instances to include: entries about the module instance itself, its deployments, and the pipeline runs and steps that act on it. |
+| `--occurred-before <string>` |  | Only entries recorded before this time. Defaults to now. |
+| `--pipeline-id <strings>` |  | Pipelines to include. |
+| `--project-id <strings>` |  | Projects to include. |
+| `--q <strings>` |  | Free-text words, compared case-insensitively. An entry matches when every word appears in who acted, its catalog id, the resource name, the project, environment or pipeline name, or the source IP address. |
+| `--request-id <strings>` |  | Request ids to include, as returned in the responses of the requests that caused each entry. |
+| `--resource-name <strings>` |  | Resource names to include, as they were when each entry was recorded, compared case-insensitively. Entries keep the name a resource had, so a renamed or deleted resource is still found by its old name. |
+| `--status <strings>` |  | Outcomes to include. |
+| `--subject-id <subjectType>` |  | Only entries about the resource with this id. Pair it with subjectType. |
+| `--subject-type <pipeline_run>` |  | Only entries about one kind of resource, for example pipeline_run. Pair it with `subjectId` to read one resource's history. |
+| `-v, --verbose` |  | show full output |
+

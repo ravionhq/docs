@@ -485,9 +485,22 @@ so the entire source can be wired from a stack output map.
 
 <ResponseField name="dimensions" type="map<string,string>" required>
   Dimensions used to scope the metric. Required — no longer derived from
-  any ARN since the source no longer carries one.
+  any ARN since the source no longer carries one. May be empty (`{}`) when
+  `group_by` names the only dimension the metric has.
 
   _(templateable)_
+</ResponseField>
+
+<ResponseField name="group_by" type="string | null">
+  Name of one dimension to split the metric by. The chart then draws one
+  line per value of that dimension, among the metrics in `namespace` named
+  `name` whose dimensions are exactly `dimensions` plus this one; every
+  dimension in `dimensions` stays fixed to its value. Omit it to chart a
+  single series. The 10 values with the largest totals over the chart's
+  window are drawn as lines, whatever the entry's `type`, and the chart
+  says how many more there were. Must not also be a key of `dimensions`.
+
+  _(minLen:1; templateable)_
 </ResponseField>
 
 ### EksPrometheusMetricSource

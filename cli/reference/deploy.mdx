@@ -1,7 +1,7 @@
 ---
 title: "ravion deploy"
 sidebarTitle: "deploy"
-description: "Trigger, list, inspect, promote, and roll back Ravion module deployments from the command line using the `ravion deploy` command group."
+description: "Deploy a folder's app to an App Cluster with `ravion deploy`, and trigger, list, inspect, promote, and roll back Ravion module deployments from the command line."
 "og:image": "https://www.ravion.com/og/docs/cli/reference/deploy.png"
 "twitter:image": "https://www.ravion.com/og/docs/cli/reference/deploy.png"
 ---
@@ -10,9 +10,56 @@ description: "Trigger, list, inspect, promote, and roll back Ravion module deplo
 
 ## `ravion deploy`
 
-Manage deployments
+Deploy the app in this folder to an App Cluster.
+
+ravion-app.yaml says how the app is built, started and served. `ravion deploy` reads it from the folder
+or the nearest folder above it in the git repository, or from --file. A folder without one gets one
+detected from its compose file or Dockerfile, written once you agree (--yes agrees in advance).
+
+Every run asks for the App Cluster, listing the clusters of the ravion.yaml project at the repository
+root first and taking the only one there is without asking, and for the app: one of the cluster's apps,
+or a new one named after ravion-app.yaml. Nothing about the choice is written to the folder. Without
+a terminal, in CI and with --yes or --json, pass --cluster and --app; --new refuses an app that exists.
+
+An app's default branch is the branch of its first deploy. A deploy from any other branch goes to the app's
+branch app of that branch, created by its first deploy and served at &lt;app&gt;--&lt;branch&gt;.&lt;domain&gt;, with a disk
+and a deploy history of its own. --branch deploys as another branch than the one checked out.
+
+The deploy uploads the git working tree, tracked files with their uncommitted changes (--include-untracked
+adds new files .gitignore does not exclude), and a pipeline run builds the app, starts it and serves its
+ports, while the deploy follows the run and streams its log. Variables that are not committed, such as
+secrets, go with --env-file and --env.
+
+Ctrl-C stops following; the run and the app keep going.
 
 **Aliases:** `deploys`, `deployment`, `deployments`
+
+```bash
+ravion deploy [dir] [flags] [command]
+```
+
+**Examples:**
+
+```bash
+ravion deploy
+ravion deploy ./services/api --cluster staging/apps --app api
+ravion deploy --cluster shop/production/apps --app web --env-file .env --yes --json
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--app <string>` |  | app to deploy to; a name no app on the cluster has creates it |
+| `--branch <string>` |  | deploy as this branch in place of the one checked out: to the app from its default branch, else to the branch's branch app |
+| `--cluster <string>` |  | App Cluster: minst_ id, &lt;environment&gt;/&lt;module&gt; in the ravion.yaml project, or &lt;project&gt;/&lt;environment&gt;/&lt;module&gt; |
+| `--env <stringArray>` |  | variable KEY=VALUE for this deploy (repeatable); wins over --env-file |
+| `--env-file <stringArray>` |  | file of KEY=VALUE lines for this deploy, such as a gitignored .env (repeatable) |
+| `--file <string>` |  | the ravion-app.yaml to deploy, in place of the one found from the folder up |
+| `--include-untracked` |  | also upload untracked files that .gitignore does not exclude |
+| `--json` |  | emit response as JSON |
+| `--new` |  | deploy only to a new app; refuse a name an app has |
+| `-y, --yes` |  | never ask; write a detected ravion-app.yaml and fail when a choice is needed |
 
 ### `ravion deploy cancel`
 

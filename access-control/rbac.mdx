@@ -1,0 +1,196 @@
+---
+title: "Role-based access control"
+description: "Control what members, service accounts, and API keys can do in your Ravion organization with system-managed roles you can combine."
+"og:image": "https://www.ravion.com/og/docs/access-control/rbac.png"
+"twitter:image": "https://www.ravion.com/og/docs/access-control/rbac.png"
+---
+
+Role-based access control (RBAC) decides what each member, service account, and API key can do in your organization. You give each of them one or more roles. A principal can do everything that any of its roles allows.
+
+## How roles work
+
+- **Roles compose.** Roles are capabilities, not job titles. A principal holds the union of its roles. For example, an infrastructure engineer can hold **Operator** and **Platform Admin**, and someone who also manages people adds **Manager**.
+- **Roles apply across the organization.** You assign a role to a member or a service account for the whole organization. The role's statements decide which resources it reaches.
+- **Deny wins.** A statement can allow or deny actions. A matching deny overrides every allow. When nothing allows an action, Ravion denies it.
+- **No one can grant more than they hold.** You can add or remove a role only when you already hold every permission in that role.
+
+## System-managed roles
+
+Ravion maintains these roles and updates them as new features ship. They're available on every plan.
+
+| Role | Key | What it allows |
+| --- | --- | --- |
+| Owner | `owner` | Full access to everything, including billing and deleting the organization. |
+| Platform Admin | `platform-admin` | Manage the module catalog, cloud accounts, execution environments, code sources, default value definitions, and service accounts. Doesn't include Operator. |
+| Operator | `operator` | Manage projects, environments, pipelines, module instances, domains, certificates, credentials, default values, and service accounts, including deleting them. Start and act on pipeline runs, approve steps, and deploy. Uses, but doesn't manage, modules, cloud accounts, and execution environments. |
+| Manager | `manager` | Manage members, roles, and role assignments. Can only give permissions they already hold. |
+| Read only | `read-only` | See everything except billing and who has which permissions. |
+| Billing | `billing` | See and manage billing. |
+
+Every role except **Billing** can read everything in the organization except billing and authorization policy. Only **Owner** and **Billing** include billing, and only **Owner** and **Manager** can see and change who has which permissions.
+
+<Tip>
+Operators can start pipeline runs and deploy modules without administering cloud accounts or execution environments. They only need to read those resources to use them.
+</Tip>
+
+### Permissions by role
+
+Each table shows what each role can do with a resource. **Manage** means full access, and **Read** means view only. A dash means no access. **Owner** can do everything, and **Read only** can read everything except roles and billing, so neither is listed. **Billing** only appears in the last table, since it has no other access. To write your own rules, see [custom roles](/access-control/custom-roles).
+
+#### Projects and environments
+
+| Resource | Platform Admin | Operator | Manager |
+| --- | --- | --- | --- |
+| Projects | Read | Manage | Read |
+| Environments | Read | Manage | Read |
+| Stacks | Read | Manage | Read |
+| Module instances | Read | Manage | Read |
+| Apps | Read | Manage | Read |
+| Sandboxes | Read | Manage | Read |
+| Domains | Read | Manage | Read |
+| Certificates | Read | Manage | Read |
+
+#### Pipelines and deployments
+
+| Resource | Platform Admin | Operator | Manager |
+| --- | --- | --- | --- |
+| Pipelines | Read | Manage | Read |
+| Pipeline runs | Read | Manage | Read |
+| Pipeline steps | Read | Read | Read |
+| Pipeline approvals | Read | Manage | Read |
+| Module deployments | Read | Manage | Read |
+| Deployment resources | Read | Manage | Read |
+| Terraform resources | Read | Read | Read |
+| Infrastructure events | Read | Read | Read |
+| Logs | Read | Read | Read |
+| Metrics | Read | Read | Read |
+
+#### Credentials and default values
+
+| Resource | Platform Admin | Operator | Manager |
+| --- | --- | --- | --- |
+| Credentials | Read | Manage | Read |
+| Default values | Read | Manage | Read |
+| Default value definitions | Manage | Read | Read |
+
+#### Platform
+
+| Resource | Platform Admin | Operator | Manager |
+| --- | --- | --- | --- |
+| Module definitions | Manage | Read | Read |
+| Cloud accounts | Manage | Read | Read |
+| Execution environments | Manage | Read | Read |
+| Code sources | Manage | Read | Read |
+
+#### Access
+
+| Resource | Platform Admin | Operator | Manager |
+| --- | --- | --- | --- |
+| Members | Read | Read | Manage |
+| Service accounts | Manage | Manage | Read |
+| Roles and role assignments | — | — | Manage |
+
+#### Organization and billing
+
+| Resource | Platform Admin | Operator | Manager | Billing |
+| --- | --- | --- | --- | --- |
+| Organization | Read | Read | Read | Read |
+| Billing | — | — | — | Manage |
+
+Reading a credential or a secret default value returns its metadata, never the secret value. Only members can delete the organization. A service account can't hold **Owner** or any role that allows deleting the organization.
+
+### Common combinations
+
+| Person | Roles |
+| --- | --- |
+| Application developer | Operator |
+| Infrastructure or platform engineer | Operator, Platform Admin |
+| Engineering manager | Operator, Manager |
+| Finance | Billing |
+| Auditor or stakeholder | Read only |
+
+## Assign roles to members
+
+A member holds at least one role. Setting a member's roles replaces the whole set.
+
+To assign roles in the dashboard:
+
+1. Go to **Settings** → **Members**.
+2. Select the member. To give roles to someone new, click **Invite member** and pick their **Roles** in the invite dialog.
+3. Under **Roles**, click **Add role** and choose a role, or remove one the member holds.
+
+The role list includes your organization's [custom roles](/access-control/custom-roles). It only offers roles whose permissions you already hold.
+
+To change them from the CLI, use [`ravion membership`](/cli/reference/membership) with `--roles`:
+
+```bash
+ravion membership assignable-roles
+ravion membership update <membership-id> --roles operator,platform-admin
+```
+
+`assignable-roles` lists the roles you can give, which are the roles whose permissions you already hold.
+
+## Service accounts
+
+Service accounts hold roles the same way members do, with a few limits:
+
+- A service account can't hold **Owner** or any role that can delete the organization.
+- A service account holds at least one role.
+- To create a key for a service account, or to widen what a key can do, you must hold every action that the key could perform.
+
+To assign roles in the dashboard, go to **Settings** → **Service Accounts** and select the service account.
+
+```bash
+ravion service-account assignable-roles
+ravion service-account update <service-account-id> --roles operator
+```
+
+See [`ravion service-account`](/cli/reference/service-account) for every flag.
+
+## Limit API key permissions
+
+An API key acts as its owner. You can give a key a permission limit so it does less than its owner can. A key can do something only when both its limit and its owner allow it, so a limit narrows the owner's permissions but never widens them.
+
+Permissions are `type:action` pairs from the authorization catalog, for example `project:read` or `pipelineRun:create`.
+
+To set a key's limit in the dashboard:
+
+1. Go to **Settings** → **API keys** and select the key, or click **API key** to create one. You can also create a key for a member from their page under **Settings** → **Members**.
+2. Under **Permissions**, choose one:
+   - **Same as** the owner: the key follows its owner's permissions, including any the owner gets later.
+   - **Read only**: the key can only read the resource types you check, where its owner has access.
+   - **Custom**: the key can do only what you check, and only where its owner can too. Permissions the owner doesn't have are greyed out.
+3. Save the key.
+
+From the CLI:
+
+```bash
+# List the permissions a key can have
+ravion api-key permissions --owner-id <membership-id> --owner-type MEMBERSHIP
+
+# Limit a key to reading projects and starting pipeline runs
+ravion api-key update <api-key-id> --permissions project:read,pipelineRun:create
+
+# Remove the limit so the key inherits all of its owner's permissions
+ravion api-key update <api-key-id> --clear-permissions
+```
+
+A key with a limit can't use the Terraform Cloud API or personal-account operations, and can't select another organization. Only a member signed in to the dashboard or the CLI can change a key's limit. See [`ravion api-key`](/cli/reference/api-key) for details.
+
+## Roles from Flightcontrol
+
+If your organization used Flightcontrol membership roles, Ravion maps them to system-managed roles:
+
+| Flightcontrol role | Ravion roles |
+| --- | --- |
+| Owner | Owner |
+| Editor | Platform Admin, Operator, Manager |
+| Developer, Contributor | Operator |
+| Restricted Developer, Viewer | Read only |
+| Billing | Read only, Billing |
+
+Restricted Developer maps to **Read only** because system-managed roles can't express a protected-environment limit. Use a [custom role](/access-control/custom-roles) to let these members deploy everywhere except production.
+
+## Need finer control?
+
+System-managed roles cover most teams. When you need to limit access to specific projects, environments, or module types, or deny particular actions, create [custom roles](/access-control/custom-roles). Custom roles require the **Security and compliance bundle**.

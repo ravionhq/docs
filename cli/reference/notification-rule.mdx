@@ -1,0 +1,122 @@
+---
+title: "ravion notification-rule"
+sidebarTitle: "notification-rule"
+description: "Manage notification rules"
+"og:image": "https://www.ravion.com/og/docs/cli/reference/notification-rule.png"
+"twitter:image": "https://www.ravion.com/og/docs/cli/reference/notification-rule.png"
+---
+
+{/* This page is generated from the Ravion CLI source. Do not edit by hand. */}
+
+## `ravion notification-rule`
+
+Manage notification rules
+
+**Aliases:** `notification-rules`
+
+### `ravion notification-rule create`
+
+Create NotificationRule
+
+```bash
+ravion notification-rule create [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--audiences <NotificationRule:AUDIENCE_REQUIRED>` | yes | NOTIFY — recipients this rule delivers matched events to. At least one is required; an empty list is refused with 400 NotificationRule:AUDIENCE_REQUIRED. A destination audience must name a notification destination of this organization, or the rule is refused with 400 `NotificationRule:DESTINATION_NOT_FOUND`. A computed audience resolves only for some events: `APPROVERS` for "pipeline.run.approval_requested" alone, and `RUN_STARTER` for events about a pipeline run (the `runScoped` events of List notification events: "pipeline.run.*" and "step.*"). A computed audience on a rule watching any other event is refused with 400 `NotificationRule:COMPUTED_AUDIENCE_NOT_APPLICABLE`. |
+| `--conditions <NotificationRule:SCOPE_TARGET_NOT_FOUND>` | yes | IF — conditions AND-ed together; empty matches unconditionally. Every id a scope condition names must be a project, environment, module instance or pipeline of this organization; an id that names nothing is refused with 400 NotificationRule:SCOPE_TARGET_NOT_FOUND. |
+| `--content <string>` | yes | WITH — presentation options applied when rendering a matched event. |
+| `--delivery <live>` | yes | VIA — how a matched event reaches its audiences. live follows one pipeline run on a single card, so every event a live rule watches must be about a run (`runScoped` in List notification events), and a glob must match only such events; any other event is refused with 400 `NotificationRule:LIVE_DELIVERY_NOT_RUN_SCOPED`. An `escalate` delivery's target must be a notification destination of this organization, or the rule is refused with 400 `NotificationRule:DESTINATION_NOT_FOUND`. |
+| `--enabled` | yes | Whether this rule is evaluated against incoming events. |
+| `--event-ids <NotificationRule:UNKNOWN_EVENT_ID>` | yes | WHEN — the events this rule watches: event ids from the event catalog (e.g. "pipeline.run.failed"), or family globs ending in ".*" (e.g. "module.deployment.*") that match every event id starting with the part before the ".*". An id the catalog does not declare, or a glob no event id falls under, is refused with NotificationRule:UNKNOWN_EVENT_ID. List notification events for the events worth offering a person. |
+| `--name <string>` | yes | User-facing rule name. |
+| `--json` |  | emit response as JSON |
+| `--owner-user-id <string>` |  | Owning user of a personal rule; absent for an organization-wide rule, visible to and editable by anyone who can manage notification rules. Only the calling user's own id is accepted. A personal rule is listed, read, changed, test-sent and deleted by its owner alone, delivers only to its owner's own Slack DM or email, and only for events about resources its owner can still read; a Slack channel or webhook destination is refused. Fixed at creation. |
+
+### `ravion notification-rule delete`
+
+Delete NotificationRule
+
+```bash
+ravion notification-rule delete <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `-y, --yes` |  | skip confirmation prompt |
+
+### `ravion notification-rule get`
+
+Get NotificationRule by id
+
+```bash
+ravion notification-rule get <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+### `ravion notification-rule list`
+
+List NotificationRules
+
+```bash
+ravion notification-rule list [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--cursor <string>` |  | cursor |
+| `--enabled` |  | Optional enabled-state filter. |
+| `--has-owner-user-id` |  | Optional ownerUserId-presence filter: true returns only personal rules (an `ownerUserId` set), `false` returns only organization-wide rules (`ownerUserId` absent). Omitted returns both. |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | limit |
+| `-v, --verbose` |  | show full output |
+
+### `ravion notification-rule test-send`
+
+Test-send a notification rule
+
+```bash
+ravion notification-rule test-send <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--platform-event-id <string>` |  | Id of an existing PlatformEvent row to replay through the rule. |
+| `--sample-event <platformEventId>` |  | Ad-hoc sample event to test the rule against — the alternative to platformEventId. |
+
+### `ravion notification-rule update`
+
+Patch NotificationRule
+
+```bash
+ravion notification-rule update <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--audiences <NotificationRule:AUDIENCE_REQUIRED>` |  | NOTIFY — recipients this rule delivers matched events to. At least one is required; an empty list is refused with 400 NotificationRule:AUDIENCE_REQUIRED. A destination audience must name a notification destination of this organization, or the rule is refused with 400 `NotificationRule:DESTINATION_NOT_FOUND`. A computed audience resolves only for some events: `APPROVERS` for "pipeline.run.approval_requested" alone, and `RUN_STARTER` for events about a pipeline run (the `runScoped` events of List notification events: "pipeline.run.*" and "step.*"). A computed audience on a rule watching any other event is refused with 400 `NotificationRule:COMPUTED_AUDIENCE_NOT_APPLICABLE`. |
+| `--conditions <NotificationRule:SCOPE_TARGET_NOT_FOUND>` |  | IF — conditions AND-ed together; empty matches unconditionally. Every id a scope condition names must be a project, environment, module instance or pipeline of this organization; an id that names nothing is refused with 400 NotificationRule:SCOPE_TARGET_NOT_FOUND. |
+| `--content <string>` |  | WITH — presentation options applied when rendering a matched event. |
+| `--delivery <live>` |  | VIA — how a matched event reaches its audiences. live follows one pipeline run on a single card, so every event a live rule watches must be about a run (`runScoped` in List notification events), and a glob must match only such events; any other event is refused with 400 `NotificationRule:LIVE_DELIVERY_NOT_RUN_SCOPED`. An `escalate` delivery's target must be a notification destination of this organization, or the rule is refused with 400 `NotificationRule:DESTINATION_NOT_FOUND`. |
+| `--enabled` |  | Whether this rule is evaluated against incoming events. |
+| `--event-ids <NotificationRule:UNKNOWN_EVENT_ID>` |  | WHEN — the events this rule watches: event ids from the event catalog (e.g. "pipeline.run.failed"), or family globs ending in ".*" (e.g. "module.deployment.*") that match every event id starting with the part before the ".*". An id the catalog does not declare, or a glob no event id falls under, is refused with NotificationRule:UNKNOWN_EVENT_ID. List notification events for the events worth offering a person. |
+| `--json` |  | emit response as JSON |
+| `--name <string>` |  | User-facing rule name. |
+

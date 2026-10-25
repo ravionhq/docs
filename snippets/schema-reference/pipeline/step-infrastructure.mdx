@@ -284,26 +284,29 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
   _(templateable)_
 </ResponseField>
 
-<ResponseField name="cpu" type="integer" required>
-  vCPUs given to the sandbox microVM
+<ResponseField name="cpu" type="integer | auto" required>
+  vCPUs given to the sandbox microVM. `auto` lets Ravion size it from
+  earlier runs; requires `interruptible: true`.
 
-  _(format:int32,min:1; templateable)_
+  _(min:1; templateable)_
 </ResponseField>
 
-<ResponseField name="memory" type="integer" required>
-  Memory in GiB given to the sandbox microVM
+<ResponseField name="memory" type="integer | auto" required>
+  Memory in GiB given to the sandbox microVM. `auto` lets Ravion size it
+  from earlier runs; requires `interruptible: true`.
 
-  _(format:int32,min:1; templateable)_
+  _(min:1; templateable)_
 </ResponseField>
 
-<ResponseField name="disk" type="integer | null">
+<ResponseField name="disk" type="integer | auto">
   GiB of host disk the sandbox microVM may write — the restored lineage
   overlay plus everything the step builds before it is frozen. A host takes
   the sandbox only when it has this much free, and stops it if it writes
   more, failing the step with SandboxDiskExceeded, so a step that writes
-  more than the default must say so.
+  more than the default must say so. `auto` lets Ravion size it from earlier
+  runs; requires `interruptible: true`.
 
-  _(format:int32,min:1; templateable)_
+  _(min:1; templateable)_
 </ResponseField>
 
 <ResponseField name="disk_cache" type="string | null">

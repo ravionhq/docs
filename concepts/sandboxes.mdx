@@ -196,8 +196,6 @@ With `disk_cache` on, what you install usually stays for later runs — only run
 
 Docker starts in the background when the sandbox boots, and the first `docker` command waits for it. Tools that talk to Docker another way, such as Testcontainers or a Docker SDK, must wait for the daemon themselves.
 
-Sandboxes are in preview. If a step hits a problem you can't explain — a tool that won't install, a kernel feature the microVM doesn't have, or anything unexpected — [contact support](/contact-support).
-
 ## Get started
 
 <Steps>
@@ -248,13 +246,29 @@ Replace `ci-builders` with the ID or given ID of your execution environment. To 
 | --- | --- | --- | --- |
 | `execution_environment_id` | One target | None | ID or given ID of the execution environment to run in. |
 | `aws_account_id` + `region` | One target | None | Run in this account and region's execution environment instead. See [Limits](#limits-and-caveats). |
-| `cpu` | Yes | None | vCPUs for the sandbox. |
-| `memory` | Yes | None | Memory in GiB. |
-| `disk` | No | 8 | GiB of host disk reserved for what the sandbox writes. |
+| `cpu` | Yes | None | vCPUs for the sandbox, or `auto`. See [Automatic sizing](#automatic-sizing). |
+| `memory` | Yes | None | Memory in GiB, or `auto`. |
+| `disk` | No | 8 | GiB of host disk reserved for what the sandbox writes, or `auto`. |
 | `disk_cache` | No | `off` | Keep the sandbox's disk between runs. See [Disk cache](#disk-cache). |
 | `interruptible` | No | `false` | Allow Spot hosts, and rerun the step from the start if its host is lost. See [Interruptible steps](#interruptible-steps-and-spot-hosts). |
 
 Sandboxes don't take `instance_size`, `ami` or `storage`. See [SandboxStepInfrastructure](/pipelines/config-reference/step-infrastructure#sandboxstepinfrastructure) for the full schema.
+
+### Automatic sizing
+
+<Note>
+  Automatic sizing is in preview. [Contact support](/contact-support) to share feedback.
+</Note>
+
+Set `cpu`, `memory` or `disk` to `auto` and Ravion sizes the sandbox from the step's earlier runs. `auto` needs `interruptible: true` on the same step; a step without it must set fixed values, and the pipeline won't save otherwise.
+
+- The first run gets 4 vCPU, 16 GiB of memory and 40 GiB of disk.
+- Every run teaches Ravion what the step needs. Sizes grow fast when a step needs more, come down gradually when it needs less, then settle. Sizes are learned per pipeline step and execution environment.
+- If a step runs out of memory or disk, Ravion gives it more and retries it in the same pipeline run, up to twice per step. The step's log shows each retry.
+- If Java (`java.lang.OutOfMemoryError: Java heap space`) or Node (`JavaScript heap out of memory`) runs out of heap, Ravion gives the step more memory and retries it. If it happens again, the heap limit is probably set in your command with `-Xmx` (Java) or `--max-old-space-size` (Node), so raise it there.
+- Sizes never go above what the largest host type in your execution environment can fit.
+
+The step's log shows the size Ravion picked and why. For GitHub Actions jobs, see [Automatic sizing](/github-actions/runners#automatic-sizing).
 
 ## Module builds
 

@@ -27,6 +27,86 @@ boost: 0.5
 
 ## Other types
 
+### ModuleApps
+
+App Cluster configuration: a module with an `apps` block hosts apps that
+`ravion deploy` sends to it. Its stack creates the load balancer and what
+the router needs, and this block tells Ravion the execution environment
+whose sandbox pool runs the apps, the AWS account, region and VPC they run
+in, the domains they are served under, the load balancer and router that
+serve them, and the sizes they get.
+
+Every field accepts `module.*` and `stack.*` templates, resolved from the
+module instance's inputs and its stack's outputs.
+
+<ResponseField name="executionEnvironmentId" type="string" required>
+  Execution environment (`ee_*`) whose sandbox pool runs the apps. It must be an AWS execution environment in the App Cluster's AWS account, region and VPC, with a sandbox pool.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="awsAccountId" type="string" required>
+  Ravion AWS account (`awsact_*`, or its given ID) the App Cluster runs in.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="region" type="string" required>
+  AWS region the App Cluster runs in.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="vpcId" type="string" required>
+  VPC the App Cluster runs in.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="domain" type="string" required>
+  Ravion domain the apps are served under, without `*.`: an app's URLs are `https://<app>.<domain>` and `https://<app>-<port name>.<domain>`.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="customDomains" type="string[] | null">
+  Custom wildcard domains the apps are also served under, each without `*.`, in a DNS zone the App Cluster's owner controls: an app is also served at `<app>.<custom domain>` and `<app>-<port name>.<custom domain>`. Absent or empty when the App Cluster has none.
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="loadBalancer" type="App.AppClusterLoadBalancer" required>
+  The load balancer that receives the apps' traffic.
+
+  See: [App.AppClusterLoadBalancer](#app-appclusterloadbalancer)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="router" type="App.AppClusterRouter" required>
+  The router that serves the apps.
+
+  See: [App.AppClusterRouter](#app-appclusterrouter)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="defaults" type="App.AppClusterDefaults" required>
+  Sizes an app gets when its definition sets none.
+
+  See: [App.AppClusterDefaults](#app-appclusterdefaults)
+
+  _(templateable)_
+</ResponseField>
+
+<ResponseField name="limits" type="App.AppClusterLimits" required>
+  The most an app may ask for.
+
+  See: [App.AppClusterLimits](#app-appclusterlimits)
+
+  _(templateable)_
+</ResponseField>
+
 ### OutputProperty
 
 A stack output a module declares for consumers.
@@ -47,6 +127,136 @@ A stack output a module declares for consumers.
 <ResponseField name="sensitive" type="boolean">
   Sensitive outputs can only be referenced by handle.
 </ResponseField>
+
+### App.AppClusterDefaults
+
+Sizes an app gets when its definition sets none.
+
+<ResponseField name="cpu" type="integer" required>
+  vCPUs.
+
+  _(format:int32,min:1; templateable)_
+</ResponseField>
+
+<ResponseField name="memoryMib" type="integer" required>
+  Memory in MiB.
+
+  _(format:int32,min:1; templateable)_
+</ResponseField>
+
+<ResponseField name="diskGib" type="integer" required>
+  Disk in GiB.
+
+  _(format:int32,min:1; templateable)_
+</ResponseField>
+
+<ResponseField name="idleTimeoutSeconds" type="integer" required>
+  Seconds without a request or a running command before an app is paused: 0 never pauses it, otherwise at least 60. Within `limits.idleTimeoutSeconds`.
+
+  _(format:int32,min:0; templateable)_
+</ResponseField>
+
+### App.AppClusterLimits
+
+The most an app may ask for. A deploy asking for more is refused.
+
+<ResponseField name="cpu" type="integer" required>
+  vCPUs.
+
+  _(format:int32,min:1; templateable)_
+</ResponseField>
+
+<ResponseField name="memoryMib" type="integer" required>
+  Memory in MiB.
+
+  _(format:int32,min:1; templateable)_
+</ResponseField>
+
+<ResponseField name="diskGib" type="integer" required>
+  Disk in GiB.
+
+  _(format:int32,min:1; templateable)_
+</ResponseField>
+
+<ResponseField name="idleTimeoutSeconds" type="integer" required>
+  Longest idle timeout in seconds an app may ask for: 0 sets no limit, so an app may also ask never to pause; any other limit is at least 60, and an app under it always pauses.
+
+  _(format:int32,min:0; templateable)_
+</ResponseField>
+
+<ResponseField name="retentionSeconds" type="integer" required>
+  Seconds a paused app's disk is kept. After it, the disk is deleted and the app is stopped until its next deploy.
+
+  _(format:int32,min:1; templateable)_
+</ResponseField>
+
+### App.AppClusterLoadBalancer
+
+The App Cluster's load balancer, which receives the apps' traffic and holds the certificates of the apps' own domains.
+
+<ResponseField name="tlsListenerArn" type="string" required>
+  TLS listener the certificate of each app's own domains is attached to.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="dnsName" type="string" required>
+  DNS name of the load balancer, which the routing record of each app's own domain points at.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="zoneId" type="string" required>
+  Hosted zone ID of the load balancer.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+### App.AppClusterRouter
+
+The router that serves an App Cluster's apps.
+
+<ResponseField name="instanceType" type="string" required>
+  EC2 instance type of the router.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="subnetIds" type="string[]" required>
+  Subnets the router may run in.
+
+  _(minItems:1; templateable)_
+</ResponseField>
+
+<ResponseField name="securityGroupId" type="string" required>
+  Security group of the router.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="instanceProfileName" type="string" required>
+  Instance profile the router runs with.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="trafficTargetGroupArn" type="string" required>
+  Target group that sends the apps' HTTPS traffic to the router.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+<ResponseField name="redirectTargetGroupArn" type="string" required>
+  Target group that sends HTTP traffic to the router, which redirects it to HTTPS.
+
+  _(minLen:1; templateable)_
+</ResponseField>
+
+### App.AppDomainName
+
+A domain name in a DNS zone you control, such as `shop.example.com`: two or more lowercase labels of letters, digits and hyphens, with no `*.` and no trailing dot.
+
+Type: string
 
 ### OutputType
 

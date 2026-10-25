@@ -1,0 +1,246 @@
+---
+title: "ravion sandbox"
+sidebarTitle: "sandbox"
+description: "Manage sandboxes: development microVMs you run commands in"
+"og:image": "https://www.ravion.com/og/docs/cli/reference/sandbox.png"
+"twitter:image": "https://www.ravion.com/og/docs/cli/reference/sandbox.png"
+---
+
+{/* This page is generated from the Ravion CLI source. Do not edit by hand. */}
+
+## `ravion sandbox`
+
+Manage sandboxes: development microVMs you run commands in
+
+**Aliases:** `sandboxes`, `sbx`
+
+### `ravion sandbox command`
+
+Start and inspect commands in a sandbox
+
+**Aliases:** `commands`
+
+#### `ravion sandbox command create`
+
+Start a command in a sandbox without attaching to it; use `sandbox exec` to run one interactively
+
+```bash
+ravion sandbox command create <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--argv <strings>` | yes | The command and its arguments. The first element is the program. |
+| `--cwd <string>` |  | Working directory to run in. Default is the sandbox's workspace. |
+| `--env <string>` |  | Environment variables for this command, on top of the sandbox's. |
+| `--json` |  | emit response as JSON |
+| `--stdin` |  | Keep the command's stdin open so you can write to it with the stdin operation. Default false: stdin is closed at start. |
+
+#### `ravion sandbox command get`
+
+Get a sandbox command: `cmd_*`, or `onresume` for the sandbox's onResume command
+
+```bash
+ravion sandbox command get <id> <commandId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+### `ravion sandbox create`
+
+Create a sandbox
+
+```bash
+ravion sandbox create [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--execution-environment-id <ee_*>` | yes | Execution environment (ee_*) whose sandbox pool runs the sandbox. It must have a sandbox pool enabled. |
+| `--cpu <int>` |  | vCPUs. Default 2. |
+| `--disk-gib <int>` |  | Disk in GiB. Default 20. |
+| `--env <string>` |  | Environment variables set for every command run in the sandbox. Values are stored for the life of the sandbox and never returned. |
+| `--idle-timeout-seconds <0>` |  | Seconds without a running command or an open connection to an exposed port before the sandbox is paused. Default 900. 0 disables the idle pause; otherwise 60 to 86400. |
+| `--json` |  | emit response as JSON |
+| `--memory-mib <int>` |  | Memory in MiB. Default 4096. |
+| `--module-instance-id <minst_*>` |  | Module instance (minst_*) the sandbox is for. Required to expose ports on the module's managed domains and to push images to the module's registry. It must be in the same organization. |
+| `--on-resume <onresume>` |  | Command to run inside the sandbox after every resume, as argv. It runs as the command onresume. |
+| `--retention-seconds <int>` |  | Seconds a paused or stopped sandbox is kept before it expires. Default 604800 (7 days), at most 2592000 (30 days). |
+
+### `ravion sandbox delete`
+
+Delete a sandbox
+
+```bash
+ravion sandbox delete <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `-y, --yes` |  | skip confirmation prompt |
+
+### `ravion sandbox exec`
+
+Run a command in a sandbox, stream its output and exit with its exit code.
+
+Put the command after `--`. When stdin is not a terminal it is piped to the command.
+Ctrl-C sends the command INT; a second Ctrl-C kills it. The output stream reconnects
+where it left off if the connection drops.
+
+```bash
+ravion sandbox exec <id> -- <command> [args...] [flags]
+```
+
+**Examples:**
+
+```bash
+ravion sandbox exec sbx_123 -- npm test
+ravion sandbox exec sbx_123 --cwd /workspace/api --env CI=1 -- make check
+cat schema.sql | ravion sandbox exec sbx_123 -- psql
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--cwd <string>` |  | working directory inside the sandbox; default is the sandbox's workspace |
+| `--env <stringArray>` |  | environment variable for the command as KEY=VALUE; repeatable |
+| `--json` |  | emit response as JSON |
+| `--no-stdin` |  | do not pipe stdin to the command even when stdin is not a terminal |
+
+### `ravion sandbox get`
+
+Get a sandbox by id
+
+```bash
+ravion sandbox get <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+### `ravion sandbox list`
+
+List sandboxes
+
+```bash
+ravion sandbox list [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--cursor <string>` |  | cursor |
+| `--execution-environment-id <string>` |  | Return only sandboxes in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | limit |
+| `--status <strings>` |  | Return only sandboxes in any of these statuses. |
+| `-v, --verbose` |  | show full output |
+
+### `ravion sandbox pause`
+
+Pause a sandbox: snapshot its disk and stop it; resume boots it from the snapshot
+
+```bash
+ravion sandbox pause <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+### `ravion sandbox port`
+
+Expose sandbox ports on your managed domains
+
+**Aliases:** `ports`
+
+#### `ravion sandbox port create`
+
+Expose a sandbox port on a managed domain and print its URL
+
+```bash
+ravion sandbox port create <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--domain <dev.api.example.com>` | yes | Fully-qualified domain name to serve the port on. Either a new label under a wildcard managed domain of the sandbox's module instance's environment (such as dev.api.example.com under `*.api.example.com`), or, with `replace`, a domain the sandbox's module instance serves today. |
+| `--port <int>` | yes | Port the sandbox listens on. |
+| `--json` |  | emit response as JSON |
+| `--replace` |  | Take over domain from the sandbox's module instance: requests to it reach the sandbox instead of the module until the port is closed. Default false. |
+
+#### `ravion sandbox port delete`
+
+Close an exposed port and release its domain
+
+```bash
+ravion sandbox port delete <id> <port> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `-y, --yes` |  | skip confirmation prompt |
+
+### `ravion sandbox resume`
+
+Resume a paused or stopped sandbox from its snapshot
+
+```bash
+ravion sandbox resume <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `--skip-on-resume` |  | Run nothing in the sandbox after it boots: not its onResume command. The sandbox's ports are routed to it again whether or not anything in it listens on them. Default false. |
+
+### `ravion sandbox upload`
+
+Tar the files git tracks under &lt;dir&gt;, with your uncommitted edits, and extract them into the sandbox.
+
+A tracked file is sent even when .gitignore matches it. Pass --include-untracked to also send new
+files you have not added yet; untracked files .gitignore excludes are never sent. The upload is
+refused when it would exceed 64 MiB.
+
+```bash
+ravion sandbox upload <id> <dir> [flags]
+```
+
+**Examples:**
+
+```bash
+ravion sandbox upload sbx_123 .
+ravion sandbox upload sbx_123 ./api --path /workspace/api --include-untracked
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--include-untracked` |  | also upload untracked files that .gitignore does not exclude |
+| `--json` |  | emit response as JSON |
+| `--path <string>` |  | absolute directory inside the sandbox to extract into |
+
