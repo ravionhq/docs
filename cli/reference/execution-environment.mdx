@@ -29,6 +29,21 @@ ravion execution-environment cache <id> [flags]
 | `--mode <string>` | yes | mode. Available values: DELETE_CACHE, KILL_JOBS_AND_DELETE_CACHE. |
 | `--json` |  | emit response as JSON |
 
+### `ravion execution-environment close-github-runner-migration-pull-request`
+
+Close a GitHub runner migration pull request
+
+```bash
+ravion execution-environment close-github-runner-migration-pull-request <executionEnvironmentId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--data <string>` | yes | Request data as JSON |
+| `--json` |  | emit response as JSON |
+
 ### `ravion execution-environment create`
 
 Create ExecutionEnvironment
@@ -92,6 +107,22 @@ ravion execution-environment github-runner-migration-preview <id> <previewId> [f
 
 | Flag | Required | Description |
 | --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+### `ravion execution-environment github-runner-migration-pull-request-description`
+
+Get a GitHub runner migration pull request description
+
+```bash
+ravion execution-environment github-runner-migration-pull-request-description <executionEnvironmentId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--pull-request-number <int>` | yes | pullRequestNumber |
+| `--repository <string>` | yes | repository |
 | `--json` |  | emit response as JSON |
 
 ### `ravion execution-environment github-runner-migration-repositories`
