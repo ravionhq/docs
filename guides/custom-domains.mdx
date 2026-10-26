@@ -1,44 +1,50 @@
 ---
 title: "Configure custom domains for Ravion services"
 sidebarTitle: "Custom domains"
-description: "Serve an ECS web service on your own domain. Ravion issues and attaches the certificate and routes the domain; you add two DNS records."
+description: "Serve ECS web services, static sites, and CloudFront distributions on your own domain. Ravion issues and attaches the certificate; you add two DNS records."
 "og:image": "https://www.ravion.com/og/docs/guides/custom-domains.png"
 "twitter:image": "https://www.ravion.com/og/docs/guides/custom-domains.png"
 ---
 
 There are two ways to serve your own domain:
 
-| Path                                                    | Use it for                                                          | What you do                                                    |
-| ------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------- |
-| [Ravion-managed domains](#ravion-managed-domains)       | ECS web services behind the cluster ALB                             | Add domains to the service and add the DNS records Ravion shows |
-| [Bring your own certificate](#bring-your-own-certificate) | CloudFront, static sites, NLB services, and clusters with managed domains off | Create an ACM certificate module and attach it               |
+| Path                                                      | Use it for                                                                   | What you do                                                    |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| [Ravion-managed domains](#ravion-managed-domains)         | ECS web services behind the cluster ALB, static sites, and CloudFront distributions | Add domains to the module and add the DNS records Ravion shows |
+| [Bring your own certificate](#bring-your-own-certificate) | NLB services, and modules with managed domains off                           | Create an ACM certificate module and attach it                 |
 
 ## Ravion-managed domains
 
-Turn on **Ravion-managed domains** on the ECS cluster, add your domains to each service, and add the DNS records Ravion shows you. Ravion issues the ACM certificates, attaches them to the load balancer, creates the listener rules, and renews the certificates.
+Turn on **Ravion-managed domains**, add your domains, and add the DNS records Ravion shows you. Ravion issues the ACM certificates, attaches them to the load balancer or CloudFront distribution, routes the domains, and renews the certificates.
 
 ### How it works
 
-Every service gets a default address under its cluster's domain, like `web.acme.ravion.app`. Ravion owns `ravion.app`, so default addresses work with no DNS setup.
+Each custom domain like `app.example.com` needs two records at your DNS provider:
 
-When you add a custom domain like `app.example.com`, it replaces the default address and needs two records at your DNS provider:
+| Record           | Points to                                        | When it appears              | Purpose                                                 |
+| ---------------- | ------------------------------------------------ | ---------------------------- | ------------------------------------------------------- |
+| Validation CNAME | `*.acm-validations.aws`                          | Right away                   | Proves you own the domain so AWS issues the certificate |
+| Routing CNAME    | The cluster load balancer or CloudFront distribution | After the certificate issues | Sends traffic to your service or site                   |
 
-| Record           | Points to                     | When it appears              | Purpose                                         |
-| ---------------- | ----------------------------- | ---------------------------- | ----------------------------------------------- |
-| Validation CNAME | `*.acm-validations.aws`       | Right away                   | Proves you own the domain so AWS issues the certificate |
-| Routing CNAME    | The cluster load balancer     | After the certificate issues | Sends traffic to your service                   |
-
-Ravion shows the routing record only after the certificate issues, so you never send traffic to a load balancer that can't serve HTTPS for the domain yet.
+Ravion shows the routing record only after the certificate issues, so you never send traffic to an endpoint that can't serve HTTPS for the domain yet.
 
 ### Requirements
 
-- `rvn-ecs-cluster` 2.2.0 or later and `rvn-ecs-web` 2.3.0 or later.
-- The cluster has exactly one ALB, public or private, with HTTPS enabled.
-- The service has a load balancer attachment.
+| You're exposing                     | Modules                                                       | Domains per module |
+| ----------------------------------- | ------------------------------------------------------------- | ------------------ |
+| ECS web service via the cluster ALB | `rvn-ecs-cluster` 2.2.0 or later and `rvn-ecs-web` 2.3.0 or later | 5                  |
+| Static site                         | `rvn-aws-static` 1.5.0 or later                               | 10                 |
+| CloudFront distribution             | `rvn-cloudfront` 1.6.0 or later                               | 10                 |
 
-`rvn-eks-addons` 0.17.0 and later has the same **Ravion-managed domains** setting for its shared ALB.
+A domain can be on only one module across all Ravion organizations.
 
-### Step 1: Turn on managed domains on the cluster
+### Set up an ECS web service
+
+Every service gets a default address under its cluster's domain, like `web.acme.ravion.app`. Ravion owns `ravion.app`, so default addresses work with no DNS setup. A custom domain replaces the default address.
+
+The cluster needs exactly one ALB, public or private, with HTTPS enabled, and the service needs a load balancer attachment. `rvn-eks-addons` 0.17.0 and later has the same **Ravion-managed domains** setting for its shared ALB.
+
+#### Turn on managed domains on the cluster
 
 On the ECS cluster's **Config** tab, under **Managed domains**:
 
@@ -49,14 +55,14 @@ Apply the cluster. Ravion issues a wildcard certificate for `*.acme.ravion.app`,
 
 The cluster's own certificate inputs and the services' listener rule inputs are hidden while managed domains are on. Ravion creates the listener rules for every service domain.
 
-### Step 2: Add domains to a service
+#### Add domains to the service
 
 Services on the cluster pick up managed domains automatically. On the service's **Config** tab, under **Domains**:
 
-- **Default Ravion domain** sets the service's address under the cluster domain. It defaults to the service's module ID: `web` becomes `web.acme.ravion.app`. Each domain belongs to one service across all of Ravion, so use a name no other service on the cluster uses.
-- **Custom domains** takes up to five domains you own, like `app.example.com`. A domain can be on only one service across all Ravion organizations. When you set any, the service serves only those domains and drops the default address. Remove them all to go back to the default address.
+- **Default Ravion domain** sets the service's address under the cluster domain. It defaults to the service's module ID: `web` becomes `web.acme.ravion.app`. Use a name no other service on the cluster uses.
+- **Custom domains** takes the domains you own, like `app.example.com`. When you set any, the service serves only those domains and drops the default address. Remove them all to go back to the default address.
 
-Apply the service. In the project config file, the same settings look like this:
+Apply the service, then [add the DNS records](#add-the-dns-records). In the project config file, the same settings look like this:
 
 ```yaml ravion.yaml highlight={8-9,18-21}
 - givenId: acme
@@ -83,9 +89,52 @@ Apply the service. In the project config file, the same settings look like this:
     # ...
 ```
 
-### Step 3: Add the DNS records
+### Set up a static site or CloudFront distribution
 
-Open the service's **Domains** tab. Each custom domain has a card with its records and two statuses: certificate (**Verified**) and routing (**Configuration valid**).
+Static sites and CloudFront distributions don't get a `ravion.app` address. Until your domains are attached, they serve on their default `*.cloudfront.net` domain.
+
+On the module's **Config** tab, under **CloudFront settings** for a static site or **Distribution** for CloudFront:
+
+1. Turn on **Ravion-managed domains**.
+2. Add your domains under **Custom domains**.
+
+Apply the module, then [add the DNS records](#add-the-dns-records). Ravion issues the certificate in `us-east-1`, and once it validates, attaches the certificate and your domains to the distribution. You don't need another apply.
+
+```yaml ravion.yaml highlight={6-9,17-19}
+- givenId: site
+  name: Marketing site
+  type: rvn-aws-static
+  version: 1.5.0
+  input:
+    ravion_managed_domains: true
+    domains:
+      - example.com
+      - www.example.com
+    # ...
+
+- givenId: cdn
+  name: CDN
+  type: rvn-cloudfront
+  version: 1.6.0
+  input:
+    ravion_managed_domains: true
+    managed_domains:
+      - app.example.com
+    # ...
+```
+
+<Warning>
+  Turn on **Ravion-managed domains** when you create the module. A distribution keeps the domain
+  setting it was first applied with, because switching would replace it and change its
+  `cloudfront.net` hostname, so the plan fails instead. To switch an existing site, add a new
+  module with the new setting, move DNS to it, then remove the old one.
+</Warning>
+
+If a CloudFront distribution fronts an ECS service that routes by host, CloudFront forwards your domain as the `Host` header. Add the same domains to the service's **Domain host rules**.
+
+### Add the DNS records
+
+Open the module's **Domains** tab. Each custom domain has a card with its records and two statuses: certificate (**Verified**) and routing (**Configuration valid**).
 
 <Steps>
   <Step title="Add the validation record">
@@ -94,7 +143,7 @@ Open the service's **Domains** tab. Each custom domain has a card with its recor
   </Step>
   <Step title="Add the routing record">
     Once the certificate issues, the card shows the routing CNAME. Add it to send traffic to your
-    service. If the domain currently serves another site, this is the cutover: see
+    service or site. If the domain currently serves another site, this is the cutover: see
     [Move an existing domain](#move-an-existing-domain).
   </Step>
   <Step title="Confirm">
@@ -115,7 +164,7 @@ Keep the validation record after the certificate issues. ACM uses it to renew th
 
 ### Change domains
 
-Edit **Custom domains** and apply. Ravion issues a new certificate covering the new list and swaps it onto the listener without downtime. Add the validation record for any new domain; the existing domains keep serving traffic while the new certificate issues.
+Edit **Custom domains** and apply. Ravion issues a new certificate covering the new list and swaps it onto the load balancer or distribution without downtime. Add the validation record for any new domain; the existing domains keep serving traffic while the new certificate issues.
 
 Before you turn off managed domains on a cluster, turn them off on its services or remove the services. Ravion won't delete the cluster's wildcard certificate while services still use it.
 
@@ -123,34 +172,37 @@ Before you turn off managed domains on a cluster, turn them off on its services 
 
 To move a domain that already serves traffic elsewhere:
 
-1. Add the domain to the service and add the validation record. The old site keeps serving traffic.
+1. Add the domain to the module and add the validation record. The old site keeps serving traffic.
 2. Lower the TTL on the domain's current record to 60 seconds, and wait for the old TTL to expire.
-3. Test the new endpoint before switching DNS:
+3. Test the new endpoint before switching DNS, using the routing CNAME's value as the target:
 
    ```bash
-   dig +short <load-balancer-dns-name>
-   curl -sv https://app.example.com/ --resolve app.example.com:443:<load-balancer-ip>
+   dig +short <routing-target>
+   curl -sv https://app.example.com/ --resolve app.example.com:443:<target-ip>
    ```
 
 4. Replace the current record with the routing CNAME. To roll back, point it back at the old target.
-5. Once traffic looks normal in the service's [metrics](/modules/metrics) and [logs](/modules/logs), raise the TTL back to a normal value like 300 seconds.
+5. Once traffic looks normal in the module's [metrics](/modules/metrics) and [logs](/modules/logs), raise the TTL back to a normal value like 300 seconds.
+
+AWS allows a domain on only one CloudFront distribution. If the domain is already an alternate domain name on another distribution, remove it there before Ravion can attach it to yours.
 
 ### Troubleshooting
 
-| Symptom                                           | Cause                                                       | Fix                                                                                         |
-| ------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| **Awaiting AWS verification** for over an hour    | Validation record missing, mistyped, or proxied by Cloudflare | Compare the record with the card, and set it to DNS only in Cloudflare                      |
-| Verification never completes with a correct record | A `CAA` record blocks Amazon                                | Add `example.com. CAA 0 issue "amazon.com"`                                                 |
-| **Verification failed**                           | AWS timed out waiting for the validation record             | Fix the record, then redeploy the service to retry                                          |
-| **Configuration incomplete** after adding the routing record | DNS hasn't propagated, or the record is proxied     | Wait for the old TTL, check with `dig app.example.com`, and set the record to DNS only      |
-| Plan fails for a domain under `ravion.app`        | The name is more than one label under the cluster domain    | Use a single label like `checkout.acme.ravion.app`, or a domain you own                     |
-| Plan fails turning on managed domains             | The cluster has both ALBs, or HTTPS is off                  | Enable only one ALB, and turn on HTTPS for it                                               |
+| Symptom                                                      | Cause                                                         | Fix                                                                                    |
+| ------------------------------------------------------------ | ------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **Awaiting AWS verification** for over an hour               | Validation record missing, mistyped, or proxied by Cloudflare | Compare the record with the card, and set it to DNS only in Cloudflare                 |
+| Verification never completes with a correct record           | A `CAA` record blocks Amazon                                  | Add `example.com. CAA 0 issue "amazon.com"`                                            |
+| **Verification failed**                                      | AWS timed out waiting for the validation record               | Fix the record, then redeploy the module to retry                                      |
+| **Configuration incomplete** after adding the routing record | DNS hasn't propagated, or the record is proxied               | Wait for the old TTL, check with `dig app.example.com`, and set the record to DNS only |
+| Plan fails for a domain under `ravion.app`                   | The name is more than one label under the cluster domain      | Use a single label like `checkout.acme.ravion.app`, or a domain you own                |
+| Plan fails turning on managed domains on a cluster           | The cluster has both ALBs, or HTTPS is off                    | Enable only one ALB, and turn on HTTPS for it                                          |
+| Plan fails after turning managed domains on or off on a static site or CloudFront module | The distribution keeps the setting it was first applied with | Add a new module with the new setting, move DNS to it, then remove the old one |
 
 You can also check domains from the CLI with [`ravion domain list` and `ravion domain dns-status`](/cli/reference/domain).
 
 ## Bring your own certificate
 
-Use this for anything managed domains don't cover: CloudFront, static sites, NLB services, and ECS clusters with managed domains off. You create the certificate with an [ACM Certificate](/module-definitions/catalog/rvn-acm-certificate) module and attach it to the module that terminates TLS.
+Use this for anything managed domains don't cover: NLB services, ECS clusters with managed domains off, and static sites or CloudFront distributions created with managed domains off. You create the certificate with an [ACM Certificate](/module-definitions/catalog/rvn-acm-certificate) module and attach it to the module that terminates TLS.
 
 | You're exposing                     | Attach the certificate to                                      | Input                                                   | Certificate region         |
 | ----------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------- | -------------------------- |
@@ -209,6 +261,12 @@ Use this for anything managed domains don't cover: CloudFront, static sites, NLB
   </Card>
   <Card title="ECS Web Service" icon="globe" href="/module-definitions/catalog/rvn-ecs-web">
     Domains and routing for `rvn-ecs-web`.
+  </Card>
+  <Card title="Static Hosting" icon="file" href="/module-definitions/catalog/rvn-aws-static">
+    Managed domains and CloudFront settings for `rvn-aws-static`.
+  </Card>
+  <Card title="CloudFront CDN" icon="cloud" href="/module-definitions/catalog/rvn-cloudfront">
+    Managed domains and origins for `rvn-cloudfront`.
   </Card>
   <Card title="ACM Certificate" icon="lock" href="/module-definitions/catalog/rvn-acm-certificate">
     Certificates you manage yourself with `rvn-acm-certificate`.
