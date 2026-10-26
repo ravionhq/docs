@@ -36,6 +36,103 @@ rss: true
 {/* ravion-changelog:october-12-2026 */}
 
 {/* ravion-changelog:october-19-2026 */}
+{/* ravion-changelog:october-26-2026 */}
+<Update
+  label="October 26, 2026"
+  rss={{
+    title: "Automatic sandbox sizing, watch paths, faster stack plans, and Ravion-managed custom domains",
+  }}
+>
+
+## Platform
+
+### Features
+
+- **[Automatic sandbox sizing](https://www.ravion.com/docs/concepts/sandboxes#automatic-sizing) (preview):** Set `cpu`, `memory` or `disk` to `auto` on an interruptible sandbox pipeline step and Ravion sizes it from the step's earlier runs.
+- **[Watch paths](https://www.ravion.com/docs/module-definitions/definition-schema/build):** Set `watch_paths` on a module build so pipeline `build` and `deploy` steps skip when no watched file changed since the last successful deployment.
+- **Interface themes:** Choose an interface theme, including **Sunrise and sunset**, in your **Personal settings**.
+
+### Improvements
+
+- Stack plans can run concurrently across branches, while applies remain exclusive and cannot be cancelled by newer plans.
+- Git sources now use partial clones by default, so checkouts download file contents only when needed, and [`fetch_depth`](https://www.ravion.com/docs/pipelines/config-reference/build-configs#gitsource) sets a shallow clone.
+- Pipeline runs and step executions now show progress against their expected duration while they are running.
+- Dashboard notices now load from cached data and share a single, compact notice row.
+
+### Fixes
+
+- Cancelled pipeline runs now keep their final status in the browser when realtime events arrive out of order.
+- Pipeline run pages now place the canvas camera before the first paint, preventing cards from jumping.
+
+## AWS account IAM policy 1.0.55 → 1.0.61
+
+- **Sandbox cache purge:** Add permissions needed to delete execution environment caches.
+- **Sandbox host diagnostics:** Let Ravion read console output and send diagnostic interrupts before replacing unresponsive sandbox hosts.
+- **Spot placement:** Allow Ravion to check AWS Spot placement scores when launching sandbox hosts.
+- **S3 cache request metrics:** Allow Ravion to enable request metrics for S3 cache buckets.
+
+Update your AWS account connection in organization settings.
+
+## Modules
+
+### [CloudFront CDN](https://www.ravion.com/docs/module-definitions/catalog/rvn-cloudfront) [1.5.1](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%401.5.1) → [1.6.0](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%401.6.0)
+
+- Add [custom domains](https://www.ravion.com/docs/guides/custom-domains) with certificates issued and attached after DNS records are added.
+
+### [EC2 Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ec2-service) [2.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%402.2.0) → [2.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%402.3.1)
+
+- Add watch paths so builds and deploys skip when no watched file changed.
+- Clarify build settings and collapse options that rarely change.
+
+### [ECS Cluster](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-cluster) [2.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%402.2.0) → [2.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%402.3.1)
+
+- Validate Ravion-managed domain requirements when configuration is saved.
+- Reject cluster names that are too long for enabled load balancers when configuration is saved.
+
+### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [2.3.2](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%402.3.2) → [2.4.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%402.4.1)
+
+- Add watch paths so builds and deploys skip when no watched file changed.
+- Clarify build settings and collapse options that rarely change.
+
+### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [2.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%402.3.0) → [2.5.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%402.5.1)
+
+- Add the default Ravion domain alongside custom domains, with a toggle to disable it.
+- Add watch paths so builds and deploys skip when no watched file changed.
+- Clarify build settings and collapse options that rarely change.
+
+### [ECS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-worker) [2.2.2](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%402.2.2) → [2.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%402.3.1)
+
+- Add watch paths so builds and deploys skip when no watched file changed.
+- Clarify build settings and collapse options that rarely change.
+
+### [Lambda Function](https://www.ravion.com/docs/module-definitions/catalog/rvn-lambda) [2.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%402.1.0) → [2.2.1](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%402.2.1)
+
+- Add watch paths so builds and deploys skip when no watched file changed.
+- Clarify build settings and collapse options that rarely change.
+
+### [Static Hosting](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-static) [1.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%401.4.0) → [1.6.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%401.6.1)
+
+- Add Ravion-managed custom domains with certificates issued and attached after DNS records are added.
+- Add watch paths so builds and deploys skip when no watched file changed.
+- Clarify build settings and collapse options that rarely change.
+
+## CLI [1.17.7](https://github.com/ravionhq/cli/releases/tag/v1.17.7) → [1.19.8](https://github.com/ravionhq/cli/releases/tag/v1.19.8)
+
+### Features
+
+- **[Pipeline validation](https://www.ravion.com/docs/cli/reference/pipeline):** Validate a pipeline config before its pipeline exists with `ravion pipeline config validate --file file`.
+- **[Execution environment cache](https://www.ravion.com/docs/cli/reference/execution-environment):** Delete an execution environment cache with `ravion execution-environment cache`.
+
+### Improvements
+
+- **CLI request identity:** Requests now identify the CLI version, operating system, and architecture.
+
+### Fixes
+
+- **Project config help:** `ravion project config apply --help` now explains that `--autoapprove=false` overrides a config file and waits at approval gates.
+
+</Update>
+
 <Update
   label="October 19, 2026"
   rss={{
