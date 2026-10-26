@@ -41,10 +41,10 @@ ravion execution-environment create [flags]
 
 | Flag | Required | Description |
 | --- | --- | --- |
-| `--aws-account-id <string>` | yes | awsAccountId |
+| `--aws-account-id <string>` | yes | AWS account the environment runs in. Set at creation; it can't be changed. |
 | `--given-id <string>` | yes | User-provided execution environment identifier. Must be unique within organization. |
 | `--name <string>` | yes | name |
-| `--region <string>` | yes | region |
+| `--region <string>` | yes | AWS region the environment runs in. Set at creation; it can't be changed. |
 | `--security-group-id <string>` | yes | securityGroupId |
 | `--subnet-id <string>` | yes | subnetId |
 | `--type <string>` | yes | type. Available values: AWS. |
@@ -200,11 +200,9 @@ ravion execution-environment update <id> [flags]
 
 | Flag | Required | Description |
 | --- | --- | --- |
-| `--aws-account-id <string>` |  | awsAccountId |
 | `--given-id <string>` |  | User-provided execution environment identifier. Must be unique within organization. |
 | `--json` |  | emit response as JSON |
 | `--name <string>` |  | name |
-| `--region <string>` |  | region |
 | `--sandboxes <{}>` |  | Sparse overrides for the sandbox defaults. Send \{\} to enable a pool that inherits global defaults, `null` to remove it, or omit it on a patch to leave the pool as it is. |
 | `--security-group-id <string>` |  | securityGroupId |
 | `--subnet-id <string>` |  | subnetId |
