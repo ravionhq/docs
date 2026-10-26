@@ -40,7 +40,7 @@ rss: true
 <Update
   label="October 26, 2026"
   rss={{
-    title: "New module deployment controls, faster stack plans, dashboard activity, and expanded CLI workflows",
+    title: "Automatic sandbox sizing, watch paths, faster stack plans, and Ravion-managed custom domains",
   }}
 >
 
@@ -48,21 +48,19 @@ rss: true
 
 ### Features
 
-- **Activity history:** Review organization activity in the dashboard, filter it, and export matching entries.
-- **GitHub Actions approvals:** Approve runs awaiting approval from the Ravion run page.
+- **[Automatic sandbox sizing](https://www.ravion.com/docs/concepts/sandboxes#automatic-sizing):** Set `cpu`, `memory` or `disk` to `auto` on an interruptible sandbox pipeline step and Ravion sizes it from the step's earlier runs.
+- **[Watch paths](https://www.ravion.com/docs/module-definitions/definition-schema/build):** Set `watch_paths` on a module build so pipeline `build` and `deploy` steps skip when no watched file changed since the last successful deployment.
 - **Interface themes:** Choose interface themes, including Sunrise and sunset, from Personal preferences.
 
 ### Improvements
 
 - Stack plans can run concurrently across branches, while applies remain exclusive and cannot be cancelled by newer plans.
-- Stack runs now cancel older same-branch plans that are still waiting for approval.
+- Git sources now use partial clones by default, so checkouts download file contents only when needed, and [`fetch_depth`](https://www.ravion.com/docs/pipelines/config-reference/build-configs#gitsource) sets a shallow clone.
 - Pipeline runs and step executions now show progress against their expected duration while they are running.
 - Dashboard notices now load from cached data and share a single, compact notice row.
 
 ### Fixes
 
-- Retrying a failed merge queue check now lets a blocked direct pull request rejoin the queue.
-- A fresh dashboard tab now loads correctly after an automatic redirect.
 - Cancelled pipeline runs now keep their final status in the browser when realtime events arrive out of order.
 - Pipeline run pages now place the canvas camera before the first paint, preventing cards from jumping.
 
@@ -120,21 +118,10 @@ Update your AWS account connection in organization settings.
 
 ## CLI [1.17.7](https://github.com/ravionhq/cli/releases/tag/v1.17.7) → [1.19.8](https://github.com/ravionhq/cli/releases/tag/v1.19.8)
 
-### Breaking changes
-
-- **Removed GitHub Actions history import:** Stop using `github-actions import-usage`; GitHub Actions history is no longer imported on demand.
-
 ### Features
 
-- **[Merge queue management](https://www.ravion.com/docs/cli/reference/merge-queue):** List, pause, and resume organization merge queues from the CLI.
 - **[Pipeline validation](https://www.ravion.com/docs/cli/reference/pipeline):** Validate a pipeline config before its pipeline exists with `ravion pipeline config validate --file file`.
 - **[Execution environment cache](https://www.ravion.com/docs/cli/reference/execution-environment):** Delete an execution environment cache with `ravion execution-environment cache`.
-- **GitHub runner migration previews:** Review detailed job decisions, pull request state, saved results, and comparison rounds.
-- **Partial Git checkouts:** Use partial clones by default and configure shallow checkouts with `fetch_depth`.
-- **[Dashboard alerts](https://www.ravion.com/docs/cli/reference/alert):** List, create, and end alerts with `ravion alert` commands.
-- **[Activity records](https://www.ravion.com/docs/cli/reference/activity):** List, inspect, export, and summarize organization activity with `ravion activity` commands.
-- **Notification management:** Manage notification rules, destinations, and deliveries from the CLI.
-- **Slack and webhook integrations:** Connect Slack workspaces and create, rotate, and inspect webhook integrations.
 
 ### Improvements
 
