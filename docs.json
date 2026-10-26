@@ -373,6 +373,7 @@
               "cli/reference/terraform",
               "cli/reference/user",
               "cli/reference/values",
+              "cli/reference/version",
               "cli/reference/whoami"
             ]
           }

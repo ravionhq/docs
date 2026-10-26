@@ -14,7 +14,7 @@ Report bugs and feedback to Ravion's private triage. Reports include your organi
 
 ### `ravion report bug`
 
-Report a bug to Ravion. The report includes your organization, user name, email, and CLI metadata. The message accepts multiline Markdown; quote it as one shell argument. Do not include secrets.
+Report a bug to Ravion. The report includes your organization, user name, email, and CLI metadata. The message accepts multiline Markdown; quote it as one shell argument. Do not include secrets. Outdated CLI versions are blocked unless --allow-outdated is set.
 
 ```bash
 ravion report bug "<markdown message>" [flags]
@@ -33,6 +33,7 @@ Describe the issue or request with **Markdown**."
 | Flag | Required | Description |
 | --- | --- | --- |
 | `--agent <string>` |  | agent submitting the report (auto-detected when possible) |
+| `--allow-outdated` |  | submit the bug report even when a newer CLI version is available |
 | `--command <string>` |  | Ravion command name related to the report (do not include secrets) |
 
 ### `ravion report feedback`
