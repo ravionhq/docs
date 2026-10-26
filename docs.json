@@ -109,6 +109,7 @@
                   "module-definitions/catalog/rvn-aws-alternat",
                   "module-definitions/catalog/rvn-aws-ami",
                   "module-definitions/catalog/rvn-aws-compliance",
+                  "module-definitions/catalog/rvn-aws-ecr",
                   "module-definitions/catalog/rvn-aws-iam-policy",
                   "module-definitions/catalog/rvn-aws-iam-role",
                   "module-definitions/catalog/rvn-aws-kms",
