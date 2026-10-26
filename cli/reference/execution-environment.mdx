@@ -29,6 +29,21 @@ ravion execution-environment cache <id> [flags]
 | `--mode <string>` | yes | mode. Available values: DELETE_CACHE, KILL_JOBS_AND_DELETE_CACHE. |
 | `--json` |  | emit response as JSON |
 
+### `ravion execution-environment check-github-runner-migration-github-app`
+
+Check GitHub App installations for runners
+
+```bash
+ravion execution-environment check-github-runner-migration-github-app <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+| `-v, --verbose` |  | show full output |
+
 ### `ravion execution-environment close-github-runner-migration-pull-request`
 
 Close a GitHub runner migration pull request
