@@ -589,7 +589,8 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
   by its repository, workflow and job), so it needs a git source. Any other
   value is a key: every step in the same execution environment that names
   the same key shares one disk, across repositories, pipelines and branches.
-  The last green run to finish publishes it. Include repository or branch
+  The last run to finish that succeeded, or failed in one of its own commands, publishes it.
+  Include repository or branch
   in the key when you want that separation. Explicit keys use the fixed
   `main` head with no branch fallback. Only `auto` restores from the run's
   branch, falling back to its base and default branches, and publishes to
