@@ -30,7 +30,7 @@ ravion notification-destination create [flags]
 | `--enabled` | yes | Whether matched notification rules deliver to this destination. |
 | `--kind <string>` | yes | Which channel this destination delivers to. Fixed at creation — create a new destination to change kind. Available values: SLACK_CHANNEL, SLACK_DM, EMAIL, WEBHOOK. |
 | `--label <string>` | yes | User-facing label shown in destination lists. |
-| `--connection-id <kind>` |  | Id of the active integration this destination delivers through. Required, and must reference an integration whose provider matches kind (SLACK for SLACK_CHANNEL and SLACK_DM, WEBHOOK for WEBHOOK). Absent for EMAIL, which carries no credential. |
+| `--connection-id <kind>` |  | Id of the active integration this destination delivers through. Required, and must reference an integration whose provider matches kind (SLACK for SLACK_CHANNEL and SLACK_DM, WEBHOOK for WEBHOOK). Absent for EMAIL, which carries no credential, and for a REVOKED destination whose integration was deleted. |
 | `--json` |  | emit response as JSON |
 
 ### `ravion notification-destination delete`
@@ -92,7 +92,7 @@ ravion notification-destination update <id> [flags]
 | Flag | Required | Description |
 | --- | --- | --- |
 | `--config <kind>` |  | The destination's address, discriminated by kind — a webhook URL, a Slack channel or user, or an email address. |
-| `--connection-id <kind>` |  | Id of the active integration this destination delivers through. Required, and must reference an integration whose provider matches kind (SLACK for SLACK_CHANNEL and SLACK_DM, WEBHOOK for WEBHOOK). Absent for EMAIL, which carries no credential. |
+| `--connection-id <kind>` |  | Id of the active integration this destination delivers through. Required, and must reference an integration whose provider matches kind (SLACK for SLACK_CHANNEL and SLACK_DM, WEBHOOK for WEBHOOK). Absent for EMAIL, which carries no credential, and for a REVOKED destination whose integration was deleted. |
 | `--enabled` |  | Whether matched notification rules deliver to this destination. |
 | `--json` |  | emit response as JSON |
 | `--label <string>` |  | User-facing label shown in destination lists. |
