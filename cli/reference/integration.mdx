@@ -60,21 +60,6 @@ ravion integration list [flags]
 | `--provider <string>` |  | Only return integrations of this provider. Available values: PLANETSCALE, SLACK, WEBHOOK. |
 | `-v, --verbose` |  | show full output |
 
-### `ravion integration lookup-slack-member`
-
-Look up a Slack integration's member by email
-
-```bash
-ravion integration lookup-slack-member <id> [flags]
-```
-
-**Flags:**
-
-| Flag | Required | Description |
-| --- | --- | --- |
-| `--email <string>` | yes | email |
-| `--json` |  | emit response as JSON |
-
 ### `ravion integration planet-scale`
 
 ```bash
@@ -107,72 +92,6 @@ ravion integration rotate-planet-scale-credential <id> [flags]
 | `--token-id <string>` | yes | tokenId |
 | `--json` |  | emit response as JSON |
 
-### `ravion integration rotate-webhook-secret`
-
-Rotate a webhook integration's signing secret
-
-```bash
-ravion integration rotate-webhook-secret <id> [flags]
-```
-
-**Flags:**
-
-| Flag | Required | Description |
-| --- | --- | --- |
-| `--json` |  | emit response as JSON |
-
-### `ravion integration slack`
-
-Manage Slack integrations
-
-#### `ravion integration slack connect`
-
-connect opens Slack's authorization page for your organization in a browser and waits for you to allow the install. Once Slack redirects back, the workspace appears as a Slack integration and its id is printed. Re-running for an already-connected workspace updates that integration in place.
-
-```bash
-ravion integration slack connect [flags]
-```
-
-**Flags:**
-
-| Flag | Required | Description |
-| --- | --- | --- |
-| `--json` |  | emit response as JSON |
-| `--no-browser` |  | Print the consent URL instead of opening a browser |
-| `--timeout <duration>` |  | how long to wait for the install to complete |
-
-### `ravion integration slack-channels`
-
-List a Slack integration's channels
-
-```bash
-ravion integration slack-channels <id> [flags]
-```
-
-**Flags:**
-
-| Flag | Required | Description |
-| --- | --- | --- |
-| `--cursor <string>` |  | cursor |
-| `--json` |  | emit response as JSON |
-| `--limit <int>` |  | limit |
-| `-v, --verbose` |  | show full output |
-
-### `ravion integration start-slack-install`
-
-Start a Slack workspace install
-
-```bash
-ravion integration start-slack-install [flags]
-```
-
-**Flags:**
-
-| Flag | Required | Description |
-| --- | --- | --- |
-| `--data <string>` | yes | Request data as JSON |
-| `--json` |  | emit response as JSON |
-
 ### `ravion integration update`
 
 Patch Integration
@@ -199,21 +118,5 @@ ravion integration validate-planet-scale <id> [flags]
 
 | Flag | Required | Description |
 | --- | --- | --- |
-| `--json` |  | emit response as JSON |
-
-### `ravion integration webhook`
-
-Create a webhook integration
-
-```bash
-ravion integration webhook [flags]
-```
-
-**Flags:**
-
-| Flag | Required | Description |
-| --- | --- | --- |
-| `--name <string>` | yes | name |
-| `--given-id <string>` |  | Identifier unique within the organization. Generated from the integration's id when omitted. |
 | `--json` |  | emit response as JSON |
 
