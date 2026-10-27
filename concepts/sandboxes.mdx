@@ -1,14 +1,14 @@
 ---
 title: "Sandboxes"
 sidebarTitle: "Sandboxes"
-description: "Run pipeline steps and module builds in Firecracker microVMs on an autoscaling fleet of EC2 hosts in your AWS account, with whole-disk caching and Spot capacity."
+description: "Run pipeline steps and module builds in Firecracker microVMs on an autoscaling fleet of EC2 hosts in your AWS account, with whole-disk caching, self-sizing steps and Spot capacity."
 "og:image": "https://www.ravion.com/og/docs/concepts/sandboxes.png"
 "twitter:image": "https://www.ravion.com/og/docs/concepts/sandboxes.png"
 ---
 
 A sandbox runs one pipeline step or module build in its own [Firecracker](https://firecracker-microvm.github.io/) microVM, on EC2 hosts in your AWS account.
 
-You set the CPU, memory and disk a step needs. Ravion launches, packs, scales and retires the hosts. On a running host, a sandbox boots in one to two seconds, and the [disk cache](#disk-cache) brings back the whole disk from the last saved run.
+You set the CPU, memory and disk a step needs, or set them to `auto` and let the step [size itself](#automatic-sizing). Ravion launches, packs, scales and retires the hosts. On a running host, a sandbox boots in one to two seconds, and the [disk cache](#disk-cache) brings back the whole disk from the last saved run.
 
 ## How the fleet works
 
@@ -259,6 +259,8 @@ Sandboxes don't take `instance_size`, `ami` or `storage`. See [SandboxStepInfras
 <Note>
   Automatic sizing is in preview. [Contact support](/contact-support) to share feedback.
 </Note>
+
+Self-sizing steps: stop guessing machine sizes.
 
 Set `cpu`, `memory` or `disk` to `auto` and Ravion sizes the sandbox from the step's earlier runs. `auto` needs `interruptible: true` on the same step; a step without it must set fixed values, and the pipeline won't save otherwise.
 
