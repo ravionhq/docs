@@ -62,6 +62,8 @@ C and C++ builds that use [ccache](https://ccache.dev) 4.4 or later share the sa
 
 [Gradle](https://docs.gradle.org/current/userguide/build_cache.html) builds that enable the build cache, with `--build-cache` or `org.gradle.caching=true`, share the same cache. Ravion adds it as the remote build cache unless your settings already configure one. Builds that don't enable the build cache are unchanged.
 
+[Turborepo](https://turborepo.com/docs/core-concepts/remote-caching) builds share the same cache without workflow changes. Ravion sets `TURBO_API` and `TURBO_TOKEN` for every sandbox job, so `turbo run` reports `Remote caching enabled` and replays task outputs that another job, branch or fresh disk already built. In `turbo.json`, declare every file a task creates in its `outputs`, because a cache hit restores only declared outputs. Also declare every environment variable that changes a task's result in its `env`, and any file outside the package in its `inputs`, because Turborepo leaves undeclared ones out of the cache key and could replay output built with different settings. A `TURBO_API`, `TURBO_TOKEN` or `TURBO_TEAM` set in your workflow still takes precedence, so a Vercel Remote Cache keeps working. To keep a job on its local cache only, run `turbo run --cache=local:rw`.
+
 [Bazel](https://bazel.build/remote/caching) builds can use the same cache by passing the URL Ravion sets in `RAVION_BAZEL_REMOTE_CACHE`:
 
 ```yaml
@@ -70,9 +72,9 @@ C and C++ builds that use [ccache](https://ccache.dev) 4.4 or later share the sa
 
 Ravion doesn't add the flag for you, because Bazel fails when an HTTP cache is combined with a remote executor in your `.bazelrc`. The sandbox image includes Bazelisk as `bazel`, which runs the Bazel version in your `.bazelversion`. Outside a sandbox the variable is empty, and an empty `--remote_cache` turns remote caching off.
 
-If the cache is unreachable, these tools build without it. Turborepo and Nx remote caches aren't filled in, because their cache keys can miss inputs you haven't declared, such as environment variables, and a shared cache could then serve another branch's output.
+If the cache is unreachable, these tools build without it. Nx remote caches aren't filled in.
 
-Pipeline sandbox steps with a git source use the same cache for Go and Rust builds; see [shared build cache for pipeline steps](/concepts/sandboxes#shared-build-cache-for-pipeline-steps).
+Pipeline sandbox steps with a git source use the same cache for Go, Rust and Turborepo builds; see [shared build cache for pipeline steps](/concepts/sandboxes#shared-build-cache-for-pipeline-steps).
 
 Public repositories get a separate cache per repository and can't read private caches. EC2 runners use GitHub's cache.
 
