@@ -64,17 +64,11 @@ C and C++ builds that use [ccache](https://ccache.dev) 4.4 or later share the sa
 
 [Turborepo](https://turborepo.com/docs/core-concepts/remote-caching) builds share the same cache without workflow changes. Ravion sets `TURBO_API` and `TURBO_TOKEN` for every sandbox job, so `turbo run` reports `Remote caching enabled` and replays task outputs that another job, branch or fresh disk already built. In `turbo.json`, declare every file a task creates in its `outputs`, because a cache hit restores only declared outputs. Also declare every environment variable that changes a task's result in its `env`, and any file outside the package in its `inputs`, because Turborepo leaves undeclared ones out of the cache key and could replay output built with different settings. A `TURBO_API`, `TURBO_TOKEN` or `TURBO_TEAM` set in your workflow still takes precedence, so a Vercel Remote Cache keeps working. To keep a job on its local cache only, run `turbo run --cache=local:rw`.
 
-[Bazel](https://bazel.build/remote/caching) builds can use the same cache by passing the URL Ravion sets in `RAVION_BAZEL_REMOTE_CACHE`:
-
-```yaml
-- run: bazel build //... --remote_cache=$RAVION_BAZEL_REMOTE_CACHE
-```
-
-Ravion doesn't add the flag for you, because Bazel fails when an HTTP cache is combined with a remote executor in your `.bazelrc`. The sandbox image includes Bazelisk as `bazel`, which runs the Bazel version in your `.bazelversion`. Outside a sandbox the variable is empty, and an empty `--remote_cache` turns remote caching off.
+[Bazel](https://bazel.build/remote/caching) builds share the same cache without workflow changes. The sandbox image includes Bazelisk as `bazel`, which runs the Bazel version in your `.bazelversion`, and Ravion adds the cache to every `bazel build`, `test`, `run` and `coverage`. Bazel still downloads every output, so later steps find the same files in `bazel-bin` as without a cache. Ravion leaves Bazel alone when your workspace already sets a remote cache or a remote executor, in `.bazelrc`, its imports, `~/.bazelrc` or on the command line. To turn it off for a job, set `RAVION_BAZEL_CACHE=off`.
 
 If the cache is unreachable, these tools build without it. Nx remote caches aren't filled in.
 
-Pipeline sandbox steps with a git source use the same cache for Go, Rust and Turborepo builds; see [shared build cache for pipeline steps](/concepts/sandboxes#shared-build-cache-for-pipeline-steps).
+Pipeline sandbox steps with a git source use the same cache for Go, Rust, Turborepo and Bazel builds; see [shared build cache for pipeline steps](/concepts/sandboxes#shared-build-cache-for-pipeline-steps).
 
 Public repositories get a separate cache per repository and can't read private caches. EC2 runners use GitHub's cache.
 

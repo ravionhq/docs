@@ -380,11 +380,11 @@ New sandbox jobs resume after cleanup completes. If cleanup fails, they stay pau
 
 ## Shared build cache for pipeline steps
 
-Private pipeline sandbox steps with a [git source](#pipeline-steps) automatically use a shared build cache, independently of `disk_cache`. Ravion configures Go builds through `GOCACHEPROG`. If you already use [sccache](https://github.com/mozilla/sccache), Rust builds use the shared cache through `SCCACHE_WEBDAV_ENDPOINT`. [Turborepo](https://turborepo.com/docs/core-concepts/remote-caching) uses it as its remote cache through `TURBO_API` and `TURBO_TOKEN`.
+Private pipeline sandbox steps with a [git source](#pipeline-steps) automatically use a shared build cache, independently of `disk_cache`. Ravion configures Go builds through `GOCACHEPROG`. If you already use [sccache](https://github.com/mozilla/sccache), Rust builds use the shared cache through `SCCACHE_WEBDAV_ENDPOINT`. [Turborepo](https://turborepo.com/docs/core-concepts/remote-caching) uses it as its remote cache through `TURBO_API` and `TURBO_TOKEN`. [Bazel](https://bazel.build/remote/caching) builds, tests and runs use it as their remote cache unless your workspace sets its own remote cache or remote executor.
 
 Ravion scopes cache entries to the repository and branch, and reads from the repository's default branch when the branch has no entry. Pipeline steps share entries with that repository's [GitHub Actions jobs](/github-actions/caching).
 
-Your own `GOCACHEPROG`, sccache or `TURBO_*` settings take precedence. To turn off one of these caches for a step, set `RAVION_GO_CACHE_PROG=off`, `RAVION_SCCACHE=off` or `RAVION_TURBO_CACHE=off` in its environment. The shared build cache does not apply inside [container instructions](#what-runs-inside-a-sandbox) or Docker builds.
+Your own `GOCACHEPROG`, sccache, `TURBO_*` or Bazel remote settings take precedence. To turn off one of these caches for a step, set `RAVION_GO_CACHE_PROG=off`, `RAVION_SCCACHE=off`, `RAVION_TURBO_CACHE=off` or `RAVION_BAZEL_CACHE=off` in its environment. The shared build cache does not apply inside [container instructions](#what-runs-inside-a-sandbox) or Docker builds.
 
 ## Limits and caveats
 
