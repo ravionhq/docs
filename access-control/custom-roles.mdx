@@ -1,6 +1,6 @@
 ---
 title: "Custom roles"
-description: "Create custom roles with fine-grained policy statements, scoped to projects, environments, or resource attributes. Requires the Security and compliance bundle."
+description: "Create custom roles with fine-grained policy statements, scoped to projects, environments, or resource attributes. Requires the Compliance controls add-on or the Security and compliance bundle."
 "og:image": "https://www.ravion.com/og/docs/access-control/custom-roles.png"
 "twitter:image": "https://www.ravion.com/og/docs/access-control/custom-roles.png"
 ---
@@ -8,26 +8,29 @@ description: "Create custom roles with fine-grained policy statements, scoped to
 Custom roles let you define exactly what a principal can do, beyond the [system-managed roles](/access-control/rbac#system-managed-roles). Use them to grant access to one project, let developers deploy to every environment except production, or deny a specific action.
 
 <Note>
-Custom roles require the **Security and compliance bundle**. System-managed roles and [API key permission limits](/access-control/rbac#limit-api-key-permissions) are available on every plan.
+Custom roles require the **Compliance controls** add-on or the **Security and compliance bundle**. System-managed roles and [API key permission limits](/access-control/rbac#limit-api-key-permissions) are available on every plan.
 </Note>
 
 ## Enable custom roles
 
-Custom roles are part of the compliance controls in the **Security and compliance bundle**. The bundle also includes SAML SSO, SCIM provisioning, and a standard BAA.
+Custom roles are part of compliance controls. You can get them two ways:
+
+- **Compliance controls**: the standalone add-on.
+- **Security and compliance bundle**: compliance controls plus SAML SSO, SCIM provisioning, and a standard BAA.
 
 1. Go to **Settings** → **Billing**.
-2. Under add-ons, turn on **Security and compliance bundle**.
+2. Under add-ons, turn on **Compliance controls** or **Security and compliance bundle**.
 3. Confirm the change.
 
-Add-ons attach to a paid Team plan. They aren't available on the Free plan or during a trial. You need a role that can manage billing, such as **Owner** or **Billing**, to turn on the bundle.
+Add-ons attach to a paid Team plan. They aren't available on the Free plan or during a trial. You need a role that can manage billing, such as **Owner** or **Billing**, to turn on an add-on.
 
 To create and assign custom roles, you also need the **Manager** or **Owner** role.
 
-### What happens if you turn off the bundle
+### What happens if you turn off compliance controls
 
-- You can't turn off the bundle while your organization has custom roles. Delete them first.
-- Once the bundle is scheduled to end, you can no longer create, edit, or assign custom roles.
-- Even without the bundle, you can always list and delete custom roles and remove them from members and service accounts.
+- You can't turn off the add-on while your organization has custom roles. Delete them first.
+- Once the add-on is scheduled to end, you can no longer create, edit, or assign custom roles.
+- Even without the add-on, you can always list and delete custom roles and remove them from members and service accounts.
 
 ## How a custom role is built
 
