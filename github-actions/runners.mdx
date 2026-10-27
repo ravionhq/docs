@@ -2,6 +2,7 @@
 title: "GitHub Actions runners"
 sidebarTitle: "Runners"
 description: "Run GitHub Actions jobs on Ravion sandboxes or EC2 instances in your own AWS account by changing one runs-on label."
+keywords: ["GitHub Actions runners", "self-sizing jobs", "automatic sizing"]
 "og:image": "https://www.ravion.com/og/docs/github-actions/runners.png"
 "twitter:image": "https://www.ravion.com/og/docs/github-actions/runners.png"
 ---
@@ -21,6 +22,8 @@ jobs:
       - run: npm ci
       - run: npm test
 ```
+
+To make a job self-sizing (preview), set `cpu`, `memory` or `disk` to `auto`. See [Automatic sizing](#automatic-sizing).
 
 <Tip>
   Use `type=sandbox` for your jobs. Sandboxes boot in seconds, keep the whole disk between runs, and pack many jobs onto each host. Use `type=ec2` only when a job needs ARM or a whole EC2 instance. Avoid `type=ec2-spot`: if AWS reclaims the instance, GitHub fails the job.
@@ -142,7 +145,9 @@ Mark jobs that are safe to run twice as `interruptible=true`, such as tests, lin
   Automatic sizing is in preview. [Contact support](/contact-support) to share feedback.
 </Note>
 
-Stop guessing machine sizes. Set `cpu`, `memory` or `disk` to `auto` and Ravion sizes the sandbox for you.
+Self-sizing jobs: stop guessing machine sizes.
+
+Set `cpu`, `memory` or `disk` to `auto` and Ravion sizes the sandbox for you.
 
 ```yaml
 runs-on: ravion/ee=github-actions/type=sandbox/cpu=auto/memory=auto/disk=auto/interruptible=true/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
