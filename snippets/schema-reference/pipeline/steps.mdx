@@ -156,16 +156,17 @@ General-purpose build action step — triggers a build based on the module's bui
 
 By default, build steps use `value: 2` with `behavior: cancel-intermediate`,
 keyed automatically by module instance and, when set, `input.branch`. The
-policy starts replacing the oldest run immediately when a strictly newer
-run arrives, while the oldest workflow is under 15 seconds old and the
-inherited replacement chain is under 30 seconds old. This lets a rapid
-burst collapse to its newest build, including before capacity is reached.
-At either age limit, the oldest and newest builds survive and intermediates
-are cancelled. Built-in deploy and terraform:apply execution is protected.
+policy replaces the oldest when a newer run starts within 10% of the run's
+expected duration (15 seconds when there's no estimate yet); the replacement
+chain is limited to twice that window. This lets a rapid burst collapse to
+its newest build, including before capacity is reached. At either limit, the
+oldest and newest builds survive and intermediates are cancelled. Built-in
+deploy and terraform:apply execution is protected after it starts.
 
-For example, with `value: 2` and arrivals at 0, 6, 12, 18, 24, 30, 36
-seconds, run 5 is protected when the 30-second chain cap is reached; runs 5
-and 7 survive. An explicit `concurrency` block opts out of this default.
+For example, with no expected-duration estimate, `value: 2` and arrivals at
+0, 6, 12, 18, 24, 30, 36 seconds, run 5 is protected when the 30-second
+chain cap is reached; runs 5 and 7 survive. An explicit `concurrency` block
+opts out of this default.
 
 <ResponseField name="id" type="string" required>
   Unique step identifier, used for referencing in logs and dependencies
@@ -320,10 +321,19 @@ This serialization is independent of trigger/step/block concurrency:
 <ResponseField name="commit_sha" type="string | null">
   Full git commit SHA of the artifact being deployed, recorded on the
   module deployment. It is the baseline watch paths compare the next run
-  against. When omitted, nothing is recorded and the next run builds and
-  deploys the module without evaluating its watch paths. In a run that
-  deploys the module without building it, this is also the commit its
-  watch paths are evaluated against; without it that deploy always runs.
+  against. In a run that deploys the module without building it, this is
+  also the commit its watch paths are evaluated against.
+
+  When omitted, the commit is taken from the builds of the same run this
+  step deploys: the module's own `build` steps and the build steps
+  (`build`, `build:image`, `build:static`, `build:lambda`) whose outputs
+  this step's config reads, such as
+  `image_ref: << steps.build.output.build_ref >>`. It is used only when all
+  of them succeeded and report the same `commit_sha`. Otherwise nothing is
+  recorded, the next run builds and deploys the module without evaluating
+  its watch paths, and a run that only deploys the module always runs this
+  step. Set it to deploy a commit no build of the run reports, such as one
+  a deploy-only pipeline promotes.
 
   _(templateable)_
 </ResponseField>

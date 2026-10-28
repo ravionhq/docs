@@ -344,15 +344,15 @@ Concurrency configuration for controlling parallel execution
 <ResponseField name="behavior" type="enum" default="queue">
   Behavior when the concurrency limit is reached
   "queue" waits for a slot; "cancel-in-progress" cancels older contenders;
-  "cancel-intermediate" immediately replaces the oldest contender when its
-  immutable workflow-start age is under 15 seconds and the replacement
-  chain, anchored to the original first workflow start, is under 30 seconds.
-  Replacements never reset the 30-second cap. Replacements can continue below
-  capacity, including at value 1. At either age limit, it preserves the
-  oldest and newest contenders while cancelling intermediates. A run is not
-  cancelled by either cancelling behavior once a step with "cancellable:
-  false" (deploy and terraform:apply by default) has started; manual
-  cancellation is unchanged.
+  "cancel-intermediate" replaces the oldest contender when a newer run
+  starts within 10% of the run's expected duration (15 seconds when there's
+  no estimate yet); the replacement chain is limited to twice that window.
+  Replacements can continue below capacity, including at value 1. At either
+  limit, it preserves the oldest and newest contenders while cancelling
+  intermediates. Once a step with "cancellable: false" has started (deploy
+  and terraform:apply by default), the run is not cancelled by
+  "cancel-in-progress" or "cancel-intermediate"; manual cancellation is
+  unchanged.
   "skip" denies the new contender and ends the run as skipped.
   This controls trigger/step/block admission only and never relaxes the
   separate deployment-manager serialization used by deploy steps.
@@ -374,7 +374,7 @@ Concurrency configuration for controlling parallel execution
   admission even when queue_size is unset, so unset does not mean unlimited
   retention. For "cancel-intermediate", the survivors are the oldest
   contender plus the newest contenders that fit in that total window. Within
-  the age limits above, the oldest young contender may instead be replaced
+  the replacement window above, the oldest contender may instead be replaced
   by the strictly newer run. With "cancel-intermediate" and value: 1,
   queue_size must be at least 1 to keep the newest waiting run while the
   current run finishes.
