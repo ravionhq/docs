@@ -263,10 +263,12 @@ ravion deploy resource rollback <id> [flags]
 
 ### `ravion deploy rollback`
 
-Start a rollback deployment
+Start a new deployment that replays a previous successful deployment. Choose the target with ravion deploy rollback-candidates &lt;deployment-id&gt;, then use ravion deploy wait &lt;new-deployment-id&gt; --watch with the new deployment ID returned by this command.
+
+Requires a deployment ID (mdep_...), not a module instance ID (minst_...). Find deployment IDs with ravion deploy list --module-instance-id &lt;module-instance-id&gt;.
 
 ```bash
-ravion deploy rollback <id> [flags]
+ravion deploy rollback <deployment-id> [flags]
 ```
 
 **Flags:**
@@ -277,10 +279,12 @@ ravion deploy rollback <id> [flags]
 
 ### `ravion deploy rollback-candidates`
 
-List rollback candidates
+List past successful deployments eligible for rollback from the same module as the given deployment.
+
+Requires a deployment ID (mdep_...), not a module instance ID (minst_...). Find deployment IDs with ravion deploy list --module-instance-id &lt;module-instance-id&gt;.
 
 ```bash
-ravion deploy rollback-candidates <id> [flags]
+ravion deploy rollback-candidates <deployment-id> [flags]
 ```
 
 **Flags:**
