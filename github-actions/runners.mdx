@@ -155,18 +155,18 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=auto/memory=auto/disk=auto/in
 
 Every run teaches Ravion what the job needs. Sizes grow fast when a job needs more, come down gradually when it needs less, then settle. Each job runs on the right machine at the right cost.
 
-- Automatic CPU and memory work with or without `interruptible=true`. Automatic disk requires `interruptible=true`. You can mix automatic and fixed values.
-- Automatic CPU starts at 4 vCPU, and automatic memory starts at 16 GiB. Fixed values stay fixed.
+- Automatic CPU, memory and disk work with or without `interruptible=true`. You can mix automatic and fixed values.
+- Automatic sizing starts at 4 vCPU, 16 GiB memory and 40 GiB disk. Fixed values stay fixed.
 - Sizes are learned per repository, workflow file and job name.
 - For interruptible jobs, Ravion can test smaller sizes. If a job runs out of memory or disk, Ravion gives it more and reruns it automatically, up to twice per workflow run. GitHub shows the failed attempt, then the rerun.
 
-For jobs that must not run twice, leave `interruptible` off and use a fixed disk size:
+For jobs that must not run twice, leave `interruptible` off:
 
 ```yaml
-runs-on: ravion/ee=github-actions/type=sandbox/cpu=auto/memory=auto/disk=40/id=${{ github.run_id }}-${{ github.run_attempt }}-deploy-${{ strategy.job-index || 0 }}
+runs-on: ravion/ee=github-actions/type=sandbox/cpu=auto/memory=auto/disk=auto/id=${{ github.run_id }}-${{ github.run_attempt }}-deploy-${{ strategy.job-index || 0 }}
 ```
 
-Ravion keeps extra memory headroom and reduces memory only after successful, representative measurements. It doesn't test smaller memory sizes or automatically rerun these jobs after a sizing failure. If a job runs out of memory, fix the cause or set fixed memory before rerunning it. If the required size won't fit your execution environment, the job fails rather than running with fewer resources.
+Ravion keeps extra memory and disk headroom and reduces them only after successful, representative measurements. It doesn't test smaller memory sizes or automatically rerun these jobs after a sizing failure. If a job runs out of memory or disk, fix the cause or set a fixed size before rerunning it. If the required size won't fit your execution environment, the job fails rather than running with fewer resources.
 
 The job's log shows the size Ravion picked and why.
 
