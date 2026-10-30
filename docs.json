@@ -121,7 +121,8 @@
                     "group": "rvn-ec2-service",
                     "root": "module-definitions/catalog/rvn-ec2-service",
                     "pages": [
-                      "module-definitions/catalog/rvn-ec2-service/inputs"
+                      "module-definitions/catalog/rvn-ec2-service/inputs-inputs",
+                      "module-definitions/catalog/rvn-ec2-service/inputs-terraform-settings"
                     ]
                   },
                   {
@@ -162,7 +163,7 @@
                     "root": "module-definitions/catalog/rvn-lambda",
                     "pages": [
                       "module-definitions/catalog/rvn-lambda/inputs-aws-account-region",
-                      "module-definitions/catalog/rvn-lambda/inputs-image-registry-lifecycle"
+                      "module-definitions/catalog/rvn-lambda/inputs-builder-config"
                     ]
                   },
                   {
@@ -466,6 +467,14 @@
     {
       "source": "/use-cases/provision-infrastructure",
       "destination": "/concepts/infrastructure-as-code"
+    },
+    {
+      "source": "/module-definitions/catalog/rvn-ec2-service/inputs",
+      "destination": "/module-definitions/catalog/rvn-ec2-service/inputs-inputs"
+    },
+    {
+      "source": "/module-definitions/catalog/rvn-lambda/inputs-image-registry-lifecycle",
+      "destination": "/module-definitions/catalog/rvn-lambda/inputs-builder-config"
     }
   ],
   "logo": {
