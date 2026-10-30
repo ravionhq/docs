@@ -76,11 +76,11 @@ ravion execution-environment create [flags]
 | `--name <string>` | yes | name |
 | `--region <string>` | yes | AWS region the environment runs in. Set at creation; it can't be changed. |
 | `--security-group-id <string>` | yes | securityGroupId |
-| `--subnet-id <string>` | yes | subnetId |
 | `--type <string>` | yes | type. Available values: AWS. |
 | `--vpc-id <string>` | yes | vpcId |
 | `--json` |  | emit response as JSON |
 | `--sandboxes <{}>` |  | Sparse overrides for the sandbox defaults. Send \{\} to enable a pool that inherits global defaults, `null` to remove it, or omit it on a patch to leave the pool as it is. |
+| `--subnet-selection <vpcId>` |  | The VPC subnets EC2 runners and sandbox hosts launch into. Sandbox hosts launch into one per availability zone. Each EC2 runner launches into one of them, in a zone that offers its instance type, picked at random so runners spread across the zones; when AWS refuses the launch in that zone it retries in another zone of the selection. A selection the VPC has no subnet for, or naming a subnet outside it or one with no route to an internet or NAT gateway, is refused. Omit it on create for the VPC's public subnets, or its private ones when it has no public subnet. Omit it on a patch to keep the stored selection; a patch that changes vpcId without one resets it to that default for the new VPC, since its subnets belonged to the old VPC. Always present in a response: an environment saved before subnet selections existed shows the one its old subnet implies — its VPC's public subnets for a public subnet, its private ones for a private subnet. |
 
 ### `ravion execution-environment delete`
 
@@ -251,7 +251,7 @@ ravion execution-environment update <id> [flags]
 | `--name <string>` |  | name |
 | `--sandboxes <{}>` |  | Sparse overrides for the sandbox defaults. Send \{\} to enable a pool that inherits global defaults, `null` to remove it, or omit it on a patch to leave the pool as it is. |
 | `--security-group-id <string>` |  | securityGroupId |
-| `--subnet-id <string>` |  | subnetId |
+| `--subnet-selection <vpcId>` |  | The VPC subnets EC2 runners and sandbox hosts launch into. Sandbox hosts launch into one per availability zone. Each EC2 runner launches into one of them, in a zone that offers its instance type, picked at random so runners spread across the zones; when AWS refuses the launch in that zone it retries in another zone of the selection. A selection the VPC has no subnet for, or naming a subnet outside it or one with no route to an internet or NAT gateway, is refused. Omit it on create for the VPC's public subnets, or its private ones when it has no public subnet. Omit it on a patch to keep the stored selection; a patch that changes vpcId without one resets it to that default for the new VPC, since its subnets belonged to the old VPC. Always present in a response: an environment saved before subnet selections existed shows the one its old subnet implies — its VPC's public subnets for a public subnet, its private ones for a private subnet. |
 | `--type <string>` |  | type. Available values: AWS. |
 | `--vpc-id <string>` |  | vpcId |
 
