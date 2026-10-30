@@ -559,14 +559,18 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
 
 <ResponseField name="cpu" type="integer | auto" required>
   vCPUs given to the sandbox microVM. `auto` lets Ravion size it from
-  earlier runs; requires `interruptible: true`.
+  earlier runs. Non-interruptible steps use conservative sizing and are not
+  automatically retried. Set `interruptible: true` for adaptive sizing.
 
   _(min:1; templateable)_
 </ResponseField>
 
 <ResponseField name="memory" type="integer | auto" required>
   Memory in GiB given to the sandbox microVM. `auto` lets Ravion size it
-  from earlier runs; requires `interruptible: true`.
+  from earlier runs. Non-interruptible steps start with at least 16 GiB, then
+  can use less memory based on representative measurements, with extra
+  headroom. They are not automatically retried. Set `interruptible: true`
+  to also let Ravion test smaller memory sizes.
 
   _(min:1; templateable)_
 </ResponseField>
@@ -577,7 +581,8 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
   the sandbox only when it has this much free, and stops it if it writes
   more, failing the step with SandboxDiskExceeded, so a step that writes
   more than the default must say so. `auto` lets Ravion size it from earlier
-  runs; requires `interruptible: true`.
+  runs. Non-interruptible steps keep extra disk headroom and reduce disk only
+  after representative measurements. They are not automatically retried.
 
   _(min:1; templateable)_
 </ResponseField>

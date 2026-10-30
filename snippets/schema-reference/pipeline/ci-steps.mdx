@@ -256,6 +256,24 @@ Custom command CI action step
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="watch_paths" type="string[]">
+  Glob patterns, relative to the repository root, that gate this step.
+  Omit the field to run the step on every run.
+
+  When set, each pipeline run compares the commit `source` resolves to
+  with the commit of this step's latest successful execution in the same
+  pipeline variant. If no changed file matches a pattern, the step is
+  skipped with the cause `NO_WATCHED_CHANGES`. A skipped or failed
+  execution never becomes the baseline, so a change stays pending until
+  the step succeeds. The step always runs when it has no earlier success,
+  when its configuration changed since that success, or when the
+  comparison is inconclusive. Patterns support `*`, `**`, `?`, `[abc]` and
+  `{a,b}`, and match dotfiles; a pattern starting with `!` excludes files.
+  Requires `source`.
+
+  _(minItems:1)_
+</ResponseField>
+
 <ResponseField name="commands" type="string[]" required>
   Shell commands to execute in order
 

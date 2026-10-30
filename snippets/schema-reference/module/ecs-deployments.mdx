@@ -173,6 +173,18 @@ Target groups and listeners are auto-looked-up from the cluster and services at 
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="ecs_listener_rule_group_stickiness_duration" type="integer | null">
+  ALB group-stickiness duration, in seconds, that Ravion applies to the
+  forward action of the production and test listener rules before every
+  deploy (rolling and native strategies alike). 0 disables group
+  stickiness; any other value enables it with that duration. Only the
+  forward action's stickiness changes — target groups, weights, other
+  actions and conditions are kept. NLB listeners are skipped. Optional —
+  omit to leave the rules' stickiness untouched.
+
+  _(format:int32,min:0,max:604800; templateable)_
+</ResponseField>
+
 ### EcsDeploymentStrategyConfig
 
 Deployment strategy executed natively by the ECS deployment controller.
