@@ -239,6 +239,20 @@ ravion module delete <id> [flags]
 | --- | --- | --- |
 | `-y, --yes` |  | skip confirmation prompt |
 
+### `ravion module ec2-ami-status`
+
+Compare an EC2 Service module's in-service instances with its launch template's AMI
+
+```bash
+ravion module ec2-ami-status <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
 ### `ravion module get`
 
 Get ModuleInstance by id

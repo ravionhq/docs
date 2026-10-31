@@ -171,7 +171,9 @@ ravion deploy redeploy <id> [flags]
 
 | Flag | Required | Description |
 | --- | --- | --- |
+| `--allow-root-volume-reset` |  | Only with updateAmi. Allow updating instances that have no data volume. Their root disk is rebuilt from the AMI, so anything stored on it is reset (a snapshot and the replaced root volume are still kept). Without it, such an update is refused with 422. |
 | `--json` |  | emit response as JSON |
+| `--update-ami` |  | EC2 Service (aws:ec2) deployments only. Before replaying the release on each instance, replace its root volume with one built from the AMI the Auto Scaling Group's launch template uses. The instance, its network interfaces and its data volumes are kept; every volume is snapshotted first, and the replaced root volume is retained. Instances already on that AMI only get the release. |
 
 ### `ravion deploy resource`
 
