@@ -157,6 +157,31 @@
                     ]
                   },
                   "module-definitions/catalog/rvn-efs",
+                  {
+                    "group": "rvn-eks-addons",
+                    "root": "module-definitions/catalog/rvn-eks-addons",
+                    "pages": [
+                      "module-definitions/catalog/rvn-eks-addons/inputs-inputs",
+                      "module-definitions/catalog/rvn-eks-addons/inputs-metrics"
+                    ]
+                  },
+                  "module-definitions/catalog/rvn-eks-chart",
+                  "module-definitions/catalog/rvn-eks-cluster",
+                  {
+                    "group": "rvn-eks-web",
+                    "root": "module-definitions/catalog/rvn-eks-web",
+                    "pages": [
+                      "module-definitions/catalog/rvn-eks-web/inputs-eks-cluster",
+                      "module-definitions/catalog/rvn-eks-web/inputs-builder-config"
+                    ]
+                  },
+                  {
+                    "group": "rvn-eks-worker",
+                    "root": "module-definitions/catalog/rvn-eks-worker",
+                    "pages": [
+                      "module-definitions/catalog/rvn-eks-worker/inputs"
+                    ]
+                  },
                   "module-definitions/catalog/rvn-elasticache",
                   {
                     "group": "rvn-lambda",
