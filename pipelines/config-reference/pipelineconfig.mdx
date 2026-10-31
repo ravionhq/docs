@@ -64,4 +64,18 @@ Pipeline configuration - the top-level schema
 
   See: [PipelineConfigTarget](/pipelines/config-reference/other-types#pipelineconfigtarget)
 </ResponseField>
+
+<ResponseField name="fail_strategy" type="enum">
+  What happens to the run's other steps when a step outside any parallel
+  block or matrix fails. "cancel-all" stops the run right away.
+  "finish-running" lets steps that are already running finish, then stops.
+  "finish-all" keeps running every step that doesn't need the failed one
+  (the way independent GitHub Actions jobs keep going) and fails the run
+  at the end. Steps that wait for the failed step are skipped either way.
+  A failure inside a parallel block or a matrix follows that block's own
+  fail_strategy first; with "cancel-all" there it still stops the run.
+  Default: "cancel-all"
+
+  Allowed values: `cancel-all` | `finish-running` | `finish-all`
+</ResponseField>
 </Visibility>

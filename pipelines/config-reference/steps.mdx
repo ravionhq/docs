@@ -144,6 +144,33 @@ Approval action step — pauses pipeline execution until a user explicitly appro
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="needs" type="string[]">
+  Ids of the steps this step waits for. Without `needs`, a step waits for
+  everything listed before it. With `needs`, it waits only for the steps
+  named here, so it can start alongside earlier steps it doesn't depend on.
+  An empty list starts the step as soon as its list starts.
+  Each id must name an action step listed earlier in the same `steps` list
+  (the top-level list or the same group). A step that names a matrix step
+  waits for every copy. If a step it needs fails or is skipped, this step
+  is skipped too.
+</ResponseField>
+
+<ResponseField name="matrix" type="StepMatrix">
+  Runs one copy of this step for every combination of the matrix axes.
+  Each copy reads its values with &lt;&lt; matrix.&lt;axis&gt; &gt;&gt; in any templatable
+  field, including infrastructure. Each copy runs as a step of its own,
+  with an id made of the step id and its axis values in axis-name order
+  (test-pg15-20) and a name with its values in parentheses. A copy's id
+  can't be the id of another step or of another matrix's copy. Step
+  concurrency limits copies across runs: without a key each copy has its
+  own slot, and an explicit key is one limit for every copy. Copies of one
+  run don't wait for each other's concurrency; use max_parallel for that.
+  Other steps can't read a matrix step's outputs or inputs, since there is
+  one per copy.
+
+  See: [StepMatrix](#stepmatrix)
+</ResponseField>
+
 <ResponseField name="concurrency" type="ConcurrencyConfig">
   Concurrency configuration for controlling step execution across variants
 
@@ -208,6 +235,33 @@ opts out of this default.
   Accepts either a boolean literal or a full template token that resolves to a boolean
 
   _(templateable)_
+</ResponseField>
+
+<ResponseField name="needs" type="string[]">
+  Ids of the steps this step waits for. Without `needs`, a step waits for
+  everything listed before it. With `needs`, it waits only for the steps
+  named here, so it can start alongside earlier steps it doesn't depend on.
+  An empty list starts the step as soon as its list starts.
+  Each id must name an action step listed earlier in the same `steps` list
+  (the top-level list or the same group). A step that names a matrix step
+  waits for every copy. If a step it needs fails or is skipped, this step
+  is skipped too.
+</ResponseField>
+
+<ResponseField name="matrix" type="StepMatrix">
+  Runs one copy of this step for every combination of the matrix axes.
+  Each copy reads its values with &lt;&lt; matrix.&lt;axis&gt; &gt;&gt; in any templatable
+  field, including infrastructure. Each copy runs as a step of its own,
+  with an id made of the step id and its axis values in axis-name order
+  (test-pg15-20) and a name with its values in parentheses. A copy's id
+  can't be the id of another step or of another matrix's copy. Step
+  concurrency limits copies across runs: without a key each copy has its
+  own slot, and an explicit key is one limit for every copy. Copies of one
+  run don't wait for each other's concurrency; use max_parallel for that.
+  Other steps can't read a matrix step's outputs or inputs, since there is
+  one per copy.
+
+  See: [StepMatrix](#stepmatrix)
 </ResponseField>
 
 <ResponseField name="concurrency" type="ConcurrencyConfig">
@@ -288,6 +342,33 @@ This serialization is independent of trigger/step/block concurrency:
   Accepts either a boolean literal or a full template token that resolves to a boolean
 
   _(templateable)_
+</ResponseField>
+
+<ResponseField name="needs" type="string[]">
+  Ids of the steps this step waits for. Without `needs`, a step waits for
+  everything listed before it. With `needs`, it waits only for the steps
+  named here, so it can start alongside earlier steps it doesn't depend on.
+  An empty list starts the step as soon as its list starts.
+  Each id must name an action step listed earlier in the same `steps` list
+  (the top-level list or the same group). A step that names a matrix step
+  waits for every copy. If a step it needs fails or is skipped, this step
+  is skipped too.
+</ResponseField>
+
+<ResponseField name="matrix" type="StepMatrix">
+  Runs one copy of this step for every combination of the matrix axes.
+  Each copy reads its values with &lt;&lt; matrix.&lt;axis&gt; &gt;&gt; in any templatable
+  field, including infrastructure. Each copy runs as a step of its own,
+  with an id made of the step id and its axis values in axis-name order
+  (test-pg15-20) and a name with its values in parentheses. A copy's id
+  can't be the id of another step or of another matrix's copy. Step
+  concurrency limits copies across runs: without a key each copy has its
+  own slot, and an explicit key is one limit for every copy. Copies of one
+  run don't wait for each other's concurrency; use max_parallel for that.
+  Other steps can't read a matrix step's outputs or inputs, since there is
+  one per copy.
+
+  See: [StepMatrix](#stepmatrix)
 </ResponseField>
 
 <ResponseField name="concurrency" type="ConcurrencyConfig">
@@ -392,6 +473,33 @@ Rollback action step — reverts a module to a specific previous deployment.
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="needs" type="string[]">
+  Ids of the steps this step waits for. Without `needs`, a step waits for
+  everything listed before it. With `needs`, it waits only for the steps
+  named here, so it can start alongside earlier steps it doesn't depend on.
+  An empty list starts the step as soon as its list starts.
+  Each id must name an action step listed earlier in the same `steps` list
+  (the top-level list or the same group). A step that names a matrix step
+  waits for every copy. If a step it needs fails or is skipped, this step
+  is skipped too.
+</ResponseField>
+
+<ResponseField name="matrix" type="StepMatrix">
+  Runs one copy of this step for every combination of the matrix axes.
+  Each copy reads its values with &lt;&lt; matrix.&lt;axis&gt; &gt;&gt; in any templatable
+  field, including infrastructure. Each copy runs as a step of its own,
+  with an id made of the step id and its axis values in axis-name order
+  (test-pg15-20) and a name with its values in parentheses. A copy's id
+  can't be the id of another step or of another matrix's copy. Step
+  concurrency limits copies across runs: without a key each copy has its
+  own slot, and an explicit key is one limit for every copy. Copies of one
+  run don't wait for each other's concurrency; use max_parallel for that.
+  Other steps can't read a matrix step's outputs or inputs, since there is
+  one per copy.
+
+  See: [StepMatrix](#stepmatrix)
+</ResponseField>
+
 <ResponseField name="concurrency" type="ConcurrencyConfig">
   Concurrency configuration for controlling step execution across variants
 
@@ -440,6 +548,33 @@ Sleep action step — pauses pipeline execution for testing and debugging
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="needs" type="string[]">
+  Ids of the steps this step waits for. Without `needs`, a step waits for
+  everything listed before it. With `needs`, it waits only for the steps
+  named here, so it can start alongside earlier steps it doesn't depend on.
+  An empty list starts the step as soon as its list starts.
+  Each id must name an action step listed earlier in the same `steps` list
+  (the top-level list or the same group). A step that names a matrix step
+  waits for every copy. If a step it needs fails or is skipped, this step
+  is skipped too.
+</ResponseField>
+
+<ResponseField name="matrix" type="StepMatrix">
+  Runs one copy of this step for every combination of the matrix axes.
+  Each copy reads its values with &lt;&lt; matrix.&lt;axis&gt; &gt;&gt; in any templatable
+  field, including infrastructure. Each copy runs as a step of its own,
+  with an id made of the step id and its axis values in axis-name order
+  (test-pg15-20) and a name with its values in parentheses. A copy's id
+  can't be the id of another step or of another matrix's copy. Step
+  concurrency limits copies across runs: without a key each copy has its
+  own slot, and an explicit key is one limit for every copy. Copies of one
+  run don't wait for each other's concurrency; use max_parallel for that.
+  Other steps can't read a matrix step's outputs or inputs, since there is
+  one per copy.
+
+  See: [StepMatrix](#stepmatrix)
+</ResponseField>
+
 <ResponseField name="concurrency" type="ConcurrencyConfig">
   Concurrency configuration for controlling step execution across variants
 
@@ -486,6 +621,33 @@ Trigger pipeline action step
   Accepts either a boolean literal or a full template token that resolves to a boolean
 
   _(templateable)_
+</ResponseField>
+
+<ResponseField name="needs" type="string[]">
+  Ids of the steps this step waits for. Without `needs`, a step waits for
+  everything listed before it. With `needs`, it waits only for the steps
+  named here, so it can start alongside earlier steps it doesn't depend on.
+  An empty list starts the step as soon as its list starts.
+  Each id must name an action step listed earlier in the same `steps` list
+  (the top-level list or the same group). A step that names a matrix step
+  waits for every copy. If a step it needs fails or is skipped, this step
+  is skipped too.
+</ResponseField>
+
+<ResponseField name="matrix" type="StepMatrix">
+  Runs one copy of this step for every combination of the matrix axes.
+  Each copy reads its values with &lt;&lt; matrix.&lt;axis&gt; &gt;&gt; in any templatable
+  field, including infrastructure. Each copy runs as a step of its own,
+  with an id made of the step id and its axis values in axis-name order
+  (test-pg15-20) and a name with its values in parentheses. A copy's id
+  can't be the id of another step or of another matrix's copy. Step
+  concurrency limits copies across runs: without a key each copy has its
+  own slot, and an explicit key is one limit for every copy. Copies of one
+  run don't wait for each other's concurrency; use max_parallel for that.
+  Other steps can't read a matrix step's outputs or inputs, since there is
+  one per copy.
+
+  See: [StepMatrix](#stepmatrix)
 </ResponseField>
 
 <ResponseField name="concurrency" type="ConcurrencyConfig">
@@ -546,6 +708,50 @@ Allowed values:
 - `finish-running`
 - `finish-all`
 
+### StepMatrix
+
+Matrix settings for a step. Ravion expands the step into one copy per
+combination when the pipeline version is planned, the way GitHub Actions
+expands `strategy.matrix`.
+
+<ResponseField name="axes" type="map<string,string | number | boolean[]>">
+  Axis name to the values it takes. The step runs once for every
+  combination of one value from each axis, so two axes of 2 and 3 values
+  run 6 copies. Axis names start with a letter or `_` and contain only
+  letters, digits and `_`. Values are literals: templates in a matrix are
+  not resolved. A matrix expands to at most 256 copies.
+</ResponseField>
+
+<ResponseField name="include" type="map<string,string | number | boolean>[]">
+  Combinations to add. Each entry is merged into every combination whose
+  axis values it doesn't change, which adds extra values to those copies.
+  An entry that would change an axis value of every combination runs as a
+  copy of its own instead.
+</ResponseField>
+
+<ResponseField name="exclude" type="map<string,string | number | boolean>[]">
+  Combinations to remove. A combination is removed when it matches every
+  key an entry lists, so `{os: debian}` removes every debian copy.
+  Exclusions apply before include.
+</ResponseField>
+
+<ResponseField name="max_parallel" type="integer">
+  Maximum number of copies of this step running at once in one run.
+  Default: no limit
+
+  _(format:int32,min:1)_
+</ResponseField>
+
+<ResponseField name="fail_strategy" type="enum" default="cancel-all">
+  What happens when a copy fails, with the same options as a parallel
+  block. "cancel-all" stops the run, "finish-running" lets running copies
+  finish, and "finish-all" runs every remaining copy. Steps that need the
+  matrix step are skipped either way.
+  Default: "cancel-all"
+
+  Allowed values: `cancel-all` | `finish-running` | `finish-all`
+</ResponseField>
+
 ### EnvironmentVariablesValue
 
 Environment variable map value.
@@ -602,6 +808,12 @@ Supports either:
 - a full template block like &lt;&lt; pipeline.input.terraform_variables &gt;&gt; that resolves to such a map.
 
 One of: map&lt;string,[TerraformVariable](#terraformvariable)&gt;, string.
+
+### MatrixValue
+
+A single matrix value. Matrix values are literals; templates are not resolved inside a matrix.
+
+One of: string, number, boolean.
 
 ### EnvironmentVariable
 
