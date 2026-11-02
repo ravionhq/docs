@@ -108,6 +108,17 @@ export RAVION_API_KEY=<your-api-key>
 ravion whoami
 ```
 
+## Troubleshoot "not found" errors
+
+CLI commands run against the organization of your current credential. A "resource not found" error (HTTP `404`) for an ID that you know exists usually means the CLI is pointed at a different organization.
+
+1. Run `ravion whoami` to print the authenticated identity and active organization.
+2. If `RAVION_API_KEY` is set, the CLI uses that key's organization instead of your stored login. Run `unset RAVION_API_KEY` to fall back to your stored credentials, or export a key from the correct organization.
+3. If you signed in with `ravion login`, run `ravion switch` to select the organization that owns the resource.
+4. Run `ravion describe <id>` to confirm the ID resolves in the active organization. The output includes a dashboard link.
+
+If the error persists, [contact support](/contact-support) and include the command, the error message, and the `requestId` if the error includes one.
+
 ## Next steps
 
 <CardGroup cols={2}>
