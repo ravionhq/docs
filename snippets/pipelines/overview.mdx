@@ -49,7 +49,7 @@ flowchart LR
 
 Keep your GitHub Actions workflow files, jobs, and actions. Change a job's `runs-on` label to run it on a Ravion runner in your AWS account. GitHub Actions still controls the workflow; Ravion starts and removes the runner for each job.
 
-These jobs use the same sandbox fleet as Ravion CI pipeline steps, but you do not need to rewrite your workflow as a Ravion pipeline.
+Sandbox jobs use the same sandbox fleet as Ravion CI pipeline steps. For jobs that need ARM or a whole instance, you can use [EC2 runners](/github-actions/runners#ec2) instead, without disk caching. Neither option requires rewriting your workflow as a Ravion pipeline.
 
 <Note>
   GitHub Actions runners are in private preview. See [GitHub Actions runners](/github-actions/runners) for setup and how to request access, and [Caching](/github-actions/caching) for disk and Actions cache support.
