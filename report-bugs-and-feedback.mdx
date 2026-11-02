@@ -7,6 +7,10 @@ description: "Send bug reports and product feedback to Ravion straight from the 
 
 Report bugs and product feedback to Ravion from the terminal. Reports go straight to our private triage — no form, no portal.
 
+<Warning>
+  For urgent or high-priority issues, also email [support@ravion.com](mailto:support@ravion.com) in addition to filing a bug report. Filing a report through the CLI or API does not contact support. Include the same error details and resource IDs in your email.
+</Warning>
+
 ## Quick start
 
 ```bash
@@ -59,13 +63,15 @@ The apply to succeed. The same pipeline applied cleanly yesterday.
 
 Each report includes your organization, user name, email, and CLI metadata such as version and platform. Nothing else is collected.
 
-On success the CLI prints `Report submitted.` and exits `0`. No ticket ID is returned, so email [support@ravion.com](mailto:support@ravion.com) if you need a reply.
+On success the CLI prints `Report submitted.` and exits `0`. Bug reports also print a reminder to email support for urgent or high-priority issues. No ticket ID is returned, so email [support@ravion.com](mailto:support@ravion.com) if you need a reply.
 
 ## For AI agents
 
 Nothing about these commands is interactive — no prompts, no editor, nothing read from stdin — so agents can call them directly. Exit `0` means the report was submitted and `1` means anything else. There is no `--json` output.
 
 Agents should paste the IDs they are already holding rather than describing resources in prose. Ravion auto-detects opencode, Claude Code, Codex, Gemini CLI, Cursor, and Aider; pass `--agent` for anything else.
+
+For urgent or high-priority issues, file the bug report and explicitly tell the user to also email [support@ravion.com](mailto:support@ravion.com). Do not treat a successful report as contacting support.
 
 Every command's help output ends with these hints, and unexpected errors append them, so agents discover the commands on their own. Add them to your agent instructions to make reporting routine rather than a fallback.
 
