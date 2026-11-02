@@ -1,18 +1,37 @@
-Ravion Pipelines are a full-featured CI/CD system that runs in your cloud account.
+Ravion CI pipelines are a full CI/CD system that runs in your AWS account. Use them to replace CircleCI, GitHub Actions, or another CI/CD service for builds, tests, deployments, and other automation — not just deployments to Ravion modules.
+
+If you want to keep your existing GitHub Actions workflows, you can run their jobs on [Ravion's GitHub Actions runners](/github-actions/runners) instead.
+
+## Choose how to run CI/CD
+
+| Option | Who manages the workflow? | Choose it when |
+| --- | --- | --- |
+| **Ravion CI pipelines** | Ravion orchestrates the steps you define in a [pipeline config](/config-as-code/pipeline-config-file). | You want to replace your CI/CD service and manage builds, tests, and deploys in Ravion. |
+| **[GitHub Actions on Ravion](/github-actions/runners)** | GitHub Actions orchestrates your existing workflows; Ravion provides the runners in your AWS account. | You want to keep GitHub Actions workflows and actions while moving job execution to Ravion. |
+
+[Stack pipelines](#stack-pipelines) automate Terraform or OpenTofu changes for your modules. They run alongside either CI/CD option, rather than replacing your build and test workflows.
+
+## Ravion CI pipelines
+
+Define your workflow as a sequence of [steps](/pipelines/step-types), then trigger it from a git push, the [API](/api-reference/overview), or manually. You can:
+
+- Run tests, lint checks, scripts, or other commands with [custom steps](/pipelines/step-types#custom).
+- Build container images or static assets and publish them to ECR or S3 with [CI steps](/pipelines/step-types#ci-steps).
+- Build and deploy [Ravion modules](/concepts/modules) using their existing configuration.
+- Add [approval gates](/pipelines/step-types#approval), run dependent work in sequence, and run independent steps in [parallel](/pipelines/step-types#blocks).
 
 Use [sandboxes](/concepts/sandboxes) for pipeline steps and module builds by default. Choose native EC2 only when you need features such as a custom AMI.
 
-They are _optional_ for you instead of using GitHub Actions or CircleCI.
-
-Regardless, you will need to have a pipeline _somewhere_ to build your code, upload the artifacts to a store, and trigger a deployment of that in Ravion.
+A build, test, and deploy workflow can look like this:
 
 ```mermaid
 flowchart LR
-  GitPush[Git push or API] --> BuildCode[Build code]
-  BuildCode --> TriggerDeploy[Trigger Ravion deploy]
+  GitPush[Git push or API] --> TestCode[Run tests]
+  TestCode --> BuildCode[Build code]
+  BuildCode --> TriggerDeploy[Deploy]
 
   class GitPush source
-  class BuildCode build
+  class TestCode,BuildCode build
   class TriggerDeploy deploy
 
   classDef source fill:#F6DDCE,stroke:#FE6104,color:#2a1208
@@ -20,14 +39,38 @@ flowchart LR
   classDef deploy fill:#FE6104,stroke:#BD4406,color:#fff
 ```
 
-### Two kinds of pipeline runs
+### Why use Ravion CI pipelines?
 
-Pipelines fill two roles in Ravion, and you'll see both in your run history:
+- Manage builds, tests, deployments, and infrastructure through one dashboard, [CLI](/cli/overview), and [API](/api-reference/overview).
+- Run steps in your own VPC so they can reach private databases and image registries without exposing them publicly.
+- Keep module build configuration alongside runtime configuration and reuse it in your pipelines.
 
-1. **Pipelines you author** — build and deploy workflows triggered by git pushes, the API, or manually. These are the optional replacement for GitHub Actions described on this page.
-2. **Stack pipelines** — the change and destroy pipelines attached to every module [stack](/modules/stack), which run Terraform plan → approval → apply whenever a module's infrastructure config changes or the module is deleted. By default these are Ravion-managed system pipelines; your platform team can substitute custom ones.
+## GitHub Actions on Ravion
 
-When other docs mention a "stack change pipeline run", it's the second kind: a normal pipeline run that was triggered by a config change instead of a git push.
+Keep your GitHub Actions workflow files, jobs, and actions. Change a job's `runs-on` label to run it on a Ravion runner in your AWS account. GitHub Actions still controls the workflow; Ravion starts and removes the runner for each job.
+
+These jobs use the same sandbox fleet as Ravion CI pipeline steps, but you do not need to rewrite your workflow as a Ravion pipeline.
+
+<Note>
+  GitHub Actions runners are in private preview. See [GitHub Actions runners](/github-actions/runners) for setup and how to request access, and [Caching](/github-actions/caching) for disk and Actions cache support.
+</Note>
+
+## Stack pipelines
+
+A [stack](/modules/stack) holds the Terraform or OpenTofu state behind a module instance. Every stack has two pipelines attached:
+
+| Pipeline | What it does | Runs when |
+| --- | --- | --- |
+| **Change** | Plan infrastructure changes, evaluate approval rules, and apply the plan. | Infrastructure configuration changes or you trigger a stack run. |
+| **Destroy** | Plan infrastructure removal, request approval, and apply the destroy plan. | You delete the module. |
+
+Ravion provides managed system pipelines by default. Your platform team can [substitute custom pipelines](/modules/stack#system-pipelines-and-customization) to add policy checks, notifications, or different approval rules.
+
+Stack pipelines use the same pipeline engine as your CI workflows, with steps, logs, and results in your run history. A **stack change pipeline run** is an infrastructure workflow, not your application's build or test pipeline. You can use stack pipelines whether your CI runs in Ravion, GitHub Actions, or another service.
+
+See [Stacks change through pipelines](/modules/stack#stacks-change-through-pipelines) for approval behavior and the full lifecycle.
+
+## Organize your Ravion CI pipelines
 
 ### One pipeline, many environments
 
@@ -94,22 +137,7 @@ For limits on overlapping runs, see [Pipeline concurrency](/pipelines/concurrenc
 
 To see what each pipeline and step costs, open the execution environment's **Usage** tab in [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments). See [Track cost and hosts](/concepts/sandboxes#track-cost-and-hosts).
 
-### You might want to use Ravion pipelines for the following reasons:
-
-<Steps>
-  <Step>
-    You get **a single pane of glass and CLI/API surface area** to see all your builds, deploys, and infrastructure.
-  </Step>
-
-  <Step>
-    You get **enhanced security and control** because you no longer have to open up your database or
-    image registries to GitHub Actions. Ravion pipelines execute entirely in your cloud account.
-  </Step>
-
-  <Step>
-    You can **define all your build configuration in the module** alongside your runtime config.
-  </Step>
-</Steps>
+## Run in your own cloud
 
 ```mermaid
 flowchart LR
@@ -136,4 +164,4 @@ flowchart LR
   classDef resource fill:#fff,stroke:#BD4406,color:#2a1208
 ```
 
-See [Pipeline configuration](/pipelines/config-reference) for the detailed config schema.
+Start with the [pipeline examples](/pipelines/examples), then see [Pipeline configuration](/pipelines/config-reference) for the detailed config schema.
