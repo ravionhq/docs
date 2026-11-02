@@ -37,6 +37,322 @@ rss: true
 
 {/* ravion-changelog:october-19-2026 */}
 {/* ravion-changelog:october-26-2026 */}
+{/* ravion-changelog:november-2-2026 */}
+<Update
+  label="November 2, 2026"
+  rss={{
+    title: "Role-based access control, live pipeline GitHub checks, pipeline matrices, and in-place EC2 AMI updates",
+  }}
+>
+
+## Platform
+
+### Breaking changes
+
+- **Replaced execution environment subnet IDs:** Replace `subnetId` with `subnetSelection` in API requests and `--subnet-id` with `--subnet-selection` in [`ravion execution-environment create` and `update`](https://www.ravion.com/docs/cli/reference/execution-environment), choosing public, private, or custom subnets for EC2 runners and sandbox hosts.
+- **Locked execution environment accounts and regions:** Stop sending `awsAccountId` and `region` in update requests and create a new execution environment to use another account or region.
+
+### Features
+
+- **[Role-based access control](https://www.ravion.com/docs/access-control/rbac):** Assign built-in roles to members and service accounts through the dashboard, API, `ravion membership update`, or `ravion service-account update`, with requests checked against those roles and denials naming the required permission.
+- **[Pipeline GitHub checks](https://www.ravion.com/docs/config-as-code/github-integration):** Pipeline runs now post live checks to every GitHub commit their steps execute, regardless of how the run starts, with failing steps, errors, and log links for repositories connected through the Ravion GitHub App.
+- **[Custom step watch paths](https://www.ravion.com/docs/pipelines/config-reference/ci-steps#customcommandcistep):** Set `watch_paths` on custom steps to skip unchanged code against the latest successful execution in the same pipeline variant while allowing dependent steps to continue.
+- **[Pipeline step dependencies](https://www.ravion.com/docs/pipelines/config-reference/steps):** Use `needs` to wait only for specific earlier action steps, or an empty list to run independently of preceding steps.
+- **[Pipeline matrices](https://www.ravion.com/docs/pipelines/config-reference/steps#stepmatrix):** Run a step across combinations in `matrix.axes`, with `include`, `exclude`, `max_parallel`, and `fail_strategy` controls.
+- **[Pipeline failure strategy](https://www.ravion.com/docs/pipelines/config-reference/pipelineconfig#pipelineconfig):** Set pipeline-level `fail_strategy` to control independent steps when another step fails.
+- **[EC2 Service AMI updates](https://www.ravion.com/docs/module-definitions/catalog/rvn-ec2-service):** Update running instances to the launch template's AMI in place while keeping instance identities, network interfaces, and data volumes, snapshotting attached volumes first, retaining replaced root volumes, and replaying the current release. Instances without data volumes require explicit consent to reset their root disk.
+
+### Improvements
+
+- [Stack change and destroy runs](https://www.ravion.com/docs/modules/stack) now automatically size Terraform plan and apply CPU, memory, and disk while remaining non-interruptible.
+- [Non-interruptible sandbox steps](https://www.ravion.com/docs/pipelines/config-reference/step-infrastructure#sandboxstepinfrastructure) now accept `auto` CPU, memory, and disk with conservative sizing and no automatic retries.
+- Execution environments now offer Low cost, Balanced, High performance, and Ludicrous performance profiles, with Balanced as the default when no preference is set.
+- Switching sandbox resources from fixed values to `auto` now starts from the previous fixed allocation when no learned size exists.
+- Sandbox steps now share Turborepo and Bazel build caches without pipeline changes, while Bazel keeps customer-configured remote caches and executors intact.
+- Sandbox build caches now use fewer S3 requests and avoid redundant stored data, while disk restores read cached data without waiting behind network fetches.
+- Sandbox pools now try economical smaller Spot host combinations before widening their Spot search and rank on-demand fallbacks by on-demand compute and configured disk cost.
+- Sandbox pools now honor explicit `maxHosts` values above 100 and impose no configured fleet limit when the field is omitted.
+- Sandbox host disks now accept up to 80,000 IOPS and 2,000 MB/s throughput.
+- Execution environment subnet selection now defaults to public subnets, or private subnets when none are public, and rejects isolated subnets.
+- Execution environment settings now distinguish fixed local NVMe storage from configurable EBS disks and show inline disk-size, IOPS, and throughput errors.
+- Sandbox pools now use ephemeral hosts even when an older configuration selected persistent hosts.
+- Pipeline canvases now align sequential stages along a stable central line and center parallel branches around it.
+- Module canvases now preserve manually positioned cards and move overlapping automatically positioned cards into free space.
+- Pipeline run canvases now appear before step drawer data finishes loading.
+- Run and deployment views now follow newly arriving runs when the latest is selected, while keeping a focused failed run open for log inspection.
+- Pipeline run cards now show whole-run elapsed time without a second step runtime.
+- [Pipeline concurrency](https://www.ravion.com/docs/pipelines/concurrency) now sizes the `cancel-intermediate` replacement window at 10% of expected run duration, capped at twice that window across a replacement chain, while runs without estimates retain the previous timing.
+- Deployment details now leave rollback selection in the module navigation rather than showing a separate Rollback to this button.
+- Module Config and Deploy tabs now prepare data on tab intent, and cached Terraform resource details stay visible while history refreshes.
+- YAML editors now search the entire document with Cmd/Ctrl+F, including read-only pipeline and module files, with match counts and next/previous navigation.
+- Locked module fields now show AWS account names while copying their stored IDs, with View and Hide grouped together.
+- Organization settings now group access, infrastructure, connections, and catalog pages, and organization deletion lives on a dedicated Danger Zone page that lists blocking projects.
+- AWS quota increase forms now prefill editable recommendations rather than invalid zero values and preserve manual edits as usage loads.
+- AWS quota decision emails now show confirmed increases as approved and make previous, requested, and current quotas easier to compare.
+- Detected AWS quota exhaustion now emails accepted organization members independently of notification rules, distinguishing pending requests and confirmed capacity fallback from rejected increases.
+- Ravion emails now use the Ravion support address as their default sender.
+- GitHub service notices now focus on dependencies Ravion uses rather than unrelated product incidents.
+- The marketing site and its embedded demos now follow the operating system's light or dark theme, with clearer long-form text spacing.
+
+### Fixes
+
+- Invited users now join the invited organization without creating an extra personal organization.
+- Sign-in now succeeds for accounts with previously unrecognized membership IDs, and unrecoverable email-verification errors offer Start again.
+- Dashboard and CLI sessions now avoid premature logouts.
+- Resource deep links now resolve across the signed-in user's accessible organizations rather than only the active organization.
+- The Connect AWS Account dialog now reports duplicate Given IDs inline before submission.
+- Member settings now prevent revoking the last accepted owner and keep the confirmation dialog open until revocation finishes.
+- Updating member roles now completes without an unrelated data refresh aborting the save.
+- Given ID fields now reset and collapse when empty and explain invalid characters in plain language.
+- Invalid module input drafts now remain editable and show the offending nested key, expected value, or YAML/JSON parser error instead of discarding edits.
+- [Project config applies](https://www.ravion.com/docs/config-as-code/project-config-file) now resume stack runs left pending by a partially failed apply and authorize newly created stacks correctly.
+- Project config plans now avoid reporting unchanged modules as updates solely because their inputs await another stack's outputs.
+- Project config applies now preserve explicitly empty input lists rather than replacing them with nonempty defaults.
+- Module version changes now preserve conditionally visible inputs and use recorded dependency values while referenced stack outputs are pending.
+- Changing a module's definition now permits newly introduced immutable inputs while still rejecting changes to immutable values already stored.
+- GitHub repository connections now explain expired authorization and missing app-installation access instead of returning a generic authentication error.
+- GitHub connections now avoid repeated authorization loops and empty repository pickers caused by conflicting saved credentials.
+- Pipeline run and module deployment lists now load subsequent pages reliably instead of stopping at the first page or failing at a pagination boundary.
+- Pipeline runs now retain terminal status updates after transient write failures, and cancelling a run whose execution has already ended or disappeared no longer leaves it active.
+- Pipeline runs and deploy steps waiting behind long-running stack approvals now recheck their conditions instead of remaining queued indefinitely.
+- Pipeline lock contention now waits and retries instead of failing when an acquisition approaches its deadline.
+- Retried pipeline run cards now measure the current attempt's duration, and progress lines stay aligned with elapsed time in long-open tabs.
+- [Deploy steps](https://www.ravion.com/docs/pipelines/config-reference/steps#deploystep) now infer `commit_sha` from their successful linked builds when those builds agree on one full commit, restoring watch-path baselines without manual wiring.
+- Watch paths now gate build and deploy steps whose `module_instance` resolves from pipeline inputs or variants.
+- [Environment variables and secrets](https://www.ravion.com/docs/pipelines/config-reference/ci-steps#customcommandcistep) now reach commands exactly as stored, including dollar signs.
+- Setup-action download errors now distinguish GitHub rate limits and connection failures from missing action files.
+- [Terraform and OpenTofu applies](https://www.ravion.com/docs/modules/stack) now restore the dependency lock file used for the saved plan, preventing inconsistent dependency lock errors.
+- ECS deployments triggered by stack applies now show the correct deployment comparison instead of an incorrect Initial deploy label.
+- [ECS deployment definitions](https://www.ravion.com/docs/module-definitions/definition-schema/ecs-deployments) now pass desired ALB group stickiness through `deploy.infrastructure`, and deployments reconcile it on live listener rules before releasing code.
+- Deployment setup now avoids rewriting unchanged AWS trust policies, preventing avoidable permission failures on older connected roles.
+- Resource logs now authorize against the owning deployment, so valid CloudWatch and EKS log requests no longer fail because of missing or stale module references.
+- AMI releases now publish successful regional copies even when another region fails, marking the failed copy with its AWS reason and leaving that region's previous image intact.
+- Managed certificates now resolve AWS accounts by either ID or Given ID.
+- Execution environment deletion now immediately shows Removing, keeps cleanup errors and Retry available until teardown succeeds, and removes cache buckets after they empty.
+- Completing an execution environment deletion now closes only that environment's drawer without interrupting navigation to another environment.
+- Private subnet selection now recognizes NAT-instance and network-interface default routes.
+- EC2 runner disk validation now rejects unsupported explicit gp3 IOPS before launch, caps inherited IOPS to the disk's supported ratio, and honors cancellation during launch retries.
+- Sandbox hosts now launch with older AWS roles that lack optional ingress permissions, and permanent permission refusals identify the missing permission instead of waiting for a generic capacity timeout.
+- Sandbox launch failures now include the last launch error rather than incorrectly reporting that existing hosts had no room.
+- Sandbox pools now replace outdated launch configurations so jobs requiring updated disk settings do not remain queued behind old hosts.
+- Sandbox host launches now avoid duplicate instance-type and availability-zone choices that caused AWS to reject the entire request.
+- Sandbox dispatch now recovers from transient connection loss instead of continuing to time out against connected hosts.
+- Sandbox hosts now reuse available capacity for arriving work without double-counting reservations or starting unnecessary hosts.
+- Automatic sandbox sizing now compares CPU and memory measurements at matching allocations and keeps fully cached workloads separate from normal builds.
+- Automatic sandbox sizing now recognizes runtime-specific memory exhaustion across 20 languages for the existing eligible recovery path while keeping fixed PHP process limits separate.
+- Sandbox step logs now have their destination saved before execution begins, preventing missing startup logs.
+- Active AWS quota issues now remain visible as Needs attention after a previous increase case closes, while resolved closed cases stay hidden.
+- Marketing demos now let page scrolling continue at embedded log and editor boundaries without capturing wheel input in their canvases.
+
+## AWS account IAM policy 1.0.61 → 1.0.65
+
+- **Cache bucket permissions:** Ravion can create and manage S3 cache buckets with names starting with `ravion-`, while existing cache buckets continue working unchanged.
+- **Cache bucket cleanup:** Ravion can remove empty execution environment cache buckets after deletion.
+- **Resource identity tags:** Ravion can tag execution environment cache buckets and host instance profiles with their organization and execution environment while preserving existing tags.
+- **EC2 Service AMI update permissions:** Ravion can snapshot attached volumes, replace root volumes in place, and protect updating instances from scale-in and health-check replacement while preserving data volumes and keeping old root volumes.
+
+Update your AWS account connection in organization settings.
+
+## Modules
+
+### New modules
+
+- **[AWS ECR Repository](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-ecr)** 1.0.0: Provision a private ECR repository with scan on push, automatic image cleanup, optional KMS encryption, and pull or push access for other IAM principals.
+
+### [ACM Certificate](https://www.ravion.com/docs/module-definitions/catalog/rvn-acm-certificate) [1.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-acm-certificate%401.1.1) → [1.1.2](https://github.com/ravionhq/modules/releases/tag/rvn-acm-certificate%401.1.2)
+
+- Prevent plans from failing on large AWS responses.
+
+### [alterNAT](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-alternat) [0.1.2](https://github.com/ravionhq/modules/releases/tag/rvn-aws-alternat%400.1.2) → [0.1.4](https://github.com/ravionhq/modules/releases/tag/rvn-aws-alternat%400.1.4)
+
+- Prevent plans from failing on large AWS responses.
+- Use the Amazon Linux 2023 minimal kernel 6.18 image family by default for new NAT instances while preserving custom AMIs.
+
+### [AMI](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-ami) [0.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-ami%400.3.1) → [0.3.2](https://github.com/ravionhq/modules/releases/tag/rvn-aws-ami%400.3.2)
+
+- Prevent plans from failing on large AWS responses.
+
+### [Aurora Database](https://www.ravion.com/docs/module-definitions/catalog/rvn-aurora) [1.5.0](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%401.5.0) → [1.6.0](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%401.6.0)
+
+- Prevent plans from failing on large AWS responses.
+- Export PostgreSQL logs and MySQL error logs by default when log exports are unset.
+
+### [AWS Application Load Balancer](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-alb) [1.3.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-alb%401.3.0) → [1.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-alb%401.4.0)
+
+- Prevent plans from failing on large AWS responses.
+- Enable access logs by default for new instances.
+
+### [AWS Compliance](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-compliance) [0.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-compliance%400.2.0) → [1.0.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-compliance%401.0.0)
+
+- Prevent plans from failing on large AWS responses.
+- Record management events with regional CloudTrail trails and private, versioned log storage, with an option to omit regions covered by existing trails.
+
+### [AWS IAM Policy](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-iam-policy) [1.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-iam-policy%401.1.1) → [1.1.2](https://github.com/ravionhq/modules/releases/tag/rvn-aws-iam-policy%401.1.2)
+
+- Prevent plans from failing on large AWS responses.
+
+### [AWS IAM Role](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-iam-role) [1.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-iam-role%401.1.1) → [1.1.2](https://github.com/ravionhq/modules/releases/tag/rvn-aws-iam-role%401.1.2)
+
+- Prevent plans from failing on large AWS responses.
+
+### [AWS KMS Key](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-kms) [0.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-kms%400.2.0) → [0.2.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-kms%400.2.1)
+
+- Prevent plans from failing on large AWS responses.
+
+### [AWS Secret](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-secret) [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-secret%401.1.0) → [1.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-secret%401.1.1)
+
+- Prevent plans from failing on large AWS responses.
+
+### [CloudFront CDN](https://www.ravion.com/docs/module-definitions/catalog/rvn-cloudfront) [1.6.0](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%401.6.0) → [1.8.0](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%401.8.0)
+
+- Prevent plans from failing on large AWS responses.
+- Show every custom domain and domain alias in the overview's Links section.
+- Create or reuse CloudFront static IPs for apex DNS and firewall allowlisting.
+
+### [EC2 Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ec2-service) [2.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%402.3.1) → [2.7.0](https://github.com/ravionhq/modules/releases/tag/rvn-ec2-service%402.7.0)
+
+- Prevent plans from failing on large AWS responses.
+- Retain application logs for a year by default for new services.
+- Use the Amazon Linux 2023 kernel 6.18 image family by default for new instances while preserving custom AMIs.
+- Automatically size sandbox build CPU, memory, and disk from previous builds, with an option to keep fixed sizes.
+- BREAKING: set Data volume explicitly before upgrading config files that omit it to preserve the intended disk settings, because omitted values now enable a separate data volume by default.
+- Snapshot data volumes daily, remount them after AMI updates, and refuse to start applications when their data volume or EFS is not mounted.
+
+### [ECS Cluster](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-cluster) [2.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%402.3.1) → [2.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%402.4.0)
+
+- Prevent plans from failing on large AWS responses.
+- Enable security logging and year-long log retention by default for new instances.
+
+### [ECS Network Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-nlb) [2.4.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%402.4.1) → [2.6.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-nlb%402.6.0)
+
+- Prevent plans from failing on large AWS responses.
+- Prevent target group name conflicts for long service names and connect listeners before service creation without replacing existing target groups on upgrade.
+- Reject full image URIs in deployment inputs with guidance to use an image tag or SHA-256 digest.
+- Configure start command overrides for Dockerfile builds.
+- Automatically size sandbox build CPU, memory, and disk from previous builds, with an option to keep fixed sizes.
+- Set allowlisted environment variables from pipeline deploy steps, including release versions computed earlier in the pipeline.
+
+### [ECS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-web) [2.5.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%402.5.1) → [2.9.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-web%402.9.0)
+
+- Prevent plans from failing on large AWS responses.
+- Show every served domain in the overview's Links section.
+- Prevent returning clients from receiving 503 responses after blue/green, linear, and canary deployment bakes with Deployment stickiness duration, defaulting to one second and applied on each deploy.
+- Prevent target group name conflicts for long service names without replacing existing target groups on upgrade.
+- Reject full image URIs in deployment inputs with guidance to use an image tag or SHA-256 digest.
+- Configure start command overrides for Dockerfile builds.
+- Automatically size sandbox build CPU, memory, and disk from previous builds, with an option to keep fixed sizes.
+- Set allowlisted environment variables from pipeline deploy steps, including release versions computed earlier in the pipeline.
+
+### [ECS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-worker) [2.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%402.3.1) → [2.5.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-worker%402.5.0)
+
+- Prevent plans from failing on large AWS responses.
+- Reject full image URIs in deployment inputs with guidance to use an image tag or SHA-256 digest.
+- Configure start command overrides for Dockerfile builds.
+- Automatically size sandbox build CPU, memory, and disk from previous builds, with an option to keep fixed sizes.
+- Set allowlisted environment variables from pipeline deploy steps, including release versions computed earlier in the pipeline.
+
+### [EFS File System](https://www.ravion.com/docs/module-definitions/catalog/rvn-efs) [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-efs%401.1.0) → [1.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-efs%401.1.1)
+
+- Prevent plans from failing on large AWS responses.
+
+### [EKS Add-ons](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-addons) [0.26.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-addons%400.26.0) → [1.0.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-addons%401.0.0)
+
+- Prevent plans from failing on large AWS responses.
+- Enable public and private ALB access logs by default for new instances.
+- Keep Grafana log queries working after AWS's April 2027 CloudWatch Logs permission change.
+- Support Loki log search results up to 100 MiB instead of failing above 4 MiB.
+- Configure Loki, Tempo, Grafana, and Mimir ingester sizes, per-ingester series caps, and warm capacity from the form.
+- Prevent memory-limit failures in Loki, Tempo, and Mimir ingesters and give Mimir store-gateways more heap room.
+- Preserve Grafana users and alert state on a volume and load dashboards and alert rules from ConfigMaps.
+- Make the first stable release available to all organizations.
+
+### [EKS Cluster](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-cluster) [0.9.2](https://github.com/ravionhq/modules/releases/tag/rvn-eks-cluster%400.9.2) → [1.0.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-cluster%401.0.0)
+
+- Prevent plans from failing on large AWS responses.
+- Roll managed Linux nodes onto AWS's recommended image release when applying the cluster.
+- Make the first stable release available to all organizations.
+
+### [EKS Helm Chart](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-chart) [0.3.2](https://github.com/ravionhq/modules/releases/tag/rvn-eks-chart%400.3.2) → [1.0.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-chart%401.0.0)
+
+- Prevent plans from failing on large AWS responses.
+- Make the first stable release available to all organizations.
+
+### [EKS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-web) [1.13.3](https://github.com/ravionhq/modules/releases/tag/rvn-eks-web%401.13.3) → [1.17.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-web%401.17.0)
+
+- Prevent plans from failing on large AWS responses.
+- Show every served domain in the overview's Links section above the load balancer link.
+- Automatically size sandbox build CPU, memory, and disk from previous builds, with an option to keep fixed sizes.
+- Choose an image repository name from the form to avoid conflicts with existing repositories.
+- Set allowlisted environment variables from pipeline deploy steps, including release versions computed earlier in the pipeline.
+
+### [EKS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-worker) [0.15.3](https://github.com/ravionhq/modules/releases/tag/rvn-eks-worker%400.15.3) → [0.18.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-worker%400.18.0)
+
+- Prevent plans from failing on large AWS responses.
+- Automatically size sandbox build CPU, memory, and disk from previous builds, with an option to keep fixed sizes.
+- Choose an image repository name from the form to avoid conflicts with existing repositories.
+- Make the first stable release available to all organizations.
+- Set allowlisted environment variables from pipeline deploy steps, including release versions computed earlier in the pipeline.
+
+### [ElastiCache](https://www.ravion.com/docs/module-definitions/catalog/rvn-elasticache) [1.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-elasticache%401.1.1) → [1.1.2](https://github.com/ravionhq/modules/releases/tag/rvn-elasticache%401.1.2)
+
+- Prevent plans from failing on large AWS responses.
+
+### [Lambda Function](https://www.ravion.com/docs/module-definitions/catalog/rvn-lambda) [2.2.1](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%402.2.1) → [2.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-lambda%402.4.0)
+
+- Prevent plans from failing on large AWS responses.
+- Retain CloudWatch logs for a year by default for new functions.
+- Automatically size sandbox build CPU, memory, and disk from previous builds, with an option to keep fixed sizes.
+
+### [RDS Database](https://www.ravion.com/docs/module-definitions/catalog/rvn-rds) [1.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-rds%401.4.0) → [1.5.0](https://github.com/ravionhq/modules/releases/tag/rvn-rds%401.5.0)
+
+- Prevent plans from failing on large AWS responses.
+- Export PostgreSQL logs and MySQL/MariaDB error logs by default when log exports are unset.
+
+### [RDS Proxy](https://www.ravion.com/docs/module-definitions/catalog/rvn-rds-proxy) [0.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-rds-proxy%400.2.0) → [0.2.1](https://github.com/ravionhq/modules/releases/tag/rvn-rds-proxy%400.2.1)
+
+- Prevent plans from failing on large AWS responses.
+
+### [Route 53 DNS](https://www.ravion.com/docs/module-definitions/catalog/rvn-route53) [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-route53%401.1.0) → [1.1.1](https://github.com/ravionhq/modules/releases/tag/rvn-route53%401.1.1)
+
+- Prevent plans from failing on large AWS responses.
+
+### [S3 Bucket](https://www.ravion.com/docs/module-definitions/catalog/rvn-s3) [2.0.1](https://github.com/ravionhq/modules/releases/tag/rvn-s3%402.0.1) → [2.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-s3%402.1.0)
+
+- Prevent plans from failing on large AWS responses.
+- Enable versioning and require secure transport by default for new buckets.
+
+### [Static Hosting](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-static) [1.6.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%401.6.1) → [1.9.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-static%401.9.0)
+
+- Prevent plans from failing on large AWS responses.
+- Show every custom domain and domain alias in the overview's Links section.
+- Automatically size sandbox build CPU, memory, and disk from previous builds, with an option to keep fixed sizes.
+- Create or reuse CloudFront static IPs for apex DNS and firewall allowlisting.
+
+### [VPC Network](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-network) [1.2.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-network%401.2.1) → [1.3.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-network%401.3.1)
+
+- Prevent plans from failing on large AWS responses.
+- Enable CloudWatch VPC Flow Logs with year-long retention by default for new networks.
+- Keep VPC flow logs delivering after AWS's April 2027 CloudWatch Logs permission change.
+
+## CLI [1.19.8](https://github.com/ravionhq/cli/releases/tag/v1.19.8) → [1.23.7](https://github.com/ravionhq/cli/releases/tag/v1.23.7)
+
+### Breaking changes
+
+- **Changed rollback candidate JSON output:** Update scripts using [`ravion deploy rollback-candidates --json`](https://www.ravion.com/docs/cli/reference/deploy) to read the candidate array directly rather than an object containing `data`. API consumers must read the array from a single `data` field rather than nested `data` objects.
+- **Required current version for bug reports:** Update the CLI before using [`ravion report bug`](https://www.ravion.com/docs/cli/reference/report), or pass `--allow-outdated` to report with an older version.
+
+### Features
+
+- **[Version checks](https://www.ravion.com/docs/cli/reference/version):** Use `ravion version` or `ravion --version` to see when a newer release is available, with `RAVION_NO_UPDATE_NOTIFIER` to disable the check.
+
+### Fixes
+
+- **[Login organization selection](https://www.ravion.com/docs/cli/reference/login):** `ravion login` now keeps the last selected organization when membership remains valid and explains how to switch organizations.
+- **Resource organization hints:** Commands that receive a resource-not-found response now check the caller's other organizations and explain when the resource belongs elsewhere.
+- **[Rollback commands](https://www.ravion.com/docs/cli/reference/deploy):** `ravion deploy rollback` and `ravion deploy rollback-candidates` now reject module instance IDs with guidance to find the required deployment ID, and rollback candidate listings display without JSON decoding errors.
+
+</Update>
+
 <Update
   label="October 26, 2026"
   rss={{
