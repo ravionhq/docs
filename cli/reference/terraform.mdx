@@ -59,6 +59,7 @@ ravion terraform execution-summary list [flags]
 | `--limit <int>` |  | limit |
 | `--pipeline-id <string>` |  | Pipeline ID to filter by - returns available summaries for runs of this pipeline |
 | `--pipeline-run-id <string>` |  | Pipeline run ID to filter by |
+| `--pipeline-run-ids <strings>` |  | Limit a stack query to these pipeline runs, for paginated history views. |
 | `--stack-id <string>` |  | Stack ID to filter by. Runs without a Terraform report are excluded; use ravion pipeline run list --stack-id STACK_ID to list every attempt. |
 | `--step-execution-id <string>` |  | Step execution ID to filter by (optional) |
 | `-v, --verbose` |  | show full output |
