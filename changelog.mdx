@@ -50,32 +50,28 @@ rss: true
 ### Breaking changes
 
 - **Replaced execution environment subnet IDs:** Replace `subnetId` with `subnetSelection` in API requests and `--subnet-id` with `--subnet-selection` in [`ravion execution-environment create` and `update`](https://www.ravion.com/docs/cli/reference/execution-environment), choosing public, private, or custom subnets for EC2 runners and sandbox hosts.
-- **Locked execution environment accounts and regions:** Stop sending `awsAccountId` and `region` in update requests and create a new execution environment to use another account or region.
 
 ### Features
 
-- **[GitHub checks for pipeline runs](https://www.ravion.com/docs/config-as-code/github-integration):** Pipeline runs now show up as GitHub checks. Every GitHub commit a run executes gets a live check with its status, and failures show the failing step, the error, and a link to logs. This works no matter how the run started: PR, push, dashboard, API, or schedule. The repository needs to be connected through the Ravion GitHub App.
 - **[Role-based access control](https://www.ravion.com/docs/access-control/rbac):** Role-based access control is now on for every organization. Assign built-in roles (Owner, Platform Admin, Operator, Manager, Read only, Billing) to members and service accounts with `ravion membership update <id> --roles`, `ravion service-account update <id> --roles`, the API, or the dashboard. Service accounts can hold every role except Owner. When access is denied, the error now names the permission you need.
+- **[API key permissions](https://www.ravion.com/docs/access-control/rbac#limit-api-key-permissions):** API keys now have RBAC permission limits. Restrict a key to specific actions without granting more access than its owner has.
+- **[GitHub checks for pipeline runs](https://www.ravion.com/docs/config-as-code/github-integration):** Pipeline runs now show up as GitHub checks. Every GitHub commit a run executes gets a live check with its status, and failures show the failing step, the error, and a link to logs. This works no matter how the run started: PR, push, dashboard, API, or schedule. The repository needs to be connected through the Ravion GitHub App.
 - **[Custom step watch paths](https://www.ravion.com/docs/pipelines/config-reference/ci-steps#customcommandcistep):** Set `watch_paths` on custom steps to skip unchanged code against the latest successful execution in the same pipeline variant while allowing dependent steps to continue.
 - **[Pipeline step dependencies](https://www.ravion.com/docs/pipelines/config-reference/steps):** Use `needs` to wait only for specific earlier action steps, or an empty list to run independently of preceding steps.
 - **[Pipeline matrices](https://www.ravion.com/docs/pipelines/config-reference/steps#stepmatrix):** Run a step across combinations in `matrix.axes`, with `include`, `exclude`, `max_parallel`, and `fail_strategy` controls.
 - **[Pipeline failure strategy](https://www.ravion.com/docs/pipelines/config-reference/pipelineconfig#pipelineconfig):** Set pipeline-level `fail_strategy` to control independent steps when another step fails.
 - **[EC2 Service AMI updates](https://www.ravion.com/docs/module-definitions/catalog/rvn-ec2-service):** Update running instances to the launch template's AMI in place while keeping instance identities, network interfaces, and data volumes, snapshotting attached volumes first, retaining replaced root volumes, and replaying the current release. Instances without data volumes require explicit consent to reset their root disk.
+- **Execution environment performance profiles:** Choose Low cost, Balanced, High performance, or Ludicrous, with Balanced as the default.
 
 ### Improvements
 
-- [Stack change and destroy runs](https://www.ravion.com/docs/modules/stack) now automatically size Terraform plan and apply CPU, memory, and disk while remaining non-interruptible.
-- [Non-interruptible sandbox steps](https://www.ravion.com/docs/pipelines/config-reference/step-infrastructure#sandboxstepinfrastructure) now accept `auto` CPU, memory, and disk with conservative sizing and no automatic retries.
-- Execution environments now offer Low cost, Balanced, High performance, and Ludicrous performance profiles, with Balanced as the default when no preference is set.
-- Switching sandbox resources from fixed values to `auto` now starts from the previous fixed allocation when no learned size exists.
-- Sandbox steps now share Turborepo and Bazel build caches without pipeline changes, while Bazel keeps customer-configured remote caches and executors intact.
-- Sandbox build caches now use fewer S3 requests and avoid redundant stored data, while disk restores read cached data without waiting behind network fetches.
-- Sandbox pools now try economical smaller Spot host combinations before widening their Spot search and rank on-demand fallbacks by on-demand compute and configured disk cost.
-- Sandbox pools now honor explicit `maxHosts` values above 100 and impose no configured fleet limit when the field is omitted.
+- Execution environments now prevent changes to their AWS account and region. Create a new execution environment to use another account or region.
+- [Non-interruptible sandbox steps](https://www.ravion.com/docs/pipelines/config-reference/step-infrastructure#sandboxstepinfrastructure) now accept `auto` CPU, memory, and disk with conservative sizing and no automatic retries, starting from the previous fixed allocation when no learned size exists.
+- Sandbox steps now automatically share Turborepo and Bazel build caches without pipeline changes, preserve customer-configured Bazel remote caches and executors, restore cached data without waiting behind network fetches, and reduce S3 requests and redundant stored data.
+- Sandbox pools now use cost-aware ephemeral hosts, trying smaller Spot combinations before widening their search and ranking on-demand fallbacks by compute and configured disk cost. Configure fleet sizes above 100 with `maxHosts`, or omit the field for no configured limit.
 - Sandbox host disks now accept up to 80,000 IOPS and 2,000 MB/s throughput.
 - Execution environment subnet selection now defaults to public subnets, or private subnets when none are public, and rejects isolated subnets.
 - Execution environment settings now distinguish fixed local NVMe storage from configurable EBS disks and show inline disk-size, IOPS, and throughput errors.
-- Sandbox pools now use ephemeral hosts even when an older configuration selected persistent hosts.
 - Pipeline canvases now align sequential stages along a stable central line and center parallel branches around it.
 - Module canvases now preserve manually positioned cards and move overlapping automatically positioned cards into free space.
 - Pipeline run canvases now appear before step drawer data finishes loading.
@@ -85,12 +81,10 @@ rss: true
 - Deployment details now leave rollback selection in the module navigation rather than showing a separate Rollback to this button.
 - Module Config and Deploy tabs now prepare data on tab intent, and cached Terraform resource details stay visible while history refreshes.
 - YAML editors now search the entire document with Cmd/Ctrl+F, including read-only pipeline and module files, with match counts and next/previous navigation.
-- Locked module fields now show AWS account names while copying their stored IDs, with View and Hide grouped together.
 - Organization settings now group access, infrastructure, connections, and catalog pages, and organization deletion lives on a dedicated Danger Zone page that lists blocking projects.
 - AWS quota increase forms now prefill editable recommendations rather than invalid zero values and preserve manual edits as usage loads.
 - AWS quota decision emails now show confirmed increases as approved and make previous, requested, and current quotas easier to compare.
 - Detected AWS quota exhaustion now emails accepted organization members independently of notification rules, distinguishing pending requests and confirmed capacity fallback from rejected increases.
-- Ravion emails now use the Ravion support address as their default sender.
 - GitHub service notices now focus on dependencies Ravion uses rather than unrelated product incidents.
 - The marketing site and its embedded demos now follow the operating system's light or dark theme, with clearer long-form text spacing.
 
@@ -132,14 +126,9 @@ rss: true
 - Completing an execution environment deletion now closes only that environment's drawer without interrupting navigation to another environment.
 - Private subnet selection now recognizes NAT-instance and network-interface default routes.
 - EC2 runner disk validation now rejects unsupported explicit gp3 IOPS before launch, caps inherited IOPS to the disk's supported ratio, and honors cancellation during launch retries.
-- Sandbox hosts now launch with older AWS roles that lack optional ingress permissions, and permanent permission refusals identify the missing permission instead of waiting for a generic capacity timeout.
-- Sandbox launch failures now include the last launch error rather than incorrectly reporting that existing hosts had no room.
-- Sandbox pools now replace outdated launch configurations so jobs requiring updated disk settings do not remain queued behind old hosts.
-- Sandbox host launches now avoid duplicate instance-type and availability-zone choices that caused AWS to reject the entire request.
-- Sandbox dispatch now recovers from transient connection loss instead of continuing to time out against connected hosts.
-- Sandbox hosts now reuse available capacity for arriving work without double-counting reservations or starting unnecessary hosts.
-- Automatic sandbox sizing now compares CPU and memory measurements at matching allocations and keeps fully cached workloads separate from normal builds.
-- Automatic sandbox sizing now recognizes runtime-specific memory exhaustion across 20 languages for the existing eligible recovery path while keeping fixed PHP process limits separate.
+- Sandbox launches now work with older AWS roles that lack optional ingress permissions, report missing permissions and the last AWS launch error, replace outdated launch configurations for jobs with updated disk settings, and avoid duplicate instance-type and availability-zone choices.
+- Sandbox dispatch now recovers from transient connection loss, and hosts reuse available capacity without double-counting reservations or starting unnecessary hosts.
+- Automatic sandbox sizing compares CPU and memory at matching allocations, keeps fully cached workloads separate from normal builds, and recognizes runtime-specific memory exhaustion across 20 languages for the existing eligible recovery path while keeping fixed PHP process limits separate.
 - Sandbox step logs now have their destination saved before execution begins, preventing missing startup logs.
 - Active AWS quota issues now remain visible as Needs attention after a previous increase case closes, while resolved closed cases stay hidden.
 - Marketing demos now let page scrolling continue at embedded log and editor boundaries without capturing wheel input in their canvases.
@@ -285,7 +274,7 @@ Update your AWS account connection in organization settings.
 - Choose an image repository name from the form to avoid conflicts with existing repositories.
 - Set allowlisted environment variables from pipeline deploy steps, including release versions computed earlier in the pipeline.
 
-### [EKS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-worker) [0.15.3](https://github.com/ravionhq/modules/releases/tag/rvn-eks-worker%400.15.3) → [0.18.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-worker%400.18.0)
+### [EKS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-worker) [0.15.3](https://github.com/ravionhq/modules/releases/tag/rvn-eks-worker%400.15.3) → [1.0.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-worker%401.0.0)
 
 - Prevent plans from failing on large AWS responses.
 - Automatically size sandbox build CPU, memory, and disk from previous builds, with an option to keep fixed sizes.
