@@ -82,6 +82,13 @@
             ]
           },
           {
+            "group": "GitHub Actions",
+            "pages": [
+              "github-actions/runners",
+              "github-actions/caching"
+            ]
+          },
+          {
             "group": "Modules",
             "pages": [
               "concepts/modules",
@@ -232,13 +239,6 @@
               "pipelines/concurrency",
               "pipelines/variants",
               "pipelines/templating"
-            ]
-          },
-          {
-            "group": "GitHub Actions",
-            "pages": [
-              "github-actions/runners",
-              "github-actions/caching"
             ]
           },
           {

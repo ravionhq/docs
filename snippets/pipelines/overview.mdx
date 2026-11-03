@@ -1,15 +1,11 @@
-Ravion Pipelines are a full-featured CI/CD system that runs in your cloud account.
+Ravion pipelines are a full CI/CD system that runs in your cloud account. Use them to run tests, build images and static sites, deploy, apply Terraform, and gate releases on approvals. They replace GitHub Actions, CircleCI, Buildkite, and similar CI services.
 
-Use [sandboxes](/concepts/sandboxes) for pipeline steps and module builds by default. Choose native EC2 only when you need features such as a custom AMI.
-
-They are _optional_ for you instead of using GitHub Actions or CircleCI.
-
-Regardless, you will need to have a pipeline _somewhere_ to build your code, upload the artifacts to a store, and trigger a deployment of that in Ravion.
+Every Ravion deploy needs a pipeline _somewhere_ that builds your code, stores the artifact, and starts the deploy. You choose where that pipeline runs.
 
 ```mermaid
 flowchart LR
-  GitPush[Git push or API] --> BuildCode[Build code]
-  BuildCode --> TriggerDeploy[Trigger Ravion deploy]
+  GitPush[Git push or API] --> BuildCode[Test and build code]
+  BuildCode --> TriggerDeploy[Ravion deploy]
 
   class GitPush source
   class BuildCode build
@@ -20,14 +16,221 @@ flowchart LR
   classDef deploy fill:#FE6104,stroke:#BD4406,color:#fff
 ```
 
-### Two kinds of pipeline runs
+## Ways to run CI/CD with Ravion
 
-Pipelines fill two roles in Ravion, and you'll see both in your run history:
+| Option                                                                 | What it is                                                                                         | Use it when                                                                         |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| [Ravion pipelines](#ravion-pipelines)                                  | Ravion-native CI/CD. You define triggers and steps in YAML, and steps run in sandboxes in your AWS account. | You want one system for CI, builds, deploys, and infrastructure.                    |
+| [GitHub Actions on Ravion runners](#github-actions-on-ravion-runners) | Your existing GitHub Actions workflows, with jobs running on Ravion sandboxes instead of GitHub-hosted runners. | You want to keep your workflows but get faster, cheaper runners inside your VPC.    |
+| [External CI](#external-ci)                                            | Any CI system builds the artifact, then calls the Ravion CLI or API to deploy it.                  | You want to keep CircleCI, Buildkite, or another CI system as it is.                |
 
-1. **Pipelines you author** — build and deploy workflows triggered by git pushes, the API, or manually. These are the optional replacement for GitHub Actions described on this page.
-2. **Stack pipelines** — the change and destroy pipelines attached to every module [stack](/modules/stack), which run Terraform plan → approval → apply whenever a module's infrastructure config changes or the module is deleted. By default these are Ravion-managed system pipelines; your platform team can substitute custom ones.
+You can mix these options. For example, run tests in GitHub Actions on Ravion runners, and build and deploy with a Ravion pipeline.
 
-When other docs mention a "stack change pipeline run", it's the second kind: a normal pipeline run that was triggered by a config change instead of a git push.
+Separately, [stack pipelines](#stack-pipelines) apply infrastructure changes for every module. They run no matter which option you choose for your code.
+
+<CardGroup cols={3}>
+  <Card title="Ravion pipelines" icon="diagram-project" href="/pipelines/examples">
+    Example pipeline configs for build, test, and deploy.
+  </Card>
+  <Card title="GitHub Actions runners" icon="github" href="/github-actions/runners">
+    Run GitHub Actions jobs on sandboxes in your AWS account.
+  </Card>
+  <Card title="Stack pipelines" icon="layer-group" href="/modules/stack#stacks-change-through-pipelines">
+    Plan, approve, and apply Terraform for each module.
+  </Card>
+</CardGroup>
+
+## Ravion pipelines
+
+Ravion pipelines cover everything you use a hosted CI service for:
+
+- **Triggers** — GitHub events such as `push`, `pull_request`, and `release`, GitLab events, schedules, generic webhooks, the API, or a manual run. See [Triggers](/pipelines/config-reference/triggers).
+- **CI steps** — run tests, linters, and scripts with [`custom`](/pipelines/step-types#custom) steps, build images with [`build:image`](/pipelines/step-types#buildimage), and build static sites with [`build:static`](/pipelines/step-types#buildstatic).
+- **Deploy steps** — [build, deploy, and roll back](/pipelines/step-types#module-steps) Ravion modules, and run [`terraform:plan` and `terraform:apply`](/pipelines/step-types#terraformplan).
+- **Flow control** — `needs` dependencies, matrix steps, [`parallel` and `group` blocks](/pipelines/step-types#blocks), [approvals](/pipelines/step-types#approval), and [`trigger:pipeline`](/pipelines/step-types#triggerpipeline) to chain pipelines.
+- **GitHub checks** — runs report their status to the commit in GitHub, so you can require them on pull requests. See [GitHub checks](#github-checks).
+- **Fast, cheap compute** — steps run in [sandboxes](/concepts/sandboxes) that boot in seconds and keep their whole disk as a cache between runs.
+
+This pipeline runs tests and builds the image in parallel on every push to `main`, then deploys only if both succeed:
+
+```yaml ravion-pipeline.yaml
+pipeline:
+  givenId: build-and-deploy
+  project: demo
+triggers:
+  - id: github_push
+    type: webhook:github
+    event: push
+    repo: https://github.com/my-org/my-repo
+    filter:
+      branch: main
+    run:
+      production:
+        input:
+          branch: << trigger.payload.branch >>
+          commit: << trigger.payload.commit >>
+inputs:
+  - id: branch
+    type: string
+    default: main
+  - id: commit
+    type: string
+    required: false
+variants:
+  - id: production
+    name: Production
+steps:
+  - parallel:
+      - id: run_tests
+        name: Run tests
+        type: custom
+        source:
+          type: git
+          repo: https://github.com/my-org/my-repo
+          branch: << pipeline.input.branch >>
+        commands:
+          - npm ci
+          - npm test
+        infrastructure:
+          type: sandbox
+          cpu: 4
+          memory: 8
+          execution_environment_id: ci-builders
+      - id: build_web_app
+        name: Build web-app
+        type: build
+        module_instance: << pipeline.variant.id >>.web-app
+        input:
+          branch: << pipeline.input.branch >>
+          ref: << pipeline.input.commit >>
+  - id: deploy_web_app
+    name: Deploy web-app
+    type: deploy
+    module_instance: << pipeline.variant.id >>.web-app
+    input:
+      image_ref: << steps.build_web_app.output.image_digest >>
+```
+
+Commit the file to a repository connected through the Ravion GitHub App, and Ravion applies changes to it automatically. See [Pipeline config file](/config-as-code/pipeline-config-file).
+
+### GitHub checks
+
+When a pipeline run is connected to a GitHub commit, Ravion reports the run to that commit as a GitHub check. The check shows on the commit and on any pull request that contains it, just like a GitHub Actions or CircleCI check.
+
+A run is connected to a commit when either of these is true:
+
+- A [GitHub trigger](/pipelines/config-reference/triggers#githubpipelinetrigger) started it, such as a `push` or `pull_request` event.
+- One of its steps builds or checks out a specific commit from a repository connected through the Ravion GitHub App, however the run started.
+
+The check follows the run live: **Queued**, **Running**, **Waiting for approval**, then **Succeeded**, **Failed**, **Timed out**, **Cancelled**, or **Skipped**. Its summary lists the steps that ran on the commit, each linked to its logs in Ravion. When a run fails, the summary shows the failing step and its error. When a run waits for approval, it links to the approval step.
+
+Each check is named `<project> / <pipeline> (<variant>)`, for example `demo / Build & Deploy (Production)`. Use that name to make the check required in a GitHub branch protection rule or ruleset. Runs started another way, such as manually, from the API, or on a schedule, add a suffix like `· manual`. They don't replace the check that a trigger started.
+
+Every run attempt gets its own check, so a retry posts a fresh check.
+
+### Coming from GitHub Actions or CircleCI
+
+| GitHub Actions                     | CircleCI                    | Ravion pipelines                                                                                  |
+| ---------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------- |
+| Workflow                           | Workflow                    | Pipeline                                                                                          |
+| Job or step                        | Job or step                 | [Step](/pipelines/step-types)                                                                     |
+| `on:`                              | Triggers and filters        | [`triggers`](/pipelines/config-reference/triggers)                                                |
+| `workflow_dispatch` inputs         | Pipeline parameters         | [`inputs`](/pipelines/config-reference/inputs)                                                    |
+| `needs:`                           | `requires:`                 | `needs`                                                                                           |
+| `strategy.matrix`                  | Matrix jobs                 | `matrix`                                                                                          |
+| `runs-on:`                         | Executor and resource class | [`infrastructure`](/pipelines/config-reference/step-infrastructure)                               |
+| Environments                       | Contexts                    | [Variants](/pipelines/variants)                                                                   |
+| `concurrency:`                     | Serial groups               | [`concurrency`](/pipelines/concurrency)                                                           |
+| `actions/cache`                    | `save_cache` / `restore_cache` | Sandbox [disk cache](/concepts/sandboxes#disk-cache)                                          |
+| Secrets                            | Environment variables       | `environment_variables` with AWS secret references                                                |
+| Status checks                      | Status checks               | [GitHub checks](#github-checks)                                                                   |
+| `${{ }}` expressions               | Pipeline values             | [`<< >>` template expressions](/pipelines/templating)                                             |
+
+### Why use Ravion pipelines
+
+<Steps>
+  <Step>
+    You get **a single pane of glass and CLI/API surface area** to see all your tests, builds, deploys, and infrastructure.
+  </Step>
+
+  <Step>
+    You get **enhanced security and control** because you no longer have to open up your database or
+    image registries to a hosted CI service. Ravion pipelines execute entirely in your cloud account.
+  </Step>
+
+  <Step>
+    You can **define all your build configuration in the module** alongside your runtime config.
+  </Step>
+</Steps>
+
+```mermaid
+flowchart LR
+  Ravion[Ravion control plane]
+
+  subgraph CustomerCloud[Your cloud account]
+    subgraph VPC[Your VPC]
+      Runner[Sandbox]
+      PrivateResources[Private resources]
+    end
+  end
+
+  Ravion --> Runner
+  Runner -- accesses --> PrivateResources
+
+  class Ravion external
+  class CustomerCloud,VPC cloud
+  class Runner runner
+  class PrivateResources resource
+
+  classDef external fill:#FE6104,stroke:#BD4406,color:#fff
+  classDef cloud fill:#F6DDCE,stroke:#FE6104,color:#2a1208
+  classDef runner fill:#1f2937,stroke:#111827,color:#fff
+  classDef resource fill:#fff,stroke:#BD4406,color:#2a1208
+```
+
+## GitHub Actions on Ravion runners
+
+<Note>
+  GitHub Actions runners are in private preview. [Contact support](/contact-support) to request access.
+</Note>
+
+Keep your GitHub Actions workflows and run their jobs on Ravion instead. Change a job's `runs-on` to a Ravion label, and Ravion starts a fresh sandbox for that job in your AWS account:
+
+```yaml .github/workflows/test.yml
+jobs:
+  test:
+    runs-on: ravion/ee=github-actions/type=sandbox/cpu=4/memory=16/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm test
+```
+
+Jobs run inside your VPC, so they can reach private resources without exposing them to GitHub. Sandboxes keep their whole disk between runs, so dependency installs and builds stay warm.
+
+See [GitHub Actions runners](/github-actions/runners) and [GitHub Actions caching](/github-actions/caching).
+
+## External CI
+
+Keep building in CircleCI, Buildkite, GitHub-hosted runners, or any other CI system. Your CI builds and pushes the artifact, then starts the deploy with the Ravion CLI:
+
+```bash
+ravion deploy create --module-instance-id <mi-id> \
+  --description "Release v1.4.2" \
+  --inputs '{"image_ref": "<digest-pinned-image-uri>"}'
+```
+
+See [Building outside Ravion](/modules/build#building-outside-ravion) and [CLI authentication](/cli/authentication) to create an API key for your CI system.
+
+## Stack pipelines
+
+Every module [stack](/modules/stack) has a change pipeline and a destroy pipeline. They run Terraform plan → approval → apply whenever a module's infrastructure config changes or the module is deleted. You don't author these to ship code. They run alongside whichever CI option you pick.
+
+By default, stacks use Ravion-managed system pipelines. Your platform team can replace them with custom pipelines, for example to add policy checks. See [System pipelines and customization](/modules/stack#system-pipelines-and-customization).
+
+Stack pipeline runs appear in your run history next to the pipelines you author. When other docs mention a "stack change pipeline run", they mean a normal pipeline run that a config change started instead of a git push.
+
+## Design your pipelines
 
 ### One pipeline, many environments
 
@@ -92,48 +295,8 @@ Use `parallel` for steps that can overlap *inside* one of these workflows — bu
 
 For limits on overlapping runs, see [Pipeline concurrency](/pipelines/concurrency).
 
+## Track cost
+
 To see what each pipeline and step costs, open the execution environment's **Usage** tab in [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments). See [Track cost and hosts](/concepts/sandboxes#track-cost-and-hosts).
-
-### You might want to use Ravion pipelines for the following reasons:
-
-<Steps>
-  <Step>
-    You get **a single pane of glass and CLI/API surface area** to see all your builds, deploys, and infrastructure.
-  </Step>
-
-  <Step>
-    You get **enhanced security and control** because you no longer have to open up your database or
-    image registries to GitHub Actions. Ravion pipelines execute entirely in your cloud account.
-  </Step>
-
-  <Step>
-    You can **define all your build configuration in the module** alongside your runtime config.
-  </Step>
-</Steps>
-
-```mermaid
-flowchart LR
-  Ravion[Ravion control plane]
-
-  subgraph CustomerCloud[Your cloud account]
-    subgraph VPC[Your VPC]
-      Runner[Sandbox]
-      PrivateResources[Private resources]
-    end
-  end
-
-  Ravion --> Runner
-  Runner -- accesses --> PrivateResources
-
-  class Ravion external
-  class CustomerCloud,VPC cloud
-  class Runner runner
-  class PrivateResources resource
-
-  classDef external fill:#FE6104,stroke:#BD4406,color:#fff
-  classDef cloud fill:#F6DDCE,stroke:#FE6104,color:#2a1208
-  classDef runner fill:#1f2937,stroke:#111827,color:#fff
-  classDef resource fill:#fff,stroke:#BD4406,color:#2a1208
-```
 
 See [Pipeline configuration](/pipelines/config-reference) for the detailed config schema.
