@@ -65,10 +65,9 @@ rss: true
 
 ### Improvements
 
-- Execution environments now prevent changes to their AWS account and region. Create a new execution environment to use another account or region.
 - [Non-interruptible sandbox steps](https://www.ravion.com/docs/pipelines/config-reference/step-infrastructure#sandboxstepinfrastructure) now accept `auto` CPU, memory, and disk with conservative sizing and no automatic retries, starting from the previous fixed allocation when no learned size exists.
-- Sandbox steps now automatically share Turborepo and Bazel build caches without pipeline changes, preserve customer-configured Bazel remote caches and executors, restore cached data without waiting behind network fetches, and reduce S3 requests and redundant stored data.
-- Sandbox pools now use cost-aware ephemeral hosts, trying smaller Spot combinations before widening their search and ranking on-demand fallbacks by compute and configured disk cost. Configure fleet sizes above 100 with `maxHosts`, or omit the field for no configured limit.
+- Sandbox steps now share Turborepo and Bazel build caches automatically, with faster restores and lower storage overhead. Existing Bazel remote caches and executors stay unchanged.
+- Sandbox pools now choose lower-cost ephemeral hosts and support fleet sizes above 100. Set `maxHosts` to limit the fleet, or omit it for no configured limit.
 - Sandbox host disks now accept up to 80,000 IOPS and 2,000 MB/s throughput.
 - Execution environment subnet selection now defaults to public subnets, or private subnets when none are public, and rejects isolated subnets.
 - Execution environment settings now distinguish fixed local NVMe storage from configurable EBS disks and show inline disk-size, IOPS, and throughput errors.
@@ -90,6 +89,7 @@ rss: true
 
 ### Fixes
 
+- Execution environments now prevent changes to their AWS account and region. Create a new execution environment to use another account or region.
 - Invited users now join the invited organization without creating an extra personal organization.
 - Sign-in now succeeds for accounts with previously unrecognized membership IDs, and unrecoverable email-verification errors offer Start again.
 - Dashboard and CLI sessions now avoid premature logouts.
@@ -126,9 +126,9 @@ rss: true
 - Completing an execution environment deletion now closes only that environment's drawer without interrupting navigation to another environment.
 - Private subnet selection now recognizes NAT-instance and network-interface default routes.
 - EC2 runner disk validation now rejects unsupported explicit gp3 IOPS before launch, caps inherited IOPS to the disk's supported ratio, and honors cancellation during launch retries.
-- Sandbox launches now work with older AWS roles that lack optional ingress permissions, report missing permissions and the last AWS launch error, replace outdated launch configurations for jobs with updated disk settings, and avoid duplicate instance-type and availability-zone choices.
+- Sandbox launches now avoid invalid capacity requests and outdated configurations, work with older AWS roles, and report actionable launch errors.
 - Sandbox dispatch now recovers from transient connection loss, and hosts reuse available capacity without double-counting reservations or starting unnecessary hosts.
-- Automatic sandbox sizing compares CPU and memory at matching allocations, keeps fully cached workloads separate from normal builds, and recognizes runtime-specific memory exhaustion across 20 languages for the existing eligible recovery path while keeping fixed PHP process limits separate.
+- Automatic sandbox sizing now uses more accurate CPU and memory measurements, distinguishes fully cached builds, and detects memory exhaustion across 20 languages.
 - Sandbox step logs now have their destination saved before execution begins, preventing missing startup logs.
 - Active AWS quota issues now remain visible as Needs attention after a previous increase case closes, while resolved closed cases stay hidden.
 - Marketing demos now let page scrolling continue at embedded log and editor boundaries without capturing wheel input in their canvases.
