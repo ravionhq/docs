@@ -31,7 +31,7 @@ To make a job self-sizing (preview), set `cpu`, `memory` or `disk` to `auto`. Se
 
 ## How it works
 
-1. GitHub sends Ravion a webhook when a job with a `ravion/...` label is queued.
+1. GitHub sends Ravion a webhook when a job using either Ravion label format is queued. See [Ravion label format](#labels).
 2. Ravion registers a just-in-time runner for that job only, and starts a sandbox or EC2 instance for it in your execution environment.
 3. The runner picks up the job, runs it, and is removed when the job ends. Each job gets a fresh runner. On sandboxes, its disk starts from an earlier run's saved disk unless you set `disk_cache=off`. See [Disk cache](/github-actions/caching#disk-cache).
 
@@ -234,7 +234,7 @@ jobs:
 
 ### Invalid labels
 
-When a label in a private repository is invalid, Ravion fails the job, and the job's annotation says which key is wrong. A job whose labels include anything besides its Ravion label stays queued.
+Invalid configuration in either label format fails a private job, and the job's annotation says which key is wrong. Unrelated extra labels (for example, `self-hosted`) or multiple Ravion namespaces leave the job queued.
 
 ## Track cost and usage
 
