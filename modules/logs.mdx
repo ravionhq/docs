@@ -1,18 +1,18 @@
 ---
-title: "View and query module logs in CloudWatch"
+title: "View and query module logs"
 sidebarTitle: "Logs"
-description: "Stream and query CloudWatch logs for a Ravion module, including filtering, time ranges, and structured log fields from the dashboard."
+description: "Find a module's log sources, read application logs from the CLI or dashboard, and parse historical JSON or live JSON Lines output."
 "og:image": "https://www.ravion.com/og/docs/modules/logs.png"
 "twitter:image": "https://www.ravion.com/og/docs/modules/logs.png"
 ---
 
-Modules that emit logs have a **Logs tab** on their page in the dashboard. Logs are **queried live from CloudWatch in your AWS account** — Ravion never ingests or stores your log data.
+Modules that declare log sources have a **Logs tab** on their page in the dashboard. Ravion queries CloudWatch or in-cluster Loki, or links to an external log provider, depending on the module's configuration.
 
 From the Logs tab you can sort, filter, and select custom time ranges.
 
 ## Log sources
 
-Each entry in the Logs tab is a **log source**: a CloudWatch log group the module writes to, declared in the module's [definition](/concepts/modules). A module can have several sources — for example, [`rvn-aurora`](/module-definitions/catalog/rvn-aurora) shows one per enabled CloudWatch log export type (`postgresql` for PostgreSQL, or `audit`, `error`, `general`, and `slowquery` for MySQL).
+Each entry in the Logs tab is a **log source**, declared in the module's [definition](/concepts/modules). A module can have several sources — for example, [`rvn-aurora`](/module-definitions/catalog/rvn-aurora) shows one per enabled CloudWatch log export type (`postgresql` for PostgreSQL, or `audit`, `error`, `general`, and `slowquery` for MySQL).
 
 Where standard-library modules send their logs:
 
@@ -30,13 +30,60 @@ The Logs tab doesn't replace a dedicated log platform — it has no full-text in
 
 ## Querying logs from the CLI
 
-The [`ravion logs cloudwatch`](/cli/reference/logs) command queries any CloudWatch log group through Ravion's credential resolution — the same mechanism the dashboard uses — so scripts and agents don't need their own AWS credentials:
+With [CLI version 1.25.0 or later](/cli/installation), use the module ID rather than looking up AWS stream names. [Authenticate](/cli/authentication) with Ravion; you do not need separate AWS credentials.
+
+```bash
+ravion module log-sources <module-id>
+ravion module logs <module-id>
+ravion module logs <module-id> --tail
+```
+
+[`module log-sources`](/cli/reference/module) shows the resolved log configuration, including the CloudWatch log group and stream prefix. [`module logs`](/cli/reference/module) selects the module's only source automatically. If there are several, choose an ID from `log-sources`:
+
+```bash
+ravion module logs <module-id> --source <source-id>
+```
+
+CloudWatch and EKS Loki sources are queried through Ravion. For an external source, the command tells you where to read the logs instead. If the source is not ready, check the module's stack apply; values derived from stack outputs are unavailable until a successful apply.
+
+### Machine-readable logs
+
+Without `--tail`, `--json` returns **one JSON array of batches**. Each batch contains an `events` array and batch metadata. A successful response with no batches is `[]`; empty batches can also occur. Read every batch rather than assuming there is only one:
+
+```bash
+ravion module logs <module-id> --json > logs.json
+jq '.[].events[]' logs.json
+python -c 'import json; batches = json.load(open("logs.json")); print(sum(len(b["events"]) for b in batches))'
+```
+
+For streaming, use `--jsonl`: each line is a complete, compact JSON batch. Newlines within messages are escaped, so you can parse one line at a time.
+
+```bash
+ravion module logs <module-id> --tail --jsonl | jq --unbuffered '.events[]'
+```
+
+`--json` and `--jsonl` are mutually exclusive. `--tail --json` is rejected; use `--tail --jsonl` instead. These formats also apply to [`logs cloudwatch`, `logs eks-loki`, and `logs pipeline-step`](/cli/reference/logs). Check the command's exit status: a failed stream can leave incomplete JSON output.
+
+### Find the underlying stack outputs
+
+The module's resolved `ui.logs` is the source of truth for log retrieval. You can inspect it with `ravion module get <module-id> --json`. To inspect infrastructure outputs, get the module's `stackId` and run:
+
+```bash
+ravion stack get <stack-id> --json
+```
+
+[ECS service modules](/module-definitions/catalog/rvn-ecs-web) already expose `log_group_name`, `log_group_arn`, `log_stream_prefix`, and `region` in the stack's `output` object. Other module types may expose different outputs; use `module log-sources` rather than assuming an ECS prefix such as `app/`.
+
+### Query CloudWatch directly
+
+The lower-level [`ravion logs cloudwatch`](/cli/reference/logs) command remains useful when you already know the log group. It requires either `--log-stream-prefix` or `--log-stream-names`. Pass an empty prefix explicitly to read all streams in the group:
 
 ```bash
 ravion logs cloudwatch \
   --aws-account-id <awsact-id> \
   --region us-east-1 \
   --log-group-name /ravion/ec2/my-service \
+  --log-stream-prefix "" \
   --start-time 2026-08-07T00:00:00Z \
   --filter-pattern "ERROR" \
   --tail
@@ -51,6 +98,6 @@ ravion logs cloudwatch \
 
 ## For module authors
 
-Declare log sources in the `ui.logs` array of your module definition. Each entry has a stable `id`, a display `name`, and a CloudWatch `source` — AWS account, region, log group, and an optional log stream prefix and filter pattern. Every field is templateable, so sources typically reference stack outputs like the created log group name.
+Declare log sources in the `ui.logs` array of your module definition. Each entry has a stable `id`, a display `name`, and a typed `source`. For CloudWatch, provide the AWS account, region, and log group, plus an optional log stream prefix and filter pattern. Every field is templateable, so sources typically reference stack outputs like the created log group name. Expose the log group and stream prefix as stack outputs and reference those outputs in `ui.logs` so the dashboard and CLI use the same configuration.
 
 See [UILog](/module-definitions/definition-schema/ui#uilog) in the definition schema.
