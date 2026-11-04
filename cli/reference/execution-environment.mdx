@@ -78,6 +78,7 @@ ravion execution-environment create [flags]
 | `--security-group-id <string>` | yes | securityGroupId |
 | `--type <string>` | yes | type. Available values: AWS. |
 | `--vpc-id <string>` | yes | vpcId |
+| `--budget <string>` |  | Spending limit. Send null to remove it, or omit it on a patch to leave it as it is. |
 | `--json` |  | emit response as JSON |
 | `--sandboxes <{}>` |  | Sparse overrides for the sandbox defaults. Send \{\} to enable a pool that inherits global defaults, `null` to remove it, or omit it on a patch to leave the pool as it is. |
 | `--subnet-selection <vpcId>` |  | The VPC subnets EC2 runners and sandbox hosts launch into. Sandbox hosts launch into one per availability zone. Each EC2 runner launches into one of them, in a zone that offers its instance type, picked at random so runners spread across the zones; when AWS refuses the launch in that zone it retries in another zone of the selection. A selection the VPC has no subnet for, or naming a subnet outside it or one with no route to an internet or NAT gateway, is refused. Omit it on create for the VPC's public subnets, or its private ones when it has no public subnet. Omit it on a patch to keep the stored selection; a patch that changes vpcId without one resets it to that default for the new VPC, since its subnets belonged to the old VPC. Always present in a response: an environment saved before subnet selections existed shows the one its old subnet implies — its VPC's public subnets for a public subnet, its private ones for a private subnet. |
@@ -95,6 +96,21 @@ ravion execution-environment delete <id> [flags]
 | Flag | Required | Description |
 | --- | --- | --- |
 | `-y, --yes` |  | skip confirmation prompt |
+
+### `ravion execution-environment download-artifact`
+
+download-artifact saves a GitHub Actions artifact that a job on this execution environment's sandbox pool kept in S3. The job log lists each artifact's key.
+
+```bash
+ravion execution-environment download-artifact <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--key <string>` | yes | The artifact's key, as printed in the job log |
+| `--output <string>` |  | Where to save the artifact (default: &lt;name&gt;.zip) |
 
 ### `ravion execution-environment get`
 
@@ -188,6 +204,34 @@ ravion execution-environment list [flags]
 | `--limit <int>` |  | limit |
 | `-v, --verbose` |  | show full output |
 
+### `ravion execution-environment sandbox-host`
+
+Get sandbox host details
+
+```bash
+ravion execution-environment sandbox-host <id> <hostId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+### `ravion execution-environment sandbox-host-logs`
+
+Get sandbox host boot logs
+
+```bash
+ravion execution-environment sandbox-host-logs <id> <hostId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
 ### `ravion execution-environment sandbox-hosts`
 
 List sandbox pool hosts
@@ -246,6 +290,7 @@ ravion execution-environment update <id> [flags]
 
 | Flag | Required | Description |
 | --- | --- | --- |
+| `--budget <string>` |  | Spending limit. Send null to remove it, or omit it on a patch to leave it as it is. |
 | `--given-id <string>` |  | User-provided execution environment identifier. Must be unique within organization. |
 | `--json` |  | emit response as JSON |
 | `--name <string>` |  | name |
