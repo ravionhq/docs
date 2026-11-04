@@ -97,6 +97,21 @@ ravion execution-environment delete <id> [flags]
 | --- | --- | --- |
 | `-y, --yes` |  | skip confirmation prompt |
 
+### `ravion execution-environment download-artifact`
+
+download-artifact saves a GitHub Actions artifact that a job on this execution environment's sandbox pool kept in S3. The job log lists each artifact's key.
+
+```bash
+ravion execution-environment download-artifact <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--key <string>` | yes | The artifact's key, as printed in the job log |
+| `--output <string>` |  | Where to save the artifact (default: &lt;name&gt;.zip) |
+
 ### `ravion execution-environment get`
 
 Get ExecutionEnvironment by id
