@@ -118,15 +118,24 @@ Ravion creates a runner group named **Ravion** in your GitHub organization the f
 
 ## Labels
 
-A Ravion label starts with `ravion/` and is a list of `key=value` segments separated by `/`. It must be the job's only label, so don't combine it with `self-hosted` or other labels.
+A Ravion label is either one label that starts with `ravion/` and contains
+`key=value` segments separated by `/`, or a list with a bare `ravion` label and
+separate `key=value` labels. Keep the Ravion label or list as the job's only
+runner configuration; don't combine it with `self-hosted` or other labels.
 
-You can also write the same label as a list, with `ravion` first and each `key=value` segment as its own entry:
+You can also write the same label as a list. The order of the entries doesn't matter:
 
 ```yaml
-runs-on: [ravion, ee=github-actions, type=sandbox, cpu=4, memory=16, id="${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}"]
+runs-on:
+  - ravion
+  - ee=github-actions
+  - type=sandbox
+  - cpu=4
+  - memory=16
+  - "id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}"
 ```
 
-Both forms mean exactly the same thing, and the order of the entries doesn't matter. In the list form, labels without `=`, such as `self-hosted`, are ignored.
+Both forms mean exactly the same thing. Keep the `id` value unique for each concurrent job.
 
 ### Sandbox
 
