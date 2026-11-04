@@ -15,8 +15,8 @@ Ravion runs your GitHub Actions jobs on machines in your AWS account. Change a j
 
 ## Quick setup
 
-- Connect your GitHub organization and AWS account, then create a dedicated CI execution environment. See [Requirements](#requirements).
-- Use `type=sandbox` with `cpu=auto`, `memory=auto` and `disk=auto` for [automatic sizing](#automatic-sizing) (preview).
+- Connect your [GitHub organization](https://app.ravion.com/org/settings/git-connections) and [AWS account](https://app.ravion.com/org/settings/aws-accounts), then create a dedicated [CI execution environment](https://app.ravion.com/org/settings/execution-environments). See [Requirements](#requirements).
+- Use `type=sandbox` with `cpu=auto`, `memory=auto` and `disk=auto` for [automatic sizing](#automatic-sizing).
 - Add `interruptible=true` only to jobs that are safe to stop and rerun from the beginning. This allows Spot hosts; leave it off for jobs that publish, deploy or push.
 
 Copy this prompt into your coding agent in the repository containing your GitHub Actions workflows:
@@ -129,7 +129,7 @@ To avoid boot waits after quiet periods, keep hosts on hand with [sandbox settin
 
 ## Requirements
 
-- **GitHub App.** The Ravion GitHub App is installed on a GitHub **organization** and connected to your Ravion organization. Runners register at the organization level, so personal accounts aren't supported.
+- **GitHub App.** The Ravion GitHub App is installed on a GitHub **organization** and connected to your [Ravion organization](https://app.ravion.com/org/settings/git-connections). Runners register at the organization level, so personal accounts aren't supported.
 - **AWS account.** Your AWS account is connected in [**Settings / AWS accounts**](https://app.ravion.com/org/settings/aws-accounts). Sandboxes require AWS account role policy **1.0.52 or later**. See [Update your AWS permissions](/concepts/sandboxes#get-started).
 - **Execution environment.** Create one in that AWS account in [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments). Ravion doesn't create it for you. Set the label's required `ee` value to its given ID (for example, `ee=github-actions`) or unique ID (`ee=ee_…`). Both refer to an execution environment in your organization; a job whose `ee` doesn't match one fails. The first sandbox job sets up the environment's sandbox hosts, so there's nothing else to provision.
 
@@ -184,10 +184,6 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=4/memory=16/disk=60/interrupt
 Mark jobs that are safe to run twice as `interruptible=true`, such as tests, lint and builds. Leave it off for jobs that publish, deploy or push.
 
 ### Automatic sizing
-
-<Note>
-  Automatic sizing is in preview. [Contact support](/contact-support) to share feedback.
-</Note>
 
 Self-sizing jobs: stop guessing machine sizes.
 
