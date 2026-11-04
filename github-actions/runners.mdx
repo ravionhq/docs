@@ -147,7 +147,7 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=4/memory=16/disk=60/interrupt
 | --- | --- | --- | --- |
 | `ee` | Yes | None | Given ID or unique ID (`ee_…`) of the execution environment to run in. |
 | `type` | Yes | None | `sandbox`. |
-| `cpu` | Yes | None | vCPUs for the sandbox, or `auto`. See [Automatic sizing](#automatic-sizing). |
+| `cpu` | Yes | None | vCPUs for the sandbox (maximum 32 due to [Firecracker's per-sandbox limit](/concepts/sandboxes#limits-and-caveats)), or `auto`. See [Automatic sizing](#automatic-sizing). |
 | `memory` | Yes | None | Memory in GiB, or `auto`. |
 | `disk` | No | 10 GiB per vCPU, at least 14 GiB | GiB of host disk reserved for what the job writes, or `auto`. |
 | `disk_cache` | No | `auto` | Keep the job's disk between runs. See [Disk cache](/github-actions/caching#disk-cache). |
