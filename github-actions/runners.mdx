@@ -13,17 +13,42 @@ keywords: ["GitHub Actions runners", "self-sizing jobs", "automatic sizing"]
 
 Ravion runs your GitHub Actions jobs on machines in your AWS account. Change a job's `runs-on` to a Ravion label, and Ravion starts a fresh runner for that one job, in the execution environment the label names.
 
+## Quick setup
+
+- Connect your GitHub organization and AWS account, then create a dedicated CI execution environment. See [Requirements](#requirements).
+- Use `type=sandbox` with `cpu=auto`, `memory=auto` and `disk=auto` for [automatic sizing](#automatic-sizing) (preview).
+- Add `interruptible=true` only to jobs that are safe to stop and rerun from the beginning. This allows Spot hosts; leave it off for jobs that publish, deploy or push.
+
+Copy this prompt into your coding agent in the repository containing your GitHub Actions workflows:
+
+<Prompt description="Set up Ravion runners with automatic sizing and Spot where safe." icon="sparkles" actions={["copy", "cursor"]}>
+  Read https://www.ravion.com/docs/github-actions/runners.md and https://www.ravion.com/docs/github-actions/caching.md, then update this repository's GitHub Actions workflows to use Ravion runners. Inspect each job and the scripts it calls before making changes.
+
+- Confirm the prerequisites in the runner guide. Ask me for the dedicated CI execution environment's given ID or unique ID (ee_…) if it isn't already known; don't invent one or use a production environment.
+- Prefer type=sandbox with cpu=auto, memory=auto and disk=auto. Automatic sizing also works without interruptible=true.
+- Add interruptible=true only when the entire job is safe to stop and rerun from the beginning, such as tests, lint or builds without external side effects. Spot loss restarts the job, not just the interrupted step. Leave it off for publishing, deployments, migrations, pushing commits or tags, and any job whose retry safety is uncertain. Do not use type=ec2-spot as a shortcut.
+- Use the execution environment ID in ee. Use either one slash-separated ravion/ label or a runs-on list with a bare ravion entry and separate key=value entries. Do not add self-hosted or unrelated labels.
+- Give each job a unique id using the GitHub run ID, run attempt, a distinct job-specific name and matrix index. Follow the guide's Unique labels example, replacing its test name for each job; do not copy the same name into every job.
+- Keep disk_cache=auto (the default) for sandbox jobs unless the job requires a clean disk. Keep checkout and dependency installation steps: a warm cache is not guaranteed. Public-repository jobs have no disk cache; confirm Allow public repositories is enabled before migrating them.
+- Check OS, architecture and tool requirements. Leave Windows and macOS jobs unchanged. Flag ARM or whole-instance requirements rather than silently moving them to a sandbox; EC2 needs an explicit instance size, not sandbox auto-sizing labels. Install missing tools explicitly rather than assuming GitHub's hosted image toolset is available.
+- Preserve workflow triggers, permissions, secrets, matrices, dependencies and job behavior. Don't remove existing cache steps as part of this change without explaining why it is safe.
+- Validate the workflow YAML and show the diff, which jobs are interruptible and why, and any prerequisites or incompatible jobs that still need attention. Do not trigger workflows, deployments or other external changes without my approval.
+
+</Prompt>
+
+For example, a test job that is safe to rerun:
+
 ```yaml
 jobs:
   test:
-    runs-on: ravion/ee=github-actions/type=sandbox/cpu=4/memory=16/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
+    runs-on: ravion/ee=github-actions/type=sandbox/cpu=auto/memory=auto/disk=auto/interruptible=true/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
     steps:
       - uses: actions/checkout@v4
       - run: npm ci
       - run: npm test
 ```
 
-To make a job self-sizing (preview), set `cpu`, `memory` or `disk` to `auto`. See [Automatic sizing](#automatic-sizing).
+Replace `github-actions` with your execution environment's given ID or unique ID, and `test` in the label's `id` with a distinct name for each job. Keep the run ID, run attempt and matrix index expressions so concurrent jobs don't share a label. See [Unique labels](#unique-labels).
 
 <Tip>
   Use `type=sandbox` for your jobs. Sandboxes boot in seconds, keep the whole disk between runs, and pack many jobs onto each host. Use `type=ec2` only when a job needs ARM or a whole EC2 instance. Avoid `type=ec2-spot`: if AWS reclaims the instance, GitHub fails the job.
