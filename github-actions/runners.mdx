@@ -106,7 +106,7 @@ To avoid boot waits after quiet periods, keep hosts on hand with [sandbox settin
 
 - **GitHub App.** The Ravion GitHub App is installed on a GitHub **organization** and connected to your Ravion organization. Runners register at the organization level, so personal accounts aren't supported.
 - **AWS account.** Your AWS account is connected in [**Settings / AWS accounts**](https://app.ravion.com/org/settings/aws-accounts). Sandboxes require AWS account role policy **1.0.52 or later**. See [Update your AWS permissions](/concepts/sandboxes#get-started).
-- **Execution environment.** Create one in that AWS account in [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments). Ravion doesn't create it for you. Its given ID is the label's required `ee` value, and a job whose `ee` doesn't match an execution environment fails. The first sandbox job sets up the environment's sandbox hosts, so there's nothing else to provision.
+- **Execution environment.** Create one in that AWS account in [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments). Ravion doesn't create it for you. Set the label's required `ee` value to its given ID (for example, `ee=github-actions`) or unique ID (`ee=exenv_…`). Both refer to an execution environment in your organization; a job whose `ee` doesn't match one fails. The first sandbox job sets up the environment's sandbox hosts, so there's nothing else to provision.
 
 ### Use a dedicated execution environment
 
@@ -128,7 +128,7 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=4/memory=16/disk=60/interrupt
 
 | Key | Required | Default | What it does |
 | --- | --- | --- | --- |
-| `ee` | Yes | None | Given ID of the execution environment to run in. |
+| `ee` | Yes | None | Given ID or unique ID (`exenv_…`) of the execution environment to run in. |
 | `type` | Yes | None | `sandbox`. |
 | `cpu` | Yes | None | vCPUs for the sandbox, or `auto`. See [Automatic sizing](#automatic-sizing). |
 | `memory` | Yes | None | Memory in GiB, or `auto`. |
