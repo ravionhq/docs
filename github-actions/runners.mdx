@@ -178,7 +178,7 @@ runs-on: ravion/ee=github-actions/type=ec2/instance_size=c7i.2xlarge/disk=100/id
 
 | Key | Required | Default | What it does |
 | --- | --- | --- | --- |
-| `ee` | Yes | None | Given ID of the execution environment to run in. |
+| `ee` | Yes | None | Given ID or unique ID (`exenv_…`) of the execution environment to run in. |
 | `type` | Yes | None | `ec2` for On-Demand, or `ec2-spot` for Spot. |
 | `instance_size` | Yes | None | EC2 instance type. List several in order of preference with `+`, such as `c7i.2xlarge+c6i.2xlarge`. Don't mix x86_64 and ARM types. |
 | `disk` | No | None | Root volume size in GiB. |
