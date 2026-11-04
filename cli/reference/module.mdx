@@ -255,7 +255,7 @@ ravion module ec2-ami-status <id> [flags]
 
 ### `ravion module get`
 
-Get ModuleInstance by id
+Inspect resolved log sources with `ravion module log-sources &lt;module-instance-id&gt;` and stream them with `ravion module logs &lt;module-instance-id&gt;`. JSON output exposes `.stackId` and `.ui.logs`.
 
 ```bash
 ravion module get <id> [flags]
@@ -287,6 +287,41 @@ ravion module list [flags]
 | `--project-id <strings>` |  | Projects to list module instances for. Repeat the parameter to ask about several. |
 | `--stack-id <string>` |  | stackId |
 | `-v, --verbose` |  | show full output |
+
+### `ravion module log-sources`
+
+List the module's resolved log sources, including the actual CloudWatch log group and stream prefix. Use `ravion stack get &lt;stack-id&gt; --json` to inspect `.output.*`, and `ravion module get --json &lt;module-instance-id&gt;` to inspect `.stackId` and `.ui.logs`.
+
+```bash
+ravion module log-sources <module-instance-id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+### `ravion module logs`
+
+Stream the module's resolved CloudWatch or EKS Loki source. If there is more than one source, choose one with --source; use `ravion module log-sources &lt;module-instance-id&gt;` to discover IDs and resolved details. Use `ravion stack get &lt;stack-id&gt; --json` to inspect `.output.*`, and `ravion module get --json &lt;module-instance-id&gt;` to inspect `.stackId` and `.ui.logs`. Finite --json output is one JSON array of batches; --jsonl writes one compact batch per line. Use --jsonl with --tail.
+
+```bash
+ravion module logs <module-instance-id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--end-time <string>` |  | End time for historical logs (ISO 8601) |
+| `--filter-pattern <string>` |  | CloudWatch FilterPattern override |
+| `--json` |  | emit response as JSON |
+| `--jsonl` |  | Write one compact JSON batch per line (NDJSON) |
+| `--search <string>` |  | Case-sensitive Loki line search |
+| `--source <ravion module log-sources>` |  | Log source ID from ravion module log-sources |
+| `--start-time <string>` |  | Start time for historical logs (ISO 8601) |
+| `--tail` |  | Switch to live tail mode after historical logs |
 
 ### `ravion module schema`
 

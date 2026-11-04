@@ -10,11 +10,11 @@ description: "Query and stream logs for Ravion modules, deployments, and service
 
 ## `ravion logs`
 
-Query and stream logs
+Stream CloudWatch, EKS Loki, and pipeline-step logs. Finite --json output is one JSON array of batches; --jsonl writes one compact batch per line. Use --jsonl with --tail.
 
 ### `ravion logs cloudwatch`
 
-Stream CloudWatch logs
+Stream CloudWatch logs. For module-managed sources, discover the resolved stream prefix with `ravion module log-sources &lt;module-id&gt;`. Use --json for one finite JSON array of batches or --jsonl for one batch per line; --tail requires --jsonl.
 
 ```bash
 ravion logs cloudwatch [flags]
@@ -32,12 +32,13 @@ ravion logs cloudwatch [flags]
 | `--end-time <string>` |  | End time for historical logs (ISO 8601) |
 | `--filter-pattern <string>` |  | Optional CloudWatch FilterPattern |
 | `--json` |  | emit response as JSON |
+| `--jsonl` |  | Write one compact JSON batch per line (NDJSON) |
 | `--start-time <string>` |  | Start time for historical logs (ISO 8601) |
 | `--tail` |  | Switch to live tail mode after fetching historical logs |
 
 ### `ravion logs eks-loki`
 
-Stream in-cluster Loki logs through the Operator agent
+Stream in-cluster Loki logs through the Operator agent. Use --json for one finite JSON array of batches or --jsonl for one batch per line; --tail requires --jsonl.
 
 ```bash
 ravion logs eks-loki [flags]
@@ -51,13 +52,14 @@ ravion logs eks-loki [flags]
 | `--log-source-key <<moduleInstanceId>::<logSourceId>>` | one of | Composite &lt;moduleInstanceId&gt;::&lt;logSourceId&gt; key of the ui.logs source to tail. Mutually exclusive with --deployment-resource-id. |
 | `--end-time <string>` |  | Inclusive end of the historical phase (ISO 8601). Defaults to now. |
 | `--json` |  | emit response as JSON |
+| `--jsonl` |  | Write one compact JSON batch per line (NDJSON) |
 | `--search <string>` |  | Case-sensitive substring the line must contain, compiled to a LogQL line filter. A plain string rather than the structured filter tree because a recursive model cannot ride a query param on an SSE GET. |
 | `--start-time <string>` |  | Inclusive start of the historical phase (ISO 8601). Defaults to fifteen minutes before now. |
 | `--tail` |  | Continue into a live tail after the historical phase. |
 
 ### `ravion logs pipeline-step`
 
-Stream logs for a pipeline step execution
+Stream logs for a pipeline step execution. Use --json for one finite JSON array of batches or --jsonl for one batch per line; --tail requires --jsonl.
 
 ```bash
 ravion logs pipeline-step <step-execution-id> [flags]
@@ -70,6 +72,7 @@ ravion logs pipeline-step <step-execution-id> [flags]
 | `--end-time <string>` |  | End time for historical logs (ISO 8601) |
 | `--filter-pattern <string>` |  | Optional CloudWatch FilterPattern |
 | `--json` |  | emit response as JSON |
+| `--jsonl` |  | Write one compact JSON batch per line (NDJSON) |
 | `--start-time <string>` |  | Start time for historical logs (ISO 8601) |
 | `--tail` |  | Switch to live tail mode after fetching historical logs |
 
