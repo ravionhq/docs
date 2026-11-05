@@ -179,7 +179,7 @@ If the repository has a `.gitmodules` file at its root, Ravion checks out its [G
 
 Ravion clones submodules with the same credentials as the repository:
 
-- **Private submodules on GitHub** are cloned if the Ravion GitHub App can access the submodule's repository. Grant the app access to it the same way you did for the main repository.
+- **Private submodules on GitHub** are cloned if the Ravion GitHub App can access the repository the submodule points to. Grant the app access to it the same way you did for the main repository.
 - **Submodules in another GitHub organization or on another Git host** must be public, because Ravion's credentials only cover the repositories it is connected to.
 - **Use HTTPS or relative URLs** in `.gitmodules`, such as `https://github.com/my-org/shared-lib` or `../shared-lib`. Relative URLs resolve against the main repository's URL. Ravion has no SSH key, so SSH URLs such as `git@github.com:my-org/shared-lib.git` fail.
 
@@ -189,7 +189,7 @@ Ravion clones submodules with the same credentials as the repository:
   url = https://github.com/my-org/shared-lib
 ```
 
-If a submodule can't be cloned, the step continues: the step log shows git's error, and the submodule's directory stays empty. A later command that needs those files fails instead, so when a submodule's files are missing, check the step's **Source** phase in the log first.
+If a submodule can't be cloned, the step continues: the step log shows the error from Git, and the directory of that submodule stays empty. A later command that needs those files fails instead, so when files from a submodule are missing, check the step's **Source** phase in the log first.
 
 #### Publishing outputs
 
