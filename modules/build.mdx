@@ -34,6 +34,8 @@ You configure a module's build the same way you configure everything else about 
     health_check_path: /
 ```
 
+If the source repository has [Git submodules](/pipelines/step-types#git-submodules), the build checks them out too, so a Dockerfile can `COPY` files from a submodule.
+
 ## Running a build
 
 Add a `build` step to your pipeline and point it at the module instance:
