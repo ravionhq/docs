@@ -184,10 +184,11 @@ ravion pipeline run create [flags]
 
 #### `ravion pipeline run get`
 
-Read a single pipeline run.
+Read a single pipeline run and all of its step executions.
 
-This returns one snapshot. To follow a run to completion, use
-`ravion pipeline run wait &lt;id&gt; --watch` instead of calling this command in a loop.
+This returns one snapshot, including step execution history. To follow a run to
+completion, use `ravion pipeline run wait &lt;id&gt; --watch` instead of calling this
+command in a loop.
 
 ```bash
 ravion pipeline run get <id> [flags]
@@ -331,6 +332,10 @@ Wait for a pipeline run to finish, or to reach the status given by --until.
 
 Use this instead of polling `ravion pipeline run get` in a loop. With --watch the command
 prints run and step status changes as they happen, then exits when the run is done.
+
+For --until PENDING_APPROVAL, step events are monitored even without --watch. A pending
+approval step can satisfy this target while the run remains IN_PROGRESS. If main approval
+steps are already completed or skipped, the command prints the run and exits nonzero.
 
 ```bash
 ravion pipeline run wait <id> [flags]
