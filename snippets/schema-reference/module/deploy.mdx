@@ -293,6 +293,13 @@ its own image recipe from these components.
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="enhanced_image_metadata_enabled" type="boolean | null">
+  Image Builder's enhanced image metadata: after the build it inventories
+  the image's packages and OS details, a step of about a minute.
+
+  _(templateable)_
+</ResponseField>
+
 <ResponseField name="retention" type="AwsAmiRetentionConfig">
   How many images each region keeps. Every deploy applies the module's
   current retention, a redeploy or rollback included.
