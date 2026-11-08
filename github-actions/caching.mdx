@@ -62,7 +62,7 @@ C and C++ builds that use [ccache](https://ccache.dev) 4.4 or later share the sa
 
 [Gradle](https://docs.gradle.org/current/userguide/build_cache.html) builds that enable the build cache, with `--build-cache` or `org.gradle.caching=true`, share the same cache. Ravion adds it as the remote build cache unless your settings already configure one. Builds that don't enable the build cache are unchanged.
 
-[Turborepo](https://turborepo.com/docs/core-concepts/remote-caching) builds share the same cache without workflow changes. Ravion sets `TURBO_API` and `TURBO_TOKEN` for every sandbox job, so `turbo run` reports `Remote caching enabled` and replays task outputs that another job or a fresh disk already built, within the [build cache scope](#build-cache-scope). In `turbo.json`, declare every file a task creates in its `outputs`, because a cache hit restores only declared outputs. Also declare every environment variable that changes a task's result in its `env`, and any file outside the package in its `inputs`, because Turborepo leaves undeclared ones out of the cache key and could replay output built with different settings. A `TURBO_API`, `TURBO_TOKEN` or `TURBO_TEAM` set in your workflow still takes precedence, so a Vercel Remote Cache keeps working. To keep a job on its local cache only, run `turbo run --cache=local:rw`.
+[Turborepo](https://turborepo.com/docs/core-concepts/remote-caching) builds share the same cache without workflow changes. Ravion sets `TURBO_API` and `TURBO_TOKEN` for every sandbox job, so `turbo run` reports `Remote caching enabled` and replays task outputs that another job, another branch or a fresh disk already built, within the [build cache scope](#build-cache-scope). In `turbo.json`, declare every file a task creates in its `outputs`, because a cache hit restores only declared outputs. Also declare every environment variable that changes a task's result in its `env`, and any file outside the package in its `inputs`, because Turborepo leaves undeclared ones out of the cache key and could replay output built with different settings. A `TURBO_API`, `TURBO_TOKEN` or `TURBO_TEAM` set in your workflow still takes precedence, so a Vercel Remote Cache keeps working. To keep a job on its local cache only, run `turbo run --cache=local:rw`.
 
 [Bazel](https://bazel.build/remote/caching) builds share the same cache without workflow changes. The sandbox image includes Bazelisk as `bazel`, which runs the Bazel version in your `.bazelversion`, and Ravion adds the cache to every `bazel build`, `test`, `run` and `coverage`. Bazel still downloads every output, so later steps find the same files in `bazel-bin` as without a cache. Ravion leaves Bazel alone when your workspace already sets a remote cache or a remote executor, in `.bazelrc`, its imports, `~/.bazelrc` or on the command line. To turn it off for a job, set `RAVION_BAZEL_CACHE=off`.
 
@@ -72,18 +72,16 @@ If the cache is unreachable, these tools build without it. Nx remote caches aren
 
 Go, sccache, ccache, Gradle, Turborepo and Bazel share one build cache, scoped like the Actions cache:
 
-- A job reads outputs from its own branch, then the pull request's base branch, then the repository's default branch.
+- A job reads outputs from its own branch, then the pull request's base branch, then the repository's default branch. If all three miss, a job on a branch other than the default branch also reads outputs other branches uploaded recently. See [Shared build outputs between branches](#shared-build-outputs-between-branches).
 - A job writes outputs to its own branch. On the default branch, only trusted triggers such as `push`, `schedule` and `workflow_dispatch` write.
 - When a pull request merges, its branch's outputs become readable from the branch it merged into. Branches cut from it afterwards start warm.
 - `cache-mode` applies the same way it does to the Actions cache.
 
-By default, two open pull requests don't read each other's outputs. A pull request that rebuilds a package another open pull request just built pays for the full build.
+### Shared build outputs between branches
 
-### Share build outputs between branches
+Jobs on different branches of a repository reuse each other's build outputs. Two open pull requests that build the same packages share their results, without waiting for one of them to merge.
 
-You can let jobs on different branches of a repository reuse each other's build outputs. [Contact support](/contact-support) to turn this on for your organization. It's off by default.
-
-When it's on, a job on any branch other than the default branch looks up outputs in its own branch, the pull request's base branch and the default branch first. If all of them miss, it also reads outputs that other branches of the same repository uploaded recently. Two open pull requests that build the same packages then reuse each other's results.
+A job on any branch other than the default branch looks up outputs in its own branch, the pull request's base branch and the default branch first. Only if all of them miss does it also read outputs that other branches of the same repository uploaded recently.
 
 - Writes still go to the job's own branch, so merges work as before.
 - Jobs on the default branch never read other branches' outputs, so a pull request can't change what default-branch builds restore.
@@ -91,7 +89,7 @@ When it's on, a job on any branch other than the default branch looks up outputs
 - It applies to the build cache only. The Actions cache and disk cache stay scoped to the branch. Pipeline steps and public repositories aren't affected.
 - Pull requests from forks don't use it.
 
-Any branch can supply outputs that another branch's jobs restore. Before you turn it on, check that your build tools key outputs on everything that changes them. For Turborepo, that means complete `outputs`, `env` and `inputs` in `turbo.json`.
+Any branch can supply outputs that another branch's jobs restore, so check that your build tools key outputs on everything that changes them. For Turborepo, that means complete `outputs`, `env` and `inputs` in `turbo.json`. To keep each branch's outputs to itself, [contact support](/contact-support) to turn sharing off for your organization.
 
 Pipeline sandbox steps with a git source use the same cache for Go, Rust, Turborepo and Bazel builds; see [shared build cache for pipeline steps](/concepts/sandboxes#shared-build-cache-for-pipeline-steps).
 
