@@ -89,7 +89,7 @@ A job on any branch other than the default branch looks up outputs in its own br
 - It applies to the build cache only. The Actions cache and disk cache stay scoped to the branch. Pipeline steps and public repositories aren't affected.
 - Pull requests from forks don't use it.
 
-Any branch can supply outputs that another branch's jobs restore, so check that your build tools key outputs on everything that changes them. For Turborepo, that means complete `outputs`, `env` and `inputs` in `turbo.json`. To keep each branch's outputs to itself, [contact support](/contact-support) to turn sharing off for your organization.
+Any branch can supply outputs that another branch's jobs restore, so check that your build tools key outputs on everything that changes them. For Turborepo, that means complete `outputs`, `env` and `inputs` in `turbo.json`.
 
 Pipeline sandbox steps with a git source use the same cache for Go, Rust, Turborepo and Bazel builds; see [shared build cache for pipeline steps](/concepts/sandboxes#shared-build-cache-for-pipeline-steps).
 
