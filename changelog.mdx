@@ -38,6 +38,156 @@ rss: true
 {/* ravion-changelog:october-19-2026 */}
 {/* ravion-changelog:october-26-2026 */}
 {/* ravion-changelog:november-2-2026 */}
+{/* ravion-changelog:november-9-2026 */}
+<Update
+  label="November 9, 2026"
+  rss={{
+    title: "Faster dashboard loading, clearer pipeline graphs, safer stack retries, and module log commands",
+  }}
+>
+
+## Platform
+
+### Breaking changes
+
+- **Renamed sandbox performance profile field:** Update execution-environment API requests and CLI `--sandboxes` JSON to use `sandboxes.performanceProfile` instead of `sandboxes.optimization`.
+
+### Improvements
+
+- The dashboard now shows its navigation frame while loading and loads less startup code, reducing the wait for usable content on phones.
+- Pipeline run graphs now fold skipped steps and consecutive skipped stages into expandable stacks with step counts and clear skipped-stage titles.
+- Pipeline canvases now place disconnected steps after the known dependency flow, use tighter spacing between parallel cards, and position cards immediately so they stay aligned with their connections.
+- Large configuration and deployment-state diffs now highlight changed lines with surrounding context and let you expand the full document.
+- The modules sidebar now remembers whether you opened or collapsed it across projects, environments, and browser reloads.
+- Dashboard breadcrumbs now keep the organization name visible at every level, including while pages load.
+- Side drawers now overlay content on narrow screens instead of squeezing the adjacent list into a thin column.
+- Service-account and API-key settings now explain automation identities versus credentials and link directly to the other creation flow.
+- Stack resource pages now load only the history and resources needed for the current view, reducing unnecessary downloads for large stacks.
+- Kubernetes deployment details now show the release revision in the details table.
+- Automatic Kubernetes rollback history now identifies Ravion as the initiator and links separately to the restored deployment and the deployment that triggered recovery.
+- AWS account details now show current and pending IAM policy updates in a compact, expandable timeline.
+- Standard EC2 On-Demand and Spot quota requests now prefill at least 1,000 vCPUs or double larger current limits or peak usage, while retaining higher AWS recommendations.
+- AWS quota emails now explain when account limits prevent pipeline steps from getting compute capacity and use an orange warning headline.
+- GitHub rate-limit emails now separate the account label and emphasize the reset time for easier scanning.
+- Sandbox logs now show automatic sizing as a collapsible card with resource sizes, change reasons, recent peaks, and CPU floors.
+- Sandbox placement logs now retain the allocated CPU, memory, and disk after placement and show the larger allocation on an automatic retry.
+- Automatically sized interruptible [sandbox steps and module builds](https://www.ravion.com/docs/concepts/sandboxes) now use their measured CPU reservation floor when enough fresh measurements support it.
+- Automatic sandbox pools now consider larger hosts when an individual job cannot fit ordinary hosts, with guest sizes up to 32 vCPUs.
+- Balanced and High performance sandbox profiles now allow shared steps to book 95% and 85% of available host CPU respectively, after the system reserve.
+- Sandbox disk saves and restores now avoid redundant storage reads and batch related reads to reduce storage requests.
+- CloudFront distributions now switch to and from [Ravion-managed domains](https://www.ravion.com/docs/guides/custom-domains) in place.
+- The website's light theme now uses consistent panel, gridline, text, and hover colors.
+
+### Fixes
+
+- [Stack change and destroy runs](https://www.ravion.com/docs/modules/stack) now use 2 CPUs, 3 GiB of memory, and 20 GiB of disk for Terraform plan and apply, avoiding failures before Terraform starts.
+- Stack run history now appears independently of resource loading, and histories with more than 100 Terraform summaries paginate successfully.
+- Newly created module detail pages now retry their lookup before reporting that the module does not exist.
+- Retrying failed stack steps now prepares runs that failed before preparation while preserving successful work in runs that already executed steps.
+- Downstream pipelines and deploy steps now stay queued after an upstream stack failure, cancellation, timeout, or skip so a successful upstream retry can release them.
+- Dependency errors now link to the failed stack run or required module and explain how to resolve the prerequisite before retrying.
+- [Project configuration plans and applies](https://www.ravion.com/docs/config-as-code/project-config-file) now handle deferred module inputs consistently and avoid unnecessary dependency waits for immutable inputs on live stacks.
+- Template-resolution errors now identify the affected module, environment, and referenced value sources when available.
+- Pipeline validation now identifies missing required fields directly instead of reporting only a parent-shape error.
+- Pipeline environment variables now accept boolean and numeric whole-value [template results](https://www.ravion.com/docs/pipelines/config-reference/template-expressions) by converting them to strings.
+- Failed pipeline runs now open on the failed or timed-out step rather than a newer successful or cancelled sibling.
+- Pipeline and stack run durations now exclude time spent waiting for approval.
+- Pipeline step drawers now stay open while you switch runs and the next step loads.
+- Workflow editor search now preserves typed characters and caret position, and read-only workflows remain searchable without allowing edits.
+- Clicking radio-option text or its row now selects the option in the Run Pipeline dialog.
+- Clicking a diff's unchanged-lines separator or activating it with the keyboard now expands the hidden context.
+- Editing environment variables now keeps the configuration form's scroll position stable.
+- The AI assistant panel now stays within half the dashboard width so it cannot crowd out navigation when the window shrinks.
+- Stale dashboard tabs now recover when reopened, and route-loading indicators remain visible without displacing navigation.
+- Long-lived pipeline tabs now avoid accumulating step executions from unrelated runs, reducing browser memory growth.
+- Pipeline cards now truncate long subtitles and status notes with full-text tooltips instead of overflowing.
+- Rollback dialogs now preselect the deployment you are viewing when eligible, and Redeploy appears only on the module's newest deployment.
+- Deployment history now follows execution order, and the Kubernetes Live badge tracks the latest successful release rather than an older automatic rollback.
+- Kubernetes workload tables now follow the newest started rollout, refresh pod-only changes, and show startup failures only against the affected pods or workload.
+- Successful AWS quota increase requests now close the dialog and confirm submission without implying that AWS has approved the request.
+- Failed cache deletion now shows the full error and recovery action, including the link to upgrade AWS permissions when needed.
+- Cache-deletion confirmation dialogs now use their intended width instead of stretching across the screen.
+- Module and environment log viewers now show query failures instead of misleading empty results and offer a retry control.
+- Accepted GitHub webhook deliveries now survive service restarts so pending configuration and pipeline work is not lost.
+- [Terraform state](https://www.ravion.com/docs/modules/stack) locking, unlocking, uploads, and workspace creation now require write-capable credentials, while read-only credentials can still read existing workspaces.
+- Self-hosted GitLab connections now reject private-address destinations at connection time and through redirects.
+- Oversized JSON API requests now return a clear request-body-too-large error before processing.
+- Idle sandbox hosts now shut down when the pool controller stops progressing, while active work and deliberately retained capacity remain protected.
+- Sandbox host updates now let healthy steps finish instead of moving them, and startup recovery retries only after confirming that the previous execution stopped before running.
+- Sandbox placement now tries other eligible hosts when measured host memory is too low and grows the pool when no currently eligible host can take a step.
+- Sandbox hosts now preserve enough memory for host operations to avoid stalls that interrupt running steps.
+- Saving an execution environment's performance profile now recalculates automatic CPU and memory targets without waiting for another job to complete.
+- Memory-thrashing sandbox steps now report an out-of-memory failure instead of remaining stuck until their timeout.
+- Sandbox pool cleanup now avoids assigning steps to a host being terminated and leaves hosts that have begun enrollment alone.
+- Sandbox launch failures now retain eligible alternate subnets in the same Availability Zone and identify the exhausted AWS resource and location.
+- Sandbox placement now distinguishes host connection failures from ordinary capacity shortages and reports the affected instance and region.
+- Docker images created, loaded, imported, or tagged during a step now survive disk-cache publication cleanup.
+- Cached Docker builds now preserve consistent builder state and recover automatically from corrupt restored builder caches.
+- Sandbox disk caching now skips repeatedly failing, unproven cache heads so retries do not keep restoring the same broken state.
+- Sandbox restores after a guest-image change now prefetch the new image's needed data without warming the discarded image's filesystem.
+
+## AWS account IAM policy 1.0.65 → 1.0.68
+
+- **Secret and parameter access:** Ravion can now read only the Secrets Manager secrets it creates, no longer decrypts with customer KMS keys, and limits SSM reads to `/ravion/` and `/aws/service/`; move custom AMI parameters used by `resolve:ssm:` into one of those paths before updating permissions.
+- **Unused AWS permissions:** The policy now drops unused Auto Scaling, Application Auto Scaling, EC2, load balancer, IAM, Lambda, and SSM actions and no longer creates the Auto Scaling service-linked role.
+- **Launch template cleanup:** Ravion can now remove unused launch template versions.
+- **Unused service permissions:** The policy now removes unused SNS topic operations and resource tagging through the Resource Groups Tagging API.
+
+Update your AWS account connection in organization settings.
+
+## Modules
+
+### [alterNAT](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-alternat) [0.1.4](https://github.com/ravionhq/modules/releases/tag/rvn-aws-alternat%400.1.4) → [0.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-alternat%400.2.0)
+
+- Detect failing connectivity testers and failover hooks with Lambda error-rate alarms.
+
+### [AMI](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-ami) [0.3.2](https://github.com/ravionhq/modules/releases/tag/rvn-aws-ami%400.3.2) → [0.4.1](https://github.com/ravionhq/modules/releases/tag/rvn-aws-ami%400.4.1)
+
+- Choose a Parent image for an individual deployment instead of using the configured parent image.
+- Reject component documents longer than 16,000 characters during configuration validation rather than waiting for deployment planning.
+
+### [EKS Add-ons](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-addons) [1.0.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-addons%401.0.0) → [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-addons%401.2.0)
+
+- Keep Mimir store-gateways from consuming CPU on continuous garbage collection when their heap exceeds the memory request.
+- Delete Prometheus and Thanos volumes when removing those components.
+- Accept OTLP logs through the collector when Loki is the configured logs provider instead of returning a not-found response.
+
+### [EKS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-worker) [0.18.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-worker%400.18.0) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-worker%401.1.0)
+
+- Protect healthy pods during crashing rollouts by requiring new pods to remain ready for a minimum time and allowing HTTP health endpoints to gate rollout progress.
+
+### [Terraform Stack](https://www.ravion.com/docs/module-definitions/catalog/rvn-stack) [1.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-stack%401.4.0) → [1.4.1](https://github.com/ravionhq/modules/releases/tag/rvn-stack%401.4.1)
+
+- Show Git workflow settings after stack variables.
+
+## CLI [1.23.7](https://github.com/ravionhq/cli/releases/tag/v1.23.7) → [1.33.0](https://github.com/ravionhq/cli/releases/tag/v1.33.0)
+
+### Breaking changes
+
+- **Replaced log JSON framing:** Update log-output parsers to read one array of batches from finite `--json` commands and use `--jsonl` instead of `--tail --json` for streaming output.
+- **Changed approval-wait exit status:** Update scripts using `ravion pipeline run wait --until PENDING_APPROVAL` to handle a nonzero exit when approval steps have already completed or were skipped without a current pending approval.
+- **Changed missing-log-group exit status:** Update scripts using `ravion logs cloudwatch` or `ravion module logs` to handle a nonzero exit when the requested CloudWatch group does not exist in the selected region and account.
+
+### Features
+
+- **[Module log sources](https://www.ravion.com/docs/modules/logs):** Use `ravion module log-sources` to discover resolved log sources and `ravion module logs` to read a CloudWatch or EKS Loki source, selecting among multiple sources with `--source`.
+- **[JSON Lines logs](https://www.ravion.com/docs/cli/reference/logs):** Use `--jsonl` on log streaming commands to receive one compact batch per line.
+- **[Stack current state](https://www.ravion.com/docs/cli/reference/stack):** Use `ravion stack current-state` to read the live resource count and include the latest successful apply identifiers and timestamp with `--json` without downloading stack history.
+- **Terraform summary filtering:** Use `ravion terraform-execution-summary list --pipeline-run-ids` with `--stack-id` to fetch summaries for up to 50 specified runs per request.
+- **[Sandbox host details and boot logs](https://www.ravion.com/docs/cli/reference/execution-environment):** Use `ravion execution-environment sandbox-host` and `sandbox-host-logs` to inspect a host and its available boot output, including before it connects to Ravion.
+
+### Improvements
+
+- **[Pipeline run inspection](https://www.ravion.com/docs/cli/reference/pipeline):** `ravion pipeline run get` now includes every step execution in human-readable and JSON output.
+- **CloudWatch log tails:** `--tail` now warns once when a log group is missing and continues waiting for the group to appear.
+- **[Bug-report guidance](https://www.ravion.com/docs/cli/reference/bug):** Bug-report confirmations and help now explain that urgent issues also require contacting the Ravion support address because filing a report does not contact support.
+
+### Fixes
+
+- **Approval waits:** `ravion pipeline run wait --until PENDING_APPROVAL` now reports current pending approvals even while the run remains `IN_PROGRESS`.
+
+</Update>
+
 <Update
   label="November 2, 2026"
   rss={{
