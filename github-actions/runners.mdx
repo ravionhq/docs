@@ -255,6 +255,10 @@ jobs:
     runs-on: ravion/ee=github-actions/type=sandbox/cpu=4/memory=16/id=${{ github.run_id }}-${{ github.run_attempt }}-test-${{ strategy.job-index || 0 }}
 ```
 
+A rerun keeps the run ID, so the run attempt is what gives its jobs labels of their own. Keep it in every `id`.
+
+If two unfinished jobs share a label, Ravion fails both, and each job's annotation names the other job. Jobs from an earlier attempt of the same run don't count, because GitHub only reruns a run after all of its jobs have finished.
+
 ### Invalid labels
 
 Invalid configuration in either label format fails a private job, and the job's annotation says which key is wrong. Unrelated extra labels (for example, `self-hosted`) or multiple Ravion namespaces leave the job queued.
