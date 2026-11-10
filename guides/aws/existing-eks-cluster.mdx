@@ -1,0 +1,71 @@
+---
+title: "Connect an existing EKS cluster"
+sidebarTitle: "Existing EKS cluster"
+description: "Deploy Ravion web services, workers, Helm charts, and add-ons to an Amazon EKS cluster you already run, by creating an IAM role with a cluster access entry and entering the cluster's details manually."
+"og:image": "https://www.ravion.com/og/docs/guides/aws/existing-eks-cluster.png"
+"twitter:image": "https://www.ravion.com/og/docs/guides/aws/existing-eks-cluster.png"
+---
+
+You don't need [`rvn-eks-cluster`](/module-definitions/catalog/rvn-eks-cluster) to use Kubernetes with Ravion. [`rvn-eks-web`](/module-definitions/catalog/rvn-eks-web), [`rvn-eks-worker`](/module-definitions/catalog/rvn-eks-worker), [`rvn-eks-chart`](/module-definitions/catalog/rvn-eks-chart), and [`rvn-eks-addons`](/module-definitions/catalog/rvn-eks-addons) can deploy to an EKS cluster you already run. Instead of picking a Ravion cluster in the **Cluster** field, enter the cluster's details yourself.
+
+<Note>
+  Ravion doesn't manage the lifecycle of a cluster you bring. Control plane version upgrades and managed node groups stay with whoever manages the cluster today. To hand those over to Ravion, create a new cluster with [`rvn-eks-cluster`](/module-definitions/catalog/rvn-eks-cluster).
+</Note>
+
+## Prerequisites
+
+### An IAM role with an EKS access entry
+
+The Ravion deploy runner and Terraform assume an IAM role to get a token for the cluster's Kubernetes API. `rvn-eks-cluster` creates this role for clusters it manages. For a cluster you bring, create it yourself:
+
+1. Create an IAM role in the cluster's AWS account. `rvn-eks-cluster` names it `<cluster-name>-ravion-runner` and trusts the account, limited with an `aws:PrincipalArn` condition to the Ravion runner roles (`arn:aws:iam::<account-id>:role/rvn-ci/rvn-ci-*`).
+2. Give the role `eks:DescribeCluster` on the cluster. Getting a cluster token needs no other IAM permissions.
+3. Add an [EKS access entry](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html) for the role, and associate `AmazonEKSClusterAdminPolicy` with cluster scope. The cluster's authentication mode must allow access entries (`API` or `API_AND_CONFIG_MAP`).
+
+You enter this role's ARN as the **Ravion Runner role ARN**.
+
+### Networking for a private API endpoint
+
+The deploy runner runs inside your AWS account. If the cluster's API endpoint is private:
+
+- Choose a **Terraform execution environment** in the cluster's VPC.
+- Create a security group for the runner, and allow HTTPS (port 443) from it to the cluster security group. Enter it as the **Ravion Runner security group ID**.
+
+For a public endpoint, you can leave the runner security group blank.
+
+## Enter the cluster's details
+
+When you add an `rvn-eks-web`, `rvn-eks-worker`, `rvn-eks-chart`, or `rvn-eks-addons` module, open the **Cluster** field and choose **Enter values manually**. Then fill in:
+
+| Field | Value |
+| --- | --- |
+| **AWS account** and **Region** | The account and region the cluster runs in. |
+| **Terraform execution environment** | For a private endpoint, one in the cluster's VPC. |
+| **EKS cluster name** | The cluster's name. |
+| **Cluster ARN** | Ravion checks that the cluster name and region match this ARN on every deploy. |
+| **Cluster API endpoint** | The HTTPS endpoint of the Kubernetes API server. |
+| **Cluster certificate authority data** | The base64-encoded CA bundle from the cluster's details. |
+| **Ravion Runner role ARN** | The role from [the prerequisites](#an-iam-role-with-an-eks-access-entry). |
+| **Ravion Runner security group ID** | Needed for a private endpoint. |
+| **VPC ID** | The cluster's VPC. Workloads only. |
+
+You can get the endpoint and CA data with:
+
+```bash
+aws eks describe-cluster --name <cluster-name> \
+  --query 'cluster.{arn: arn, endpoint: endpoint, ca: certificateAuthority.data}'
+```
+
+`rvn-eks-addons` asks for the cluster name, runner role, and runner security group, plus these fields:
+
+- **Cluster security group ID**: used by Karpenter nodes and shared load balancers. Required when the default NodePool or any shared load balancer is enabled.
+- **Node subnet IDs**: where the default Karpenter NodePool launches nodes. Internal shared load balancers use them too.
+- **Public subnet IDs**: for internet-facing shared load balancers.
+
+## Operate the cluster with add-ons
+
+Add [`rvn-eks-addons`](/module-definitions/catalog/rvn-eks-addons) to an existing cluster to install Karpenter, External Secrets, KEDA, cert-manager, the AWS Load Balancer Controller, and logs, metrics, and traces.
+
+Leave **Ravion EKS Management** on to register the cluster with Ravion and install the Operator agent. The agent reports workloads, pods, Kubernetes events, and crash logs to the dashboard, and runs in-cluster deploys.
+
+After that, you deploy to the cluster the same way as to a cluster created with `rvn-eks-cluster`. See [Deploy](/modules/deploy).

@@ -31,7 +31,7 @@ ECS deploys also support `pre_deploy` and `post_deploy` hooks — one-off tasks 
 
 EC2 deploys roll out across the group with configurable concurrency and an error threshold that stops the rollout early. Instances launched later by autoscaling or instance replacement automatically run the active release so they catch up. See [`rvn-ec2-service`](/module-definitions/catalog/rvn-ec2-service).
 
-Kubernetes deploys target a cluster created with [`rvn-eks-cluster`](/module-definitions/catalog/rvn-eks-cluster). Use [`rvn-eks-web`](/module-definitions/catalog/rvn-eks-web) and [`rvn-eks-worker`](/module-definitions/catalog/rvn-eks-worker) to deploy from a Dockerfile, Railpack, or a registry image without writing manifests, or [`rvn-eks-chart`](/module-definitions/catalog/rvn-eks-chart) to install any Helm chart from an HTTP repo, an OCI registry, or Git. An optional in-cluster Operator agent reports workloads, pods, Kubernetes events, and crash logs to the dashboard.
+Kubernetes deploys target a cluster created with [`rvn-eks-cluster`](/module-definitions/catalog/rvn-eks-cluster) or [an EKS cluster you already run](/guides/aws/existing-eks-cluster). Use [`rvn-eks-web`](/module-definitions/catalog/rvn-eks-web) and [`rvn-eks-worker`](/module-definitions/catalog/rvn-eks-worker) to deploy from a Dockerfile, Railpack, or a registry image without writing manifests, or [`rvn-eks-chart`](/module-definitions/catalog/rvn-eks-chart) to install any Helm chart from an HTTP repo, an OCI registry, or Git. An optional in-cluster Operator agent reports workloads, pods, Kubernetes events, and crash logs to the dashboard.
 
 Deploys are locked per module instance, so concurrent triggers queue instead of colliding.
 
@@ -96,7 +96,13 @@ ravion deploy wait <deployment-id> --watch --timeout 30m
 
 - **Redeploy** (`ravion deploy redeploy <id>`) starts a new deploy with the same definition as a previous one.
 - **Cancel** (`ravion deploy cancel <id>`) stops an in-progress deploy; ECS traffic-shift deploys still in their rollback window are rolled back natively by ECS.
-- **Kubernetes workloads** can also be rolled back to an earlier Helm revision or restarted, from the dashboard or with `ravion deploy resource restart <id>` and `ravion deploy resource rollback <id> --revision <n>`.
+- **Kubernetes workloads** can also be rolled back to an earlier Helm revision or restarted, from the dashboard or the CLI. These commands take a deployment resource ID, not a deployment ID. Find it first:
+
+  ```bash
+  ravion deploy resource list --deployment-id <deployment-id>
+  ravion deploy resource rollback <deployment-resource-id> --revision <helm-revision>
+  ravion deploy resource restart <deployment-resource-id>
+  ```
 - **Continue** (`ravion deploy continue <id>`) resumes a deploy paused on a pause-stage hook.
 
 See the [`ravion deploy`](/cli/reference/deploy) CLI reference.
