@@ -49,7 +49,7 @@ You get a much more comprehensive and easy to understand view of the deployment 
 
 EC2 deployments work the same way: we update the existing instances in place over SSM — replacing a container or running your own deploy commands — and surface per-instance status and logs for every host in the group.
 
-Kubernetes deployments work the same way on [Amazon EKS](https://www.ravion.com/kubernetes): every deploy is a Helm release with live progress and automatic rollback if pods never become ready. Deploy web services and workers without writing manifests, or install any Helm chart. An optional in-cluster agent reports pods, Kubernetes events, and crash logs back to Ravion. See [`rvn-eks-cluster`](/module-definitions/catalog/rvn-eks-cluster), [`rvn-eks-web`](/module-definitions/catalog/rvn-eks-web), and [`rvn-eks-chart`](/module-definitions/catalog/rvn-eks-chart).
+Kubernetes deployments work the same way on [Amazon EKS](https://www.ravion.com/kubernetes), on a cluster Ravion creates or [one you already run](/guides/aws/existing-eks-cluster). Every deploy is a Helm release with live progress and automatic rollback if pods never become ready. Deploy web services and workers without writing manifests, or install any Helm chart. An optional in-cluster agent reports pods, Kubernetes events, and crash logs back to Ravion. See [`rvn-eks-cluster`](/module-definitions/catalog/rvn-eks-cluster), [`rvn-eks-web`](/module-definitions/catalog/rvn-eks-web), and [`rvn-eks-chart`](/module-definitions/catalog/rvn-eks-chart).
 
 ## 7. See all your infrastructure, builds, deploys, metrics, and logs in a single place
 
