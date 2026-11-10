@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000" role="img" aria-labelledby="title desc">
+<title id="title">A module is an abstraction layer between developers and Terraform</title>
+<desc id="desc">1. A developer fills in a short module form. 2. The module definition validates inputs, adds defaults, and maps them to Terraform variables. 3. Terraform plans and applies. 4. Resources are created in your AWS account, and outputs flow back to the module.</desc>
+<defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#BD4406"/></marker></defs>
+<rect width="1000" height="1000" rx="6" fill="#FFFAF6"/>
+<rect x="40" y="40" width="430" height="400" rx="6" fill="#FFFFFF" stroke="#EBD3C4" stroke-width="2"/>
+<circle cx="80" cy="80" r="15" fill="#FE6104"/>
+<text x="80" y="87" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+<text x="106" y="87" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#8A6552" text-anchor="start" letter-spacing="1.2">DEVELOPER CONFIGURES</text>
+<text x="66" y="136" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#2A1208" text-anchor="start">S3 Bucket</text>
+<text x="66" y="166" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="400" fill="#8A6552" text-anchor="start">rvn-s3 · v2.1.0</text>
+<text x="66" y="218" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="18" font-weight="600" fill="#8A6552" text-anchor="start">Bucket name</text>
+<rect x="66" y="230" width="378" height="46" rx="4" fill="#FFF6F0" stroke="#EBD3C4" stroke-width="1.5"/>
+<text x="82" y="261" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="400" fill="#2A1208" text-anchor="start">acme-prod-uploads</text>
+<text x="66" y="327" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="21" font-weight="500" fill="#2A1208" text-anchor="start">Versioning</text>
+<rect x="384" y="305" width="58" height="30" rx="15" fill="#FE6104"/>
+<circle cx="426" cy="320" r="11" fill="#FFFFFF"/>
+<text x="66" y="373" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="21" font-weight="500" fill="#2A1208" text-anchor="start">Block public access</text>
+<rect x="384" y="351" width="58" height="30" rx="15" fill="#FE6104"/>
+<circle cx="426" cy="366" r="11" fill="#FFFFFF"/>
+<text x="66" y="418" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="17" font-weight="400" fill="#8A6552" text-anchor="start">Dashboard · ravion.yaml · CLI · API · AI</text>
+<rect x="530" y="40" width="430" height="400" rx="6" fill="#FE6104" stroke="#BD4406" stroke-width="2"/>
+<circle cx="570" cy="80" r="15" fill="#FFFFFF"/>
+<text x="570" y="87" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#FE6104" text-anchor="middle">2</text>
+<text x="596" y="87" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#FFE3D2" text-anchor="start" letter-spacing="1.2">MODULE TRANSLATES</text>
+<text x="556" y="136" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#FFFFFF" text-anchor="start">Module definition</text>
+<text x="556" y="166" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="400" fill="#FFE3D2" text-anchor="start">rvn-s3-definition.yml</text>
+<rect x="552" y="186" width="386" height="48" rx="4" fill="#FFFFFF" fill-opacity="0.16" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="1.5"/>
+<text x="570" y="219" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="21" font-weight="700" fill="#FFFFFF" text-anchor="start">Validates inputs</text>
+<rect x="552" y="244" width="386" height="48" rx="4" fill="#FFFFFF" fill-opacity="0.16" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="1.5"/>
+<text x="570" y="277" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="21" font-weight="700" fill="#FFFFFF" text-anchor="start">Adds secure defaults</text>
+<rect x="552" y="302" width="386" height="76" rx="4" fill="#FFFFFF" fill-opacity="0.16" stroke="#FFFFFF" stroke-opacity="0.45" stroke-width="1.5"/>
+<text x="570" y="335" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="21" font-weight="700" fill="#FFFFFF" text-anchor="start">Maps inputs to Terraform</text>
+<text x="570" y="366" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="17" font-weight="400" fill="#FFFFFF" text-anchor="start">name: &lt;&lt; module.input.name &gt;&gt;</text>
+<text x="556" y="418" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="17" font-weight="400" fill="#FFE3D2" text-anchor="start">Owned by Ravion or your platform team</text>
+<rect x="530" y="560" width="430" height="400" rx="6" fill="#FFFFFF" stroke="#EBD3C4" stroke-width="2"/>
+<circle cx="570" cy="600" r="15" fill="#FE6104"/>
+<text x="570" y="607" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
+<text x="596" y="607" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#8A6552" text-anchor="start" letter-spacing="1.2">TERRAFORM PROVISIONS</text>
+<text x="556" y="656" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#2A1208" text-anchor="start">Terraform / OpenTofu</text>
+<text x="556" y="686" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="400" fill="#8A6552" text-anchor="start">storage/s3/*.tf</text>
+<text x="556" y="735" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="17" font-weight="400" fill="#5B2A10" text-anchor="start">variable &quot;name&quot; {}</text>
+<text x="556" y="763" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="17" font-weight="400" fill="#5B2A10" text-anchor="start">variable &quot;versioning_enabled&quot; {}</text>
+<text x="556" y="791" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="17" font-weight="400" fill="#5B2A10" text-anchor="start">resource &quot;aws_s3_bucket&quot; …</text>
+<text x="556" y="819" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="17" font-weight="400" fill="#8A6552" text-anchor="start"># …and many more</text>
+<rect x="556.0" y="838" width="182.0" height="72" rx="4" fill="#FBE9DE"/>
+<text x="647.0" y="876" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#FE6104" text-anchor="middle">18</text>
+<text x="647.0" y="900" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="16" font-weight="400" fill="#8A6552" text-anchor="middle">variables</text>
+<rect x="752.0" y="838" width="182.0" height="72" rx="4" fill="#FBE9DE"/>
+<text x="843.0" y="876" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#FE6104" text-anchor="middle">8</text>
+<text x="843.0" y="900" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="16" font-weight="400" fill="#8A6552" text-anchor="middle">resources</text>
+<text x="556" y="938" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="17" font-weight="400" fill="#8A6552" text-anchor="start">Plan → approve → apply in a pipeline</text>
+<rect x="40" y="560" width="430" height="400" rx="6" fill="#FFFFFF" stroke="#EBD3C4" stroke-width="2" stroke-dasharray="8 6"/>
+<circle cx="80" cy="600" r="15" fill="#FE6104"/>
+<text x="80" y="607" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#FFFFFF" text-anchor="middle">4</text>
+<text x="106" y="607" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#8A6552" text-anchor="start" letter-spacing="1.2">IN YOUR CLOUD</text>
+<text x="66" y="656" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#2A1208" text-anchor="start">AWS account</text>
+<text x="66" y="686" font-family="SFMono-Regular, Menlo, Consolas, monospace" font-size="18" font-weight="400" fill="#8A6552" text-anchor="start">acme-prod · us-east-1</text>
+<rect x="66.0" y="716" width="182.0" height="46" rx="4" fill="#FBE9DE"/>
+<rect x="66.0" y="716" width="5" height="46" fill="#FE6104"/>
+<text x="84.0" y="746" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="19" font-weight="500" fill="#2A1208" text-anchor="start">S3 bucket</text>
+<rect x="262.0" y="716" width="182.0" height="46" rx="4" fill="#FBE9DE"/>
+<rect x="262.0" y="716" width="5" height="46" fill="#FE6104"/>
+<text x="280.0" y="746" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="19" font-weight="500" fill="#2A1208" text-anchor="start">Versioning</text>
+<rect x="66.0" y="774" width="182.0" height="46" rx="4" fill="#FBE9DE"/>
+<rect x="66.0" y="774" width="5" height="46" fill="#FE6104"/>
+<text x="84.0" y="804" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="19" font-weight="500" fill="#2A1208" text-anchor="start">Encryption</text>
+<rect x="262.0" y="774" width="182.0" height="46" rx="4" fill="#FBE9DE"/>
+<rect x="262.0" y="774" width="5" height="46" fill="#FE6104"/>
+<text x="280.0" y="804" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="19" font-weight="500" fill="#2A1208" text-anchor="start">Access block</text>
+<rect x="66.0" y="832" width="182.0" height="46" rx="4" fill="#FBE9DE"/>
+<rect x="66.0" y="832" width="5" height="46" fill="#FE6104"/>
+<text x="84.0" y="862" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="19" font-weight="500" fill="#2A1208" text-anchor="start">Lifecycle rules</text>
+<rect x="262.0" y="832" width="182.0" height="46" rx="4" fill="#FBE9DE"/>
+<rect x="262.0" y="832" width="5" height="46" fill="#FE6104"/>
+<text x="280.0" y="862" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="19" font-weight="500" fill="#2A1208" text-anchor="start">Bucket policy</text>
+<text x="66" y="938" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="17" font-weight="400" fill="#8A6552" text-anchor="start">Runs in your account, not Ravion's</text>
+<line x1="476" y1="240.0" x2="522" y2="240.0" stroke="#BD4406" stroke-width="3.5" marker-end="url(#arr)"/>
+<text x="500.0" y="226.0" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#BD4406" text-anchor="middle">inputs</text>
+<line x1="745.0" y1="446" x2="745.0" y2="552" stroke="#BD4406" stroke-width="3.5" marker-end="url(#arr)"/>
+<text x="759.0" y="506.0" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#BD4406" text-anchor="start">Terraform variables</text>
+<line x1="524" y1="760.0" x2="478" y2="760.0" stroke="#BD4406" stroke-width="3.5" marker-end="url(#arr)"/>
+<text x="500.0" y="746.0" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="17" font-weight="700" fill="#BD4406" text-anchor="middle">apply</text>
+<line x1="255.0" y1="554" x2="255.0" y2="448" stroke="#BD4406" stroke-width="3.5" stroke-dasharray="9 7" marker-end="url(#arr)"/>
+<text x="269.0" y="506.0" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#BD4406" text-anchor="start">outputs: bucket name, ARN</text>
+</svg>

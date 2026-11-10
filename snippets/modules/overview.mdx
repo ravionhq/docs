@@ -1,5 +1,97 @@
 A module is the core primitive in Ravion for both tracking and managing your services and supporting infrastructure.
 
+## A module is an abstraction layer over Terraform
+
+Terraform is powerful, but most developers don't want to learn every variable, provider, and resource it takes to stand up a bucket, a database, or a web service. A module sits between the developer and Terraform. The developer fills in a few meaningful inputs. The module turns them into a complete, validated Terraform configuration and runs it in your cloud account.
+
+<Frame caption="How a module turns a short form into Terraform-managed resources, using the standard-library S3 bucket module as an example.">
+  <img className="block dark:hidden" src="/images/modules/module-abstraction-light.svg" alt="A four-step loop: 1. A developer fills in a short S3 Bucket form. 2. The module definition validates the inputs, adds secure defaults, and maps them to Terraform variables. 3. Terraform plans and applies 18 variables and 8 resources. 4. The resources are created in your AWS account, and outputs such as the bucket name and ARN flow back to the module." />
+  <img className="hidden dark:block" src="/images/modules/module-abstraction-dark.svg" alt="A four-step loop: 1. A developer fills in a short S3 Bucket form. 2. The module definition validates the inputs, adds secure defaults, and maps them to Terraform variables. 3. Terraform plans and applies 18 variables and 8 resources. 4. The resources are created in your AWS account, and outputs such as the bucket name and ARN flow back to the module." />
+</Frame>
+
+Here's what happens when someone creates an S3 bucket with the [`rvn-s3`](/module-definitions/catalog/rvn-s3) module:
+
+1. **The developer configures.** They pick **S3 Bucket** from the catalog and fill in a short form: a bucket name, versioning, and maybe a lifecycle rule. The same inputs work from the dashboard, the [project config file](/config-as-code/project-config-file), the CLI, the API, or an AI agent.
+2. **The module translates.** The module definition validates the inputs, fills in secure defaults (private, encrypted, versioned), and maps each input to a Terraform variable with a [template expression](/module-definitions/definition-schema/template-expressions) such as `<< module.input.name >>`.
+3. **Terraform provisions.** Ravion runs plan, approval, and apply against the module's Terraform code in a [stack](/modules/stack) change pipeline. For `rvn-s3`, that's 18 variables and 8 AWS resources the developer never has to write.
+4. **Resources land in your cloud account.** The stack's outputs, such as the bucket name and ARN, flow back to the module, where you see them and where [other modules can reference them](/modules/output-references).
+
+### What each layer looks like
+
+The same setting, versioning, appears at every layer. Each layer is written by a different person:
+
+<CodeGroup>
+
+```yaml ravion.yaml (developer)
+moduleInstances:
+  - givenId: uploads
+    name: Uploads bucket
+    type: rvn-s3
+    version: 2.1.0
+    input:
+      aws_account_id: acme-prod
+      aws_region: us-east-1
+      name: acme-prod-uploads
+      versioning_enabled: true
+```
+
+```yaml rvn-s3-definition.yml (module author)
+module:
+  inputs:
+    - id: versioning_enabled
+      label: Versioning
+      description: Keep multiple versions of objects in the bucket.
+      type: boolean
+      default: true
+  stack:
+    # Simplified: maps module inputs to Terraform variables
+    terraform_variables:
+      name: << module.input.name >>
+      versioning_enabled: << module.input.versioning_enabled >>
+```
+
+```hcl variables.tf (Terraform)
+variable "versioning_enabled" {
+  type        = bool
+  description = "Whether to enable versioning for the S3 bucket."
+  default     = true
+}
+
+resource "aws_s3_bucket_versioning" "this" {
+  # ...
+}
+```
+
+</CodeGroup>
+
+### Who works at which layer
+
+| Layer                 | Who works here                                                       | What they care about                                                    |
+| --------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **Module instance**   | Developers and AI agents                                             | "I need a private bucket for uploads." Inputs, status, outputs, logs.   |
+| **Module definition** | Your platform team, or Ravion for the [standard library](/module-definitions/standard-library) | Which inputs to expose, defaults, validation, and versioning.           |
+| **Terraform code**    | Your platform team, or Ravion for the standard library               | Providers, resources, and state.                                        |
+
+A developer only needs the first layer. A platform team can work at all three.
+
+### Why put a layer between developers and Terraform
+
+- **Self-service without Terraform expertise.** Developers create infrastructure from a form or a few lines of YAML. They don't need to know which eight resources make up a secure S3 bucket.
+- **Guardrails by default.** The module definition decides which inputs exist, what values are valid, and what the defaults are. Unsafe configurations are rejected before Terraform runs.
+- **One safe path for every change.** Every change runs through plan, approval, and apply in a pipeline. Nobody runs `terraform apply` from a laptop.
+- **Improve once, roll out everywhere.** Module definitions are versioned with semver. Fix or improve a module once, then upgrade each instance to the new version.
+- **More than infrastructure.** The same module also carries the build, deploy, logs, metrics, and links for the service it creates.
+
+### It's not a black box
+
+The abstraction hides Terraform from developers who don't need it, not from people who do:
+
+- Every module with a stack shows the full Terraform plan, the provisioned resources, and the state history. See [Stack](/modules/stack).
+- Standard-library modules include an **Advanced Terraform variables** input (`advanced_terraform_variables`) that overrides any generated Terraform variable for one-off cases.
+- You can [write your own module definitions](/module-definitions/definition-schema) around your own Terraform, or [run existing Terraform as-is](/migrate/existing-terraform-stack) with the [`rvn-stack`](/module-definitions/catalog/rvn-stack) module.
+
+## Module capabilities
+
 A module's definition determines which **capabilities** its instances have — a Terraform stack, build config, deploy manager, and so on:
 
 ```mermaid
