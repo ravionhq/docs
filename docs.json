@@ -11,13 +11,13 @@
   "fonts": {
     "body": {
       "family": "PP Neue Montreal",
-      "source": "/docs/fonts/PPNeueMontreal-Variable.woff2",
+      "source": "https://www.ravion.com/docs/fonts/PPNeueMontreal-Variable.woff2",
       "format": "woff2",
       "weight": 450
     },
     "heading": {
       "family": "PP Fragment",
-      "source": "/docs/fonts/PPFragment-GlareRegular.woff2",
+      "source": "https://www.ravion.com/docs/fonts/PPFragment-GlareRegular.woff2",
       "format": "woff2",
       "weight": 400
     }
@@ -123,7 +123,13 @@
                   "module-definitions/catalog/rvn-aws-network",
                   "module-definitions/catalog/rvn-aws-secret",
                   "module-definitions/catalog/rvn-aws-static",
-                  "module-definitions/catalog/rvn-cloudfront",
+                  {
+                    "group": "rvn-cloudfront",
+                    "root": "module-definitions/catalog/rvn-cloudfront",
+                    "pages": [
+                      "module-definitions/catalog/rvn-cloudfront/inputs"
+                    ]
+                  },
                   {
                     "group": "rvn-ec2-service",
                     "root": "module-definitions/catalog/rvn-ec2-service",
