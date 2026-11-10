@@ -48,10 +48,6 @@ rss: true
 
 ## Platform
 
-### Breaking changes
-
-- **Renamed sandbox performance profile field:** Update execution-environment API requests and CLI `--sandboxes` JSON to use `sandboxes.performanceProfile` instead of `sandboxes.optimization`.
-
 ### Improvements
 
 - The dashboard now shows its navigation frame while loading and loads less startup code, reducing the wait for usable content on phones.
@@ -80,7 +76,6 @@ rss: true
 
 ### Fixes
 
-- [Stack change and destroy runs](https://www.ravion.com/docs/modules/stack) now use 2 CPUs, 3 GiB of memory, and 20 GiB of disk for Terraform plan and apply, avoiding failures before Terraform starts.
 - Stack run history now appears independently of resource loading, and histories with more than 100 Terraform summaries paginate successfully.
 - Newly created module detail pages now retry their lookup before reporting that the module does not exist.
 - Retrying failed stack steps now prepares runs that failed before preparation while preserving successful work in runs that already executed steps.
@@ -152,7 +147,7 @@ Update your AWS account connection in organization settings.
 - Delete Prometheus and Thanos volumes when removing those components.
 - Accept OTLP logs through the collector when Loki is the configured logs provider instead of returning a not-found response.
 
-### [EKS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-worker) [0.18.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-worker%400.18.0) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-worker%401.1.0)
+### [EKS Worker](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-worker) [1.0.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-worker%401.0.0) → [1.1.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-worker%401.1.0)
 
 - Protect healthy pods during crashing rollouts by requiring new pods to remain ready for a minimum time and allowing HTTP health endpoints to gate rollout progress.
 
@@ -173,7 +168,7 @@ Update your AWS account connection in organization settings.
 - **[Module log sources](https://www.ravion.com/docs/modules/logs):** Use `ravion module log-sources` to discover resolved log sources and `ravion module logs` to read a CloudWatch or EKS Loki source, selecting among multiple sources with `--source`.
 - **[JSON Lines logs](https://www.ravion.com/docs/cli/reference/logs):** Use `--jsonl` on log streaming commands to receive one compact batch per line.
 - **[Stack current state](https://www.ravion.com/docs/cli/reference/stack):** Use `ravion stack current-state` to read the live resource count and include the latest successful apply identifiers and timestamp with `--json` without downloading stack history.
-- **Terraform summary filtering:** Use `ravion terraform-execution-summary list --pipeline-run-ids` with `--stack-id` to fetch summaries for up to 50 specified runs per request.
+- **Terraform summary filtering:** Use `ravion terraform execution-summary list --pipeline-run-ids` with `--stack-id` to fetch summaries for up to 50 specified runs per request.
 - **[Sandbox host details and boot logs](https://www.ravion.com/docs/cli/reference/execution-environment):** Use `ravion execution-environment sandbox-host` and `sandbox-host-logs` to inspect a host and its available boot output, including before it connects to Ravion.
 
 ### Improvements
