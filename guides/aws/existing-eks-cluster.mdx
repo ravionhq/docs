@@ -24,6 +24,15 @@ The Ravion deploy runner and Terraform assume an IAM role to get a token for the
 
 You enter this role's ARN as the **Ravion Runner role ARN**.
 
+### The EKS Pod Identity Agent
+
+The add-ons and the IAM roles of web services and workers get AWS credentials through [EKS Pod Identity](https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html). `rvn-eks-cluster` installs the `eks-pod-identity-agent` add-on. On a cluster you bring, check that it's installed, and install it if it isn't:
+
+```bash
+aws eks describe-addon --cluster-name <cluster-name> --addon-name eks-pod-identity-agent
+aws eks create-addon --cluster-name <cluster-name> --addon-name eks-pod-identity-agent
+```
+
 ### Networking for a private API endpoint
 
 The deploy runner runs inside your AWS account. If the cluster's API endpoint is private:
@@ -48,6 +57,7 @@ When you add an `rvn-eks-web`, `rvn-eks-worker`, `rvn-eks-chart`, or `rvn-eks-ad
 | **Ravion Runner role ARN** | The role from [the prerequisites](#an-iam-role-with-an-eks-access-entry). |
 | **Ravion Runner security group ID** | Needed for a private endpoint. |
 | **VPC ID** | The cluster's VPC. Workloads only. |
+| **Cluster private subnet IDs** | Web services and workers that target Fargate only. EKS Fargate doesn't support public subnets. |
 
 You can get the endpoint and CA data with:
 
@@ -55,6 +65,8 @@ You can get the endpoint and CA data with:
 aws eks describe-cluster --name <cluster-name> \
   --query 'cluster.{arn: arn, endpoint: endpoint, ca: certificateAuthority.data}'
 ```
+
+`rvn-eks-web` also requires an **EKS add-ons** reference, which supplies the shared load balancer listeners. Set up [`rvn-eks-addons`](#operate-the-cluster-with-add-ons) on the cluster first, then select it. In `rvn-eks-worker`, the add-ons reference is optional.
 
 `rvn-eks-addons` asks for the cluster name, runner role, and runner security group, plus these fields:
 
@@ -65,6 +77,8 @@ aws eks describe-cluster --name <cluster-name> \
 ## Operate the cluster with add-ons
 
 Add [`rvn-eks-addons`](/module-definitions/catalog/rvn-eks-addons) to an existing cluster to install Karpenter, External Secrets, KEDA, cert-manager, the AWS Load Balancer Controller, and logs, metrics, and traces.
+
+If the cluster already has a `gp3` StorageClass that `rvn-eks-addons` doesn't manage, turn off **Default gp3 storage class**. Otherwise the installation fails.
 
 Leave **Ravion EKS Management** on to register the cluster with Ravion and install the Operator agent. The agent reports workloads, pods, Kubernetes events, and crash logs to the dashboard, and runs in-cluster deploys.
 
