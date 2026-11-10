@@ -9,7 +9,7 @@ description: "Deploy Ravion web services, workers, Helm charts, and add-ons to a
 You don't need [`rvn-eks-cluster`](/module-definitions/catalog/rvn-eks-cluster) to use Kubernetes with Ravion. [`rvn-eks-web`](/module-definitions/catalog/rvn-eks-web), [`rvn-eks-worker`](/module-definitions/catalog/rvn-eks-worker), [`rvn-eks-chart`](/module-definitions/catalog/rvn-eks-chart), and [`rvn-eks-addons`](/module-definitions/catalog/rvn-eks-addons) can deploy to an EKS cluster you already run. Instead of picking a Ravion cluster in the **Cluster** field, enter the cluster's details yourself.
 
 <Note>
-  Ravion doesn't manage the lifecycle of a cluster you bring. Control plane version upgrades and managed node groups stay with whoever manages the cluster today. To hand those over to Ravion, create a new cluster with [`rvn-eks-cluster`](/module-definitions/catalog/rvn-eks-cluster).
+  Ravion doesn't manage the lifecycle of a cluster you connect this way. Control plane version upgrades and managed node groups stay with whoever manages the cluster today. To hand those over to Ravion, either create a new cluster with [`rvn-eks-cluster`](/module-definitions/catalog/rvn-eks-cluster), or [import the existing cluster](/migrate/import-into-standard-module) into an `rvn-eks-cluster` module's Terraform state. Importing adopts the cluster without recreating it, and you then select that module in the **Cluster** field instead of following this guide.
 </Note>
 
 ## Prerequisites
