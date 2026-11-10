@@ -11,13 +11,13 @@
   "fonts": {
     "body": {
       "family": "PP Neue Montreal",
-      "source": "/docs/fonts/PPNeueMontreal-Variable.woff2",
+      "source": "https://www.ravion.com/docs/fonts/PPNeueMontreal-Variable.woff2",
       "format": "woff2",
       "weight": 450
     },
     "heading": {
       "family": "PP Fragment",
-      "source": "/docs/fonts/PPFragment-GlareRegular.woff2",
+      "source": "https://www.ravion.com/docs/fonts/PPFragment-GlareRegular.woff2",
       "format": "woff2",
       "weight": 400
     }
