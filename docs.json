@@ -246,7 +246,7 @@
             "pages": [
               "guides/custom-domains",
               "guides/aws/multi-region",
-            "guides/aws/existing-eks-cluster",
+              "guides/aws/existing-eks-cluster",
               "guides/managing-secrets",
               "guides/database-migrations",
               "guides/puppeteer-on-ecs"
