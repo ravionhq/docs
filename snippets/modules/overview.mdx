@@ -23,16 +23,19 @@ The same setting, versioning, appears at every layer. Each layer is written by a
 <CodeGroup>
 
 ```yaml ravion.yaml (developer)
-moduleInstances:
-  - givenId: uploads
-    name: Uploads bucket
-    type: rvn-s3
-    version: 2.1.0
-    input:
-      aws_account_id: acme-prod
-      aws_region: us-east-1
-      name: acme-prod-uploads
-      versioning_enabled: true
+environments:
+  - givenId: production
+    name: Production
+    moduleInstances:
+      - givenId: uploads
+        name: Uploads bucket
+        type: rvn-s3
+        version: 2.1.0
+        input:
+          aws_account_id: acme-prod
+          aws_region: us-east-1
+          name: acme-prod-uploads
+          versioning_enabled: true
 ```
 
 ```yaml rvn-s3-definition.yml (module author)
@@ -44,10 +47,14 @@ module:
       type: boolean
       default: true
   stack:
-    # Simplified: maps module inputs to Terraform variables
-    terraform_variables:
-      name: << module.input.name >>
-      versioning_enabled: << module.input.versioning_enabled >>
+    type: opentofu
+    pipelines:
+      defaults:
+        input:
+          # Other pipeline inputs (repo, base_path, tool, ...) omitted
+          terraform_variables:
+            name: << module.input.name >>
+            versioning_enabled: << module.input.versioning_enabled >>
 ```
 
 ```hcl variables.tf (Terraform)
@@ -77,8 +84,8 @@ A developer only needs the first layer. A platform team can work at all three.
 ### Why put a layer between developers and Terraform
 
 - **Self-service without Terraform expertise.** Developers create infrastructure from a form or a few lines of YAML. They don't need to know which eight resources make up a secure S3 bucket.
-- **Guardrails by default.** The module definition decides which inputs exist, what values are valid, and what the defaults are. Unsafe configurations are rejected before Terraform runs.
-- **One safe path for every change.** Every change runs through plan, approval, and apply in a pipeline. Nobody runs `terraform apply` from a laptop.
+- **Guardrails you control.** The module definition decides which inputs exist, what values are valid, and what the defaults are. Inputs that fail the definition's validation rules are rejected before Terraform runs.
+- **One path for every change.** Every change runs through a stack pipeline that plans and applies Terraform, with approval following that pipeline's rules. Nobody needs to run `terraform apply` from a laptop.
 - **Improve once, roll out everywhere.** Module definitions are versioned with semver. Fix or improve a module once, then upgrade each instance to the new version.
 - **More than infrastructure.** The same module also carries the build, deploy, logs, metrics, and links for the service it creates.
 
@@ -87,8 +94,8 @@ A developer only needs the first layer. A platform team can work at all three.
 The abstraction hides Terraform from developers who don't need it, not from people who do:
 
 - Every module with a stack shows the full Terraform plan, the provisioned resources, and the state history. See [Stack](/modules/stack).
-- Standard-library modules include an **Advanced Terraform variables** input (`advanced_terraform_variables`) that overrides any generated Terraform variable for one-off cases.
-- You can [write your own module definitions](/module-definitions/definition-schema) around your own Terraform, or [run existing Terraform as-is](/migrate/existing-terraform-stack) with the [`rvn-stack`](/module-definitions/catalog/rvn-stack) module.
+- Most standard-library modules, including `rvn-s3`, include an **Advanced Terraform variables** input (`advanced_terraform_variables`) that overrides generated Terraform variables for one-off cases. [`rvn-stack`](/module-definitions/catalog/rvn-stack) is the exception: it takes Terraform variables directly through its `tf_variables` input.
+- You can [write your own module definitions](/module-definitions/definition-schema) around your own Terraform, or [run existing Terraform as-is](/migrate/existing-terraform-stack) with the `rvn-stack` module.
 
 ## Module capabilities
 
