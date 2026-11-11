@@ -186,7 +186,7 @@
                     "root": "module-definitions/catalog/rvn-eks-web",
                     "pages": [
                       "module-definitions/catalog/rvn-eks-web/inputs-eks-cluster",
-                      "module-definitions/catalog/rvn-eks-web/inputs-builder-config"
+                      "module-definitions/catalog/rvn-eks-web/inputs-alarms"
                     ]
                   },
                   {
@@ -507,6 +507,10 @@
     {
       "source": "/module-definitions/catalog/rvn-lambda/inputs-image-registry-lifecycle",
       "destination": "/module-definitions/catalog/rvn-lambda/inputs-builder-config"
+    },
+    {
+      "source": "/module-definitions/catalog/rvn-eks-web/inputs-builder-config",
+      "destination": "/module-definitions/catalog/rvn-eks-web/inputs-alarms"
     }
   ],
   "logo": {
