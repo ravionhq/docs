@@ -4,10 +4,29 @@ A module is the core primitive in Ravion for both tracking and managing your ser
 
 Terraform is powerful, but most developers don't want to learn every variable, provider, and resource it takes to stand up a bucket, a database, or a web service. A module sits between the developer and Terraform. The developer fills in a few meaningful inputs. The module turns them into a complete, validated Terraform configuration and runs it in your cloud account.
 
-<Frame caption="How a module turns a short form into Terraform-managed resources, using the standard-library S3 bucket module as an example.">
-  <img className="block dark:hidden" src="/images/modules/module-abstraction-light.svg" alt="A four-step loop: 1. A developer fills in a short S3 Bucket form. 2. The module definition validates the inputs, adds secure defaults, and maps them to Terraform variables. 3. Terraform plans and applies 18 variables and 8 resources. 4. The resources are created in your AWS account, and outputs such as the bucket name and ARN flow back to the module." />
-  <img className="hidden dark:block" src="/images/modules/module-abstraction-dark.svg" alt="A four-step loop: 1. A developer fills in a short S3 Bucket form. 2. The module definition validates the inputs, adds secure defaults, and maps them to Terraform variables. 3. Terraform plans and applies 18 variables and 8 resources. 4. The resources are created in your AWS account, and outputs such as the bucket name and ARN flow back to the module." />
-</Frame>
+```mermaid
+flowchart TB
+  Developer["Developer or AI agent"]
+  Module["Module: rvn-s3<br/>validates inputs, adds defaults"]
+  Terraform["Terraform<br/>18 variables, 8 resources"]
+
+  Resources["Your AWS account<br/>S3 bucket, policy, encryption, lifecycle rules"]
+
+  Developer -- inputs --> Module
+  Module -- Terraform variables --> Terraform
+  Terraform -- plan and apply --> Resources
+  Resources -. outputs .-> Module
+
+  class Developer source
+  class Module module
+  class Terraform store
+  class Resources cloud
+
+  classDef source fill:#F6DDCE,stroke:#FE6104,color:#2a1208
+  classDef module fill:#FE6104,stroke:#BD4406,color:#fff
+  classDef store fill:#23000A,stroke:#571D04,color:#FDDDC9
+  classDef cloud fill:#F6DDCE,stroke:#FE6104,color:#2a1208
+```
 
 Here's what happens when someone creates an S3 bucket with the [`rvn-s3`](/module-definitions/catalog/rvn-s3) module:
 
