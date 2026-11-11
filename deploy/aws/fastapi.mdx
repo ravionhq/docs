@@ -41,7 +41,7 @@ environments:
       - givenId: network
         name: Network
         type: rvn-aws-network
-        version: 1.0.0
+        version: 1.3.1
         input:
           aws_account_id: ravion-prod
           aws_region: us-east-1
@@ -49,7 +49,7 @@ environments:
       - givenId: cluster
         name: ECS cluster
         type: rvn-ecs-cluster
-        version: 1.0.0
+        version: 2.4.0
         input:
           network:
             moduleGivenIdRef: network
@@ -57,7 +57,7 @@ environments:
       - givenId: web
         name: FastAPI web service
         type: rvn-ecs-web
-        version: 1.0.0
+        version: 2.9.0
         input:
           cluster:
             moduleGivenIdRef: cluster
