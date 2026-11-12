@@ -269,7 +269,7 @@ Invalid configuration in either label format fails a private job, and the job's 
 
 ### Why Ravion gets more efficient at scale
 
-- **Sizes that fit the job.** A RunsOn job rounds up to the next EC2 size, so a job that needs 5 vCPU pays for 8. With [automatic sizing](#automatic-sizing), Ravion sizes each sandbox in whole vCPUs and 1 GiB of memory, so the job gets what it needs and no more.
+- **Sizes that fit the job.** A RunsOn job rounds up to the next EC2 size, so a job that needs 5 vCPU pays for 8. With [automatic sizing](#automatic-sizing), Ravion sizes each sandbox in whole vCPUs and 1 GiB of memory, rather than rounding up to an EC2 size. Jobs without `interruptible=true` keep extra memory and disk headroom.
 - **Slightly tighter fits.** Automatic sizing also gives a job a little less than its peak when tests show that doesn't noticeably slow it down.
 - **Shared reserved compute.** Most jobs don't hit their CPU peak at the same moment. Ravion lets jobs on the same host share their reserved compute when that doesn't affect their performance, so each host runs more work.
 - **Better packing with more jobs.** The more jobs that run at once, the more ways Ravion has to fill each host. Short jobs fill the gaps beside long ones, so fewer hosts sit partly empty.
