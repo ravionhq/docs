@@ -86,6 +86,7 @@
             "group": "GitHub Actions",
             "pages": [
               "github-actions/runners",
+              "github-actions/aws-credentials",
               "github-actions/caching"
             ]
           },
