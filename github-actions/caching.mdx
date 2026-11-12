@@ -27,13 +27,15 @@ On sandboxes, `disk_cache=auto` is the default. When a job ends, Ravion saves th
 | Value | What it does |
 | --- | --- |
 | `auto` | Keep this job's own disk, named by its repository, workflow and job. |
-| A key, such as `web-deps` | Share one disk across every job in the repository that uses the key. |
+| A key, such as `web-deps` | Share one disk across every job that uses the key, in any repository that runs on the same sandbox pool. |
 | `off` | Start from the base image every run. |
 
 - With `auto`, a run restores the disk saved for its branch. If there's none, it uses the pull request's base branch, then the repository's default branch. It saves to its own branch.
 - A run saves its disk when the job succeeds, or runs to its end and fails. A job that's canceled, loses its host, or writes past its `disk` limit saves nothing.
 - On the default branch, only runs from triggers GitHub trusts for caches, such as `push`, `schedule` and `workflow_dispatch`, save. Runs from `pull_request_target`, `issue_comment` or `workflow_run` only read.
-- A key shares one disk across branches, so only runs from those trusted triggers save to it, on any branch.
+- A key shares one disk across branches and repositories, so only default-branch runs from those trusted triggers save to it. Runs on other branches and tags only read it.
+- A run on a tag keeps its own disk, apart from any branch with the same name. It restores the default branch's disk when it has none.
+- A run whose commit Ravion can't place on its branch or tag, such as a run of a tag deleted before the job started, neither restores nor saves a disk.
 - A job with GitHub's `cache-mode: read` or `cache-mode: none` never saves its disk.
 - Pull requests from forks never restore or save a disk.
 
@@ -41,7 +43,7 @@ On sandboxes, `disk_cache=auto` is the default. When a job ends, Ravion saves th
 
 On sandboxes, `actions/cache` and actions that use the GitHub Actions cache API work without workflow changes. Ravion stores entries in the `actions-cache/` prefix of an S3 bucket in your account and keeps a hot copy on the host disk.
 
-Cache reads try the job's branch, then the pull request's base branch, then the repository's default branch. Writes go to the job's own branch. On the default branch, only trusted triggers such as `push`, `schedule` and `workflow_dispatch` can write; other events can read only. Existing keys aren't overwritten.
+Cache reads try the job's branch, then the pull request's base branch, then the repository's default branch. Writes go to the job's own branch. A run on a tag reads and writes the tag's own entries, apart from any branch with the same name, then reads the default branch's. On the default branch, only trusted triggers such as `push`, `schedule` and `workflow_dispatch` can write; other events can read only. Existing keys aren't overwritten.
 
 GitHub's `cache-mode` controls whether a job restores or saves entries:
 
@@ -72,7 +74,7 @@ If the cache is unreachable, these tools build without it. Nx remote caches aren
 
 Go, sccache, ccache, Gradle, Turborepo and Bazel share one build cache, scoped like the Actions cache:
 
-- A job reads outputs from its own branch, then the pull request's base branch, then the repository's default branch. If all three miss, a job on a branch other than the default branch also reads outputs other branches uploaded recently. See [Shared build outputs between branches](#shared-build-outputs-between-branches).
+- A job reads outputs from its own branch, then the pull request's base branch, then the repository's default branch. If all three miss, a `pull_request` or `push` job on a branch other than the default branch or a release branch also reads outputs other branches uploaded recently. See [Shared build outputs between branches](#shared-build-outputs-between-branches).
 - A job writes outputs to its own branch. On the default branch, only trusted triggers such as `push`, `schedule` and `workflow_dispatch` write.
 - When a pull request merges, its branch's outputs become readable from the branch it merged into. Branches cut from it afterwards start warm.
 - `cache-mode` applies the same way it does to the Actions cache.
@@ -81,10 +83,11 @@ Go, sccache, ccache, Gradle, Turborepo and Bazel share one build cache, scoped l
 
 Jobs on different branches of a repository reuse each other's build outputs. Two open pull requests that build the same packages share their results, without waiting for one of them to merge.
 
-A job on any branch other than the default branch looks up outputs in its own branch, the pull request's base branch and the default branch first. Only if all of them miss does it also read outputs that other branches of the same repository uploaded recently.
+A `pull_request` or `push` job on a branch other than the default branch looks up outputs in its own branch, the pull request's base branch and the default branch first. Only if all of them miss does it also read outputs that other branches of the same repository uploaded recently.
 
 - Writes still go to the job's own branch, so merges work as before.
 - Jobs on the default branch never read other branches' outputs, so a pull request can't change what default-branch builds restore.
+- Jobs that may publish never read them either: runs on tags, `release` events, branches named `release`, `releases/...`, `release/...` or `release-...`, and triggers other than `pull_request` and `push`, such as `workflow_dispatch`.
 - Only recent uploads are shared, so it helps most with work done in the last few hours.
 - It applies to the build cache only. The Actions cache and disk cache stay scoped to the branch. Pipeline steps and public repositories aren't affected.
 - Pull requests from forks don't use it.
