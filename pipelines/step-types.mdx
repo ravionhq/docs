@@ -344,7 +344,7 @@ When you use `replace` on a Terraform step, your policies must cover:
 
 Some access stays in place whichever form you use. On `ec2` and `ec2-spot` runners, the role always has `AmazonSSMManagedInstanceCore` and `CloudWatchAgentServerPolicy`, which Ravion uses to run the step and stream its logs. When a step reads environment variables from Secrets Manager, Ravion also grants `secretsmanager:GetSecretValue` on those secrets.
 
-On `sandbox` steps, the role's credentials are served at the instance metadata endpoint inside the sandbox. Docker containers the step starts on a bridge network can't reach that endpoint. See [AWS credentials in GitHub Actions jobs](/github-actions/aws-credentials#get-credentials-into-containers) for workarounds, which apply to sandbox steps too.
+On `sandbox` steps, the role's credentials are served at the instance metadata endpoint inside the sandbox, with the sandbox host's region. Docker containers the step starts on a bridge network reach that endpoint too. See [AWS credentials in GitHub Actions jobs](/github-actions/aws-credentials#docker-containers), which applies to sandbox steps as well.
 
 GitHub Actions jobs on Ravion sandboxes also run with a role of their own, which has no policies attached by default and doesn't use `infrastructure.permissions`. See [AWS credentials in GitHub Actions jobs](/github-actions/aws-credentials).
 

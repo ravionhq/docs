@@ -242,9 +242,7 @@ With the disk cache on, what you install usually stays for later runs. Only runs
 
 ### AWS credentials
 
-Each sandbox job gets its own IAM role, served at the standard instance metadata endpoint (`169.254.169.254`, IMDSv2 only). The AWS CLI and SDKs in `run` steps find it with no setup. Set `AWS_REGION` yourself, because the endpoint doesn't provide one.
-
-Docker containers in the job, including `services:` and `container:`, can't reach the endpoint, and their requests time out. See [AWS credentials](/github-actions/aws-credentials) for how to give containers credentials without printing them in the job log, and how to use GitHub OIDC.
+Each sandbox job gets its own IAM role, served at the standard instance metadata endpoint (`169.254.169.254`, IMDSv2 only) with the sandbox host's region. The AWS CLI and SDKs find it with no setup, in `run` steps and in the job's Docker containers, including `services:` and `container:`. SDKs that don't read the region from instance metadata, such as Ruby's and JavaScript's, still need `AWS_REGION`. See [AWS credentials](/github-actions/aws-credentials) for what containers can read and how to use GitHub OIDC.
 
 Docker isn't logged in to any registry when a job starts, and the job role has no IAM policies by default. To push images or Buildx caches to Amazon ECR, see [Amazon ECR](/github-actions/amazon-ecr).
 
