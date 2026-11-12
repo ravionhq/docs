@@ -244,6 +244,8 @@ Each sandbox job gets its own IAM role, served at the standard instance metadata
 
 Docker containers in the job, including `services:` and `container:`, can't reach the endpoint, and their requests time out. See [AWS credentials](/github-actions/aws-credentials) for how to give containers credentials without printing them in the job log, and how to use GitHub OIDC.
 
+Docker isn't logged in to any registry when a job starts, and the job role has no IAM policies by default. To push images or Buildx caches to Amazon ECR, see [Amazon ECR](/github-actions/amazon-ecr).
+
 <Note>
   Runners are in private preview. If a job hits a problem you can't explain — a tool that won't install, a missing kernel feature, or anything unexpected — [contact support](/contact-support).
 </Note>

@@ -87,6 +87,7 @@
             "pages": [
               "github-actions/runners",
               "github-actions/aws-credentials",
+              "github-actions/amazon-ecr",
               "github-actions/caching"
             ]
           },
