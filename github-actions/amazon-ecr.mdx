@@ -51,7 +51,16 @@ So get credentials with [GitHub OIDC](/github-actions/aws-credentials#use-github
 
 ## Push images and Buildx caches to ECR
 
-### 1. Create an IAM role for the workflow
+### 1. Create the ECR repositories
+
+ECR doesn't create a repository on first push, so the image push and the cache export fail if their repositories don't exist. The examples on this page use `app` for images and `app-cache` for the Buildx cache. Create them in the account and region you push to, or replace those names with repositories you already have:
+
+```bash
+aws ecr create-repository --repository-name app --region us-east-1
+aws ecr create-repository --repository-name app-cache --region us-east-1
+```
+
+### 2. Create an IAM role for the workflow
 
 Create an IAM role that trusts GitHub's OpenID Connect provider. GitHub's guide, [Configuring OpenID Connect in Amazon Web Services](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services), shows how to add the provider and the trust policy. Limit the trust policy's `sub` condition to the repositories, and if you like the branches or environments, that may push.
 
@@ -98,7 +107,7 @@ Attach a policy with these actions. `ecr:GetAuthorizationToken` doesn't support 
 
 A job that only reads a cache or pulls images needs `ecr:GetAuthorizationToken`, `ecr:BatchCheckLayerAvailability`, `ecr:BatchGetImage` and `ecr:GetDownloadUrlForLayer`.
 
-### 2. Log in and build
+### 3. Log in and build
 
 ```yaml
 permissions:
@@ -141,7 +150,7 @@ The runner pulls `services:` and `container:` images before any step runs, so th
 {/* P1 hook: when Ravion configures the ECR credential helper before each job, document here that pulls from the execution environment's own account and region work without a login step, and which IAM actions the job role then needs. */}
 
 <Note>
-  **Planned:** Ravion is working on logging Docker in to your execution environment's ECR registry before each job starts, so `services:` and `container:` images and `docker push` work without a login step. Until that ships, log in in the workflow as shown above.
+  **Planned:** Ravion is working on logging Docker in to your execution environment's ECR registry before each job starts, so `services:` and `container:` images and `docker push` work without a login step. Until that ships, log in from the workflow as shown above.
 </Note>
 
 ## Architecture

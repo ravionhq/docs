@@ -123,6 +123,7 @@ prerendered
 Prisma
 Dockerfiles
 BuildKit
+Buildx
 multi-stage
 host-build
 dockerignore
