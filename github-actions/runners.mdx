@@ -228,12 +228,14 @@ EC2 runners start a whole instance per job, boot Amazon Linux 2023, and have no 
 
 ### The runner image
 
-Sandbox jobs boot an x86_64 Ubuntu 24.04 image. It has the apt packages [GitHub's `ubuntu-24.04` runner image](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) installs, such as git and Git LFS, build-essential, Clang 18 (`clang-18`, `lld-18`, `lldb-18`, `clang-format-18` and `clang-tidy-18`), `zip`, `rsync`, `wget`, `brotli`, `sqlite3` and the PostgreSQL client. It also has GitHub CLI (`gh`), Node.js 24, Docker with Docker Compose, the AWS CLI, `jq`, `yq`, ccache, sccache and Bazelisk (as `bazel`). Like GitHub's images, `apt-get install` doesn't ask for confirmation. See [What runs inside a sandbox](/concepts/sandboxes#what-runs-inside-a-sandbox).
+Sandbox jobs boot an x86_64 Ubuntu 24.04 image with the apt packages [GitHub's `ubuntu-24.04` runner image](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) installs. These include build-essential, Clang 18 and the native build headers common gems, wheels and Node.js packages compile against, such as `zlib1g-dev`, `libssl-dev`, `libffi-dev`, `libyaml-dev`, `libpq-dev`, `libmysqlclient-dev`, `libxml2-dev` and `libreadline-dev`. It also has Node.js 24 with `npm` and Yarn 1, Go 1.26, Rust, Python 3.12, GitHub CLI (`gh`), Docker with Docker Compose, the AWS CLI, the PostgreSQL client, Google Chrome, `jq` and `yq`. Like GitHub's images, `apt-get install` doesn't ask for confirmation. See [What runs inside a sandbox](/concepts/sandboxes#what-runs-inside-a-sandbox) for the full list.
 
-The image is still much smaller than GitHub's hosted runner images. Their `ubuntu-latest` also comes with several versions each of Node.js, Python, Java, Go, Ruby and .NET, plus browsers, databases and cloud tools. The Ravion image doesn't. If a job needs something missing, install it natively in a `run` step:
+The image's Node.js 24 and Go 1.26 are in the Actions tool cache, so `actions/setup-node` and `actions/setup-go` asking for those versions use them without a download. Every other version starts out missing from the tool cache.
+
+The image is still much smaller than GitHub's hosted runner images. Their `ubuntu-latest` also comes with several versions each of Node.js, Python, Java, Go, Ruby and .NET, plus databases and cloud tools. The Ravion image has no Ruby, Java, .NET, PHP or `pnpm`. If a job needs something missing, install it natively in a `run` step:
 
 - System packages with `apt-get`, for example `apt-get update && apt-get install -y python3-pip`. Jobs run as root.
-- Language versions with the usual `setup-*` actions, such as `actions/setup-node`, `actions/setup-python` or `actions/setup-java`.
+- Language versions with the usual `setup-*` actions, such as `ruby/setup-ruby`, `actions/setup-java`, `actions/setup-python` or `pnpm/action-setup`.
 - Anything else by downloading its binary or installer.
 
 With the disk cache on, what you install usually stays for later runs. Only runs whose trigger can write the cache save their disk, so some jobs install on every run. See [Disk cache](/github-actions/caching#disk-cache).
