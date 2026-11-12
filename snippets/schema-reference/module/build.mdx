@@ -373,7 +373,7 @@ Spot EC2 instance infrastructure
 </ResponseField>
 
 <ResponseField name="permissions" type="Pipeline.AwsPermissions">
-  IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. EC2 runners always keep AmazonSSMManagedInstanceCore, CloudWatchAgentServerPolicy, and any inline policies Ravion adds (such as access to referenced secrets).
+  IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. Both EC2 runners and sandboxes always keep any inline policies Ravion adds (such as access to referenced secrets). EC2 runners also always keep AmazonSSMManagedInstanceCore and CloudWatchAgentServerPolicy. Sandbox steps get no baseline policies: their role has only the step defaults or listed policies plus those inline policies.
 
   See: [Pipeline.AwsPermissions](#pipeline-awspermissions)
 
@@ -448,7 +448,7 @@ On-demand EC2 instance infrastructure
 </ResponseField>
 
 <ResponseField name="permissions" type="Pipeline.AwsPermissions">
-  IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. EC2 runners always keep AmazonSSMManagedInstanceCore, CloudWatchAgentServerPolicy, and any inline policies Ravion adds (such as access to referenced secrets).
+  IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. Both EC2 runners and sandboxes always keep any inline policies Ravion adds (such as access to referenced secrets). EC2 runners also always keep AmazonSSMManagedInstanceCore and CloudWatchAgentServerPolicy. Sandbox steps get no baseline policies: their role has only the step defaults or listed policies plus those inline policies.
 
   See: [Pipeline.AwsPermissions](#pipeline-awspermissions)
 
@@ -526,7 +526,7 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
 </ResponseField>
 
 <ResponseField name="permissions" type="Pipeline.AwsPermissions">
-  IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. EC2 runners always keep AmazonSSMManagedInstanceCore, CloudWatchAgentServerPolicy, and any inline policies Ravion adds (such as access to referenced secrets).
+  IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. Both EC2 runners and sandboxes always keep any inline policies Ravion adds (such as access to referenced secrets). EC2 runners also always keep AmazonSSMManagedInstanceCore and CloudWatchAgentServerPolicy. Sandbox steps get no baseline policies: their role has only the step defaults or listed policies plus those inline policies.
 
   See: [Pipeline.AwsPermissions](#pipeline-awspermissions)
 
@@ -580,7 +580,9 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
   overlay plus everything the step builds before it is frozen. A host takes
   the sandbox only when it has this much free, and stops it if it writes
   more, failing the step with SandboxDiskExceeded, so a step that writes
-  more than the default must say so. `auto` lets Ravion size it from earlier
+  more than the default must say so. A step on any image but `ubuntu-24`
+  reserves the image's base beside this, so it stays what the step writes on
+  every image (see `image`). `auto` lets Ravion size it from earlier
   runs. Non-interruptible steps keep extra disk headroom and reduce disk only
   after representative measurements. They are not automatically retried.
 
@@ -631,6 +633,31 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
   _(templateable)_
 </ResponseField>
 
+<ResponseField name="image" type="enum">
+  Guest image the sandbox boots. `ubuntu-24` is Ravion's Ubuntu 24.04
+  image, on every sandbox host. `ubuntu-22` and `ubuntu-26` are Ravion's
+  Ubuntu 22.04 and 26.04 images, with Docker, Node.js 24, git, gh, the AWS
+  CLI and the GitHub Actions runner. `github-ubuntu-24` and
+  `github-ubuntu-26` are GitHub's Ubuntu 24.04 and 26.04 runner images, with
+  the tools a GitHub-hosted runner of the same release has. A step boots the
+  newest release of the image it names, so an image's updates reach the
+  step without a change to it. A pool reads every image but `ubuntu-24`
+  from Ravion's image buckets the first time a step boots it. A step keeps
+  a disk for each image it boots: the first run after a change of image
+  starts on a clean disk, and changing back restores the disk it kept on
+  that image.
+  A step on any image but `ubuntu-24` also reserves the image's base on
+  its host, beside its disk, because a sandbox can copy the whole image into
+  its disk. The step's placement shows both, such as
+  `60 GiB disk + 56 GiB image`. Every image but `ubuntu-24` is available
+  to organizations with guest images enabled; contact Ravion to have them
+  enabled.
+
+  Allowed values: `ubuntu-24` | `ubuntu-22` | `ubuntu-26` | `github-ubuntu-24` | `github-ubuntu-26`
+
+  _(templateable)_
+</ResponseField>
+
 <ResponseField name="execution_environment_overrides" type="Pipeline.ExecutionEnvironmentOverrides">
   Overrides for individual attributes of the resolved execution environment.
   A sandbox runs on a host of the environment's pool, so the host's network
@@ -670,8 +697,8 @@ Environment variable from AWS Secrets Manager
 
 ### Pipeline.AwsPermissions
 
-IAM policies configuration for runner roles
-Used by EC2-backed steps to specify additional permissions
+IAM policies configuration for the step's runner role
+Used by EC2 and sandbox steps to change the step's AWS permissions
 
 One of: [Pipeline.AwsPermissionsAttach](#pipeline-awspermissionsattach), [Pipeline.AwsPermissionsReplace](#pipeline-awspermissionsreplace).
 
@@ -750,6 +777,18 @@ Root volume storage configuration
 
   _(format:int32; templateable)_
 </ResponseField>
+
+### Pipeline.SandboxImage
+
+Guest image a sandbox microVM boots
+
+Allowed values:
+
+- `ubuntu-24`
+- `ubuntu-22`
+- `ubuntu-26`
+- `github-ubuntu-24`
+- `github-ubuntu-26`
 
 ### Pipeline.ParameterStoreReferenceValue
 
