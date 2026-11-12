@@ -27,14 +27,14 @@ On sandboxes, `disk_cache=auto` is the default. When a job ends, Ravion saves th
 | Value | What it does |
 | --- | --- |
 | `auto` | Keep this job's own disk, named by its repository, workflow and job. |
-| A key, such as `web-deps` | Share one disk across every job that uses the key, in any repository that runs on the same sandbox pool. |
+| A key, such as `web-deps` | Share one disk across every job in the repository that uses the key. |
 | `off` | Start from the base image every run. |
 
 - With `auto`, a run restores the disk saved for its branch. If there's none, it uses the pull request's base branch, then the repository's default branch. It saves to its own branch.
 - A run saves its disk when the job succeeds, or runs to its end and fails. A job that's canceled, loses its host, or writes past its `disk` limit saves nothing.
 - On the default branch, only runs from triggers GitHub trusts for caches, such as `push`, `schedule` and `workflow_dispatch`, save. Runs from `pull_request_target`, `issue_comment` or `workflow_run` only read.
-- A key shares one disk across branches and repositories, so only default-branch runs from those trusted triggers save to it. Runs on other branches and tags only read it.
-- A run on a tag keeps its own disk, apart from any branch with the same name. It restores the default branch's disk when it has none.
+- A key shares one disk across branches, so only default-branch runs from those trusted triggers save to it. Runs on other branches and tags only read it.
+- With `auto`, a run on a tag keeps its own disk, apart from any branch with the same name. It restores the default branch's disk when it has none.
 - A run whose commit Ravion can't place on its branch or tag, such as a run of a tag deleted before the job started, neither restores nor saves a disk.
 - A job with GitHub's `cache-mode: read` or `cache-mode: none` never saves its disk.
 - Pull requests from forks never restore or save a disk.
