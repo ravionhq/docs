@@ -2,7 +2,7 @@ A module is the core primitive in Ravion for both tracking and managing your ser
 
 ## A module is an abstraction layer over Terraform
 
-Terraform is powerful, but most developers don't want to learn every variable, provider, and resource it takes to stand up a bucket, a database, or a web service. A module sits between the developer and Terraform. The developer fills in a few meaningful inputs. The module turns them into a complete, validated Terraform configuration and runs it in your cloud account.
+Developers and AI agents shouldn't work with Terraform directly. It's too easy to misconfigure a resource, drift from your standards, or break production. Instead, they describe what they need in a simple YAML file or form. Ravion translates that into pre-vetted Terraform modules that your platform team controls, and runs them in your cloud account.
 
 ```mermaid
 flowchart TB
