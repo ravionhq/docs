@@ -240,6 +240,12 @@ The image is still much smaller than GitHub's hosted runner images. Their `ubunt
 
 With the disk cache on, what you install usually stays for later runs. Only runs whose trigger can write the cache save their disk, so some jobs install on every run. See [Disk cache](/github-actions/caching#disk-cache).
 
+### AWS credentials
+
+Each sandbox job gets its own IAM role, served at the standard instance metadata endpoint (`169.254.169.254`, IMDSv2 only). The AWS CLI and SDKs in `run` steps find it with no setup. Set `AWS_REGION` yourself, because the endpoint doesn't provide one.
+
+Docker containers in the job, including `services:` and `container:`, can't reach the endpoint, and their requests time out. See [AWS credentials](/github-actions/aws-credentials) for how to give containers credentials without printing them in the job log, and how to use GitHub OIDC.
+
 <Note>
   Runners are in private preview. If a job hits a problem you can't explain — a tool that won't install, a missing kernel feature, or anything unexpected — [contact support](/contact-support).
 </Note>
@@ -286,6 +292,9 @@ Each public repository gets its own runner group, and its jobs run without a dis
 ## Next steps
 
 <CardGroup cols={2}>
+  <Card title="AWS credentials" icon="key" href="/github-actions/aws-credentials">
+    The job's IAM role, Docker containers and GitHub OIDC.
+  </Card>
   <Card title="Caching" icon="database" href="/github-actions/caching">
     Disk cache, Actions cache and artifacts.
   </Card>
