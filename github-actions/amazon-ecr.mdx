@@ -1,0 +1,178 @@
+---
+title: "Push to Amazon ECR and use Docker registry caches in GitHub Actions jobs"
+sidebarTitle: "Amazon ECR"
+description: "Log in to Amazon ECR from a Ravion sandbox job with GitHub OIDC, push images, and use Docker Buildx registry caches. Includes the IAM actions to grant."
+keywords: ["Amazon ECR", "docker push", "buildx cache-to", "type=registry", "amazon-ecr-login", "configure-aws-credentials", "GitHub OIDC", "RunsOn ecr-cache"]
+"og:image": "https://www.ravion.com/og/docs/github-actions/amazon-ecr.png"
+"twitter:image": "https://www.ravion.com/og/docs/github-actions/amazon-ecr.png"
+---
+
+<Note>
+  GitHub Actions runners are in private preview. [Contact support](/contact-support) to request access.
+</Note>
+
+This page covers jobs that run on sandboxes (`type=sandbox`) and build or push Docker images. It explains which Docker build caches work without setup, and how to push images and Buildx caches to Amazon ECR.
+
+## What works without setup
+
+| Cache or registry | Works without setup | Notes |
+| --- | --- | --- |
+| Docker layers on the job's disk | Yes | The [disk cache](/github-actions/caching#disk-cache) keeps images, layers and Buildx state between runs. |
+| `cache-to: type=gha` / `cache-from: type=gha` | Yes | Served by Ravion's [Actions cache](/github-actions/caching#actions-cache), in S3 in your account. |
+| `cache-to: type=inline` | Yes | Stored in the image you push, so you still need to log in to that registry. |
+| `cache-to: type=registry` on Amazon ECR | No | Log in to ECR first, as below. |
+| `docker push` to Amazon ECR | No | Log in to ECR first, as below. |
+
+If you don't need to share the Docker cache outside GitHub Actions, use `type=gha`. It needs no AWS setup:
+
+```yaml
+- uses: docker/setup-buildx-action@v3
+- uses: docker/build-push-action@v6
+  with:
+    context: .
+    cache-from: type=gha,scope=app
+    cache-to: type=gha,scope=app,mode=max
+```
+
+## Why ECR needs setup
+
+Two things stand between a sandbox job and your ECR registries today:
+
+- **Docker isn't logged in to any registry** when the job starts. Ravion doesn't write a Docker login or credential helper for the job.
+- **The job's AWS role has no IAM policies.** Each sandbox job gets an IAM role served at the instance metadata endpoint, but that role has no policies attached by default, so `aws ecr get-login-password` and `aws-actions/amazon-ecr-login` return `AccessDenied` with it. See [AWS credentials](/github-actions/aws-credentials#how-sandbox-jobs-get-aws-credentials).
+
+So get credentials with [GitHub OIDC](/github-actions/aws-credentials#use-github-oidc), then log Docker in to ECR with [`aws-actions/amazon-ecr-login`](https://github.com/aws-actions/amazon-ecr-login). That's the same setup as on GitHub-hosted runners.
+
+{/* P0 hook: when execution environments can attach IAM policies to GitHub runner job roles, add a tab here that grants the policy below to the job role instead of an OIDC role. */}
+
+<Note>
+  **Planned:** Ravion is working on a way to attach IAM policies to the job role from the execution environment, so jobs won't need a separate OIDC role. Until that ships, use GitHub OIDC as shown on this page.
+</Note>
+
+## Push images and Buildx caches to ECR
+
+### 1. Create the ECR repositories
+
+ECR doesn't create a repository on first push, so the image push and the cache export fail if their repositories don't exist. The examples on this page use `app` for images and `app-cache` for the Buildx cache. Create them in the account and region you push to, or replace those names with repositories you already have:
+
+```bash
+aws ecr create-repository --repository-name app --region us-east-1
+aws ecr create-repository --repository-name app-cache --region us-east-1
+```
+
+### 2. Create an IAM role for the workflow
+
+Create an IAM role that trusts GitHub's OpenID Connect provider. GitHub's guide, [Configuring OpenID Connect in Amazon Web Services](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services), shows how to add the provider and the trust policy. Limit the trust policy's `sub` condition to the repositories, and if you like the branches or environments, that may push.
+
+Attach a policy with these actions. `ecr:GetAuthorizationToken` doesn't support resource-level permissions, so it needs `"Resource": "*"`. Scope the rest to the repositories the job pushes to and caches in:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EcrLogin",
+      "Effect": "Allow",
+      "Action": "ecr:GetAuthorizationToken",
+      "Resource": "*"
+    },
+    {
+      "Sid": "EcrPushAndCache",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+        "ecr:PutImage",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+      ],
+      "Resource": [
+        "arn:aws:ecr:us-east-1:123456789012:repository/app",
+        "arn:aws:ecr:us-east-1:123456789012:repository/app-cache"
+      ]
+    }
+  ]
+}
+```
+
+| Action | Used for |
+| --- | --- |
+| `ecr:GetAuthorizationToken` | Logging Docker in to the registry |
+| `ecr:BatchCheckLayerAvailability` | Skipping layers the repository already has |
+| `ecr:InitiateLayerUpload`, `ecr:UploadLayerPart`, `ecr:CompleteLayerUpload` | Uploading layers |
+| `ecr:PutImage` | Writing the image or cache manifest and tags |
+| `ecr:BatchGetImage`, `ecr:GetDownloadUrlForLayer` | Pulling base images and reading the registry cache (`cache-from`) |
+
+A job that only reads a cache or pulls images needs `ecr:GetAuthorizationToken`, `ecr:BatchCheckLayerAvailability`, `ecr:BatchGetImage` and `ecr:GetDownloadUrlForLayer`.
+
+### 3. Log in and build
+
+```yaml
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  image:
+    runs-on: ravion/ee=github-actions/type=sandbox/cpu=auto/memory=auto/disk=auto/id=${{ github.run_id }}-${{ github.run_attempt }}-image-${{ strategy.job-index || 0 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/ci-ecr-push
+          aws-region: us-east-1
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.ecr.outputs.registry }}/app:${{ github.sha }}
+          cache-from: type=registry,ref=${{ steps.ecr.outputs.registry }}/app-cache:main
+          cache-to: type=registry,ref=${{ steps.ecr.outputs.registry }}/app-cache:main,mode=max,image-manifest=true,oci-mediatypes=true
+```
+
+- `amazon-ecr-login` logs Docker in to your account's registry for the region in `aws-region`. Both `docker push` and Buildx use that login, including the `docker-container` builder that `setup-buildx-action` creates.
+- ECR stores Buildx cache manifests only with `image-manifest=true,oci-mediatypes=true` on `cache-to`.
+- Keep the cache in its own repository, or under a tag that no image uses, so lifecycle policies for images don't expire it unexpectedly.
+
+### Images for `services:` and `container:`
+
+The runner pulls `services:` and `container:` images before any step runs, so the login above doesn't apply to them. To use a private ECR image in those, start it with `docker run` or `docker compose` in a step after `amazon-ecr-login` instead. See [Run services with Docker Compose](/github-actions/aws-credentials#run-services-with-docker-compose).
+
+{/* P1 hook: when Ravion configures the ECR credential helper before each job, document here that pulls from the execution environment's own account and region work without a login step, and which IAM actions the job role then needs. */}
+
+<Note>
+  **Planned:** Ravion is working on logging Docker in to your execution environment's ECR registry before each job starts, so `services:` and `container:` images and `docker push` work without a login step. Until that ships, log in from the workflow as shown above.
+</Note>
+
+## Architecture
+
+Sandboxes are x86_64 only, so images built on a sandbox are `linux/amd64`. To build `linux/arm64` images, run that job on an EC2 runner with an ARM `instance_size`. See [EC2 labels](/github-actions/runners#ec2).
+
+## Moving from RunsOn
+
+RunsOn's `extras=ecr-cache` creates an ECR repository for Docker caches, sets `RUNS_ON_ECR_CACHE`, and logs Docker in to it. Ravion runners do none of these, so a ref built from `${{ env.RUNS_ON_ECR_CACHE }}` is empty. Either:
+
+- Switch the cache to `type=gha`. The migration preview does this for `cache-from` and `cache-to` inputs of `docker/build-push-action` that use `RUNS_ON_ECR_CACHE`, using the tag as the cache scope. It leaves jobs that use `RUNS_ON_ECR_CACHE` anywhere else, such as in a `run` script, on RunsOn.
+- Keep the ECR cache. Replace `${{ env.RUNS_ON_ECR_CACHE }}` with your repository URL and log in as in [Push images and Buildx caches to ECR](#push-images-and-buildx-caches-to-ecr).
+
+On RunsOn, the instance role usually supplies AWS credentials for `amazon-ecr-login` and ECR pushes. The migration preview lists jobs that use ECR without `aws-actions/configure-aws-credentials`, because they need the OIDC setup above on Ravion.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="AWS credentials" icon="key" href="/github-actions/aws-credentials">
+    The job role, containers and GitHub OIDC.
+  </Card>
+  <Card title="Caching" icon="database" href="/github-actions/caching">
+    Disk cache and Actions cache.
+  </Card>
+</CardGroup>

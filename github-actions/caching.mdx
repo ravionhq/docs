@@ -95,6 +95,22 @@ Pipeline sandbox steps with a git source use the same cache for Go, Rust, Turbor
 
 Public repositories get a separate cache per repository and can't read private caches. EC2 runners use GitHub's cache.
 
+## Docker build caches
+
+Docker layers and Buildx state on the job's disk come back with the [disk cache](#disk-cache), so repeat builds on the same branch are usually warm without any cache settings.
+
+To share a Buildx cache between branches or jobs, use `type=gha`. It goes through the [Actions cache](#actions-cache) and needs no credentials:
+
+```yaml
+- uses: docker/setup-buildx-action@v3
+- uses: docker/build-push-action@v6
+  with:
+    cache-from: type=gha,scope=app
+    cache-to: type=gha,scope=app,mode=max
+```
+
+`type=inline` also works, but it's stored in the image you push. A registry cache (`type=registry`), for example in Amazon ECR, needs a registry login first, because Docker isn't logged in to any registry when a job starts. See [Amazon ECR](/github-actions/amazon-ecr).
+
 ## Artifacts
 
 Artifacts work on all Ravion runners. Use `actions/upload-artifact` and `actions/download-artifact` as usual. GitHub stores the artifacts, and its retention and limits apply. Ravion stores nothing.
