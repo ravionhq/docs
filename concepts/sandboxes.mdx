@@ -187,12 +187,12 @@ Use `ec2` or `ec2-spot` [infrastructure](/pipelines/config-reference/step-infras
 Sandboxes boot an x86_64 Ubuntu 24.04 image. Like GitHub's images, `apt-get install` doesn't ask for confirmation. The image includes:
 
 - **Build tools:** build-essential (`gcc`, `g++`, `make`), `autoconf`, `automake`, `libtool`, `pkg-config`, Clang 18 (`clang`, `lld-18`, `lldb-18`, `clang-format` and `clang-tidy`), ccache, sccache and Bazelisk (as `bazel`).
-- **Native build headers**, so gems, wheels and Node.js addons with native extensions compile without an `apt-get install`: `zlib1g-dev`, `libssl-dev`, `libffi-dev`, `libyaml-dev`, `libreadline-dev`, `libpq-dev`, `libmysqlclient-dev`, `libsqlite3-dev`, `libxml2-dev`, `libxslt1-dev`, `libcurl4-openssl-dev`, `libicu-dev`, `libgmp-dev`, `libncurses-dev`, `libbz2-dev`, `liblzma-dev` and `libgdbm-dev`.
-- **Languages:** Node.js 24 with npm and Yarn 1, Go 1.26, Rust stable through rustup (with `cargo`, `clippy` and `rustfmt`), and Python 3.12 as `python` and `python3`.
-- **Tools:** git and Git LFS, GitHub CLI (`gh`), Docker with Buildx and Docker Compose, the AWS CLI, the PostgreSQL 16 client (`psql`), `sqlite3`, `jq`, `yq`, `shellcheck`, `zip`, `rsync`, `wget` and `brotli`.
+- **Native build headers**, so gems, wheels and Node.js packages with native extensions compile without an `apt-get install`: `zlib1g-dev`, `libssl-dev`, `libffi-dev`, `libyaml-dev`, `libreadline-dev`, `libpq-dev`, `libmysqlclient-dev`, `libsqlite3-dev`, `libxml2-dev`, `libxslt1-dev`, `libcurl4-openssl-dev`, `libicu-dev`, `libgmp-dev`, `libncurses-dev`, `libbz2-dev`, `liblzma-dev` and `libgdbm-dev`.
+- **Languages:** Node.js 24 with `npm` and Yarn 1, Go 1.26, Rust stable through `rustup` (with `cargo`, `clippy` and `rustfmt`), and Python 3.12 as `python` and `python3`.
+- **Tools:** git and Git LFS, GitHub CLI (`gh`), Docker with `buildx` and Docker Compose, the AWS CLI, the PostgreSQL 16 client (`psql`), `sqlite3`, `jq`, `yq`, `shellcheck`, `zip`, `rsync`, `wget` and `brotli`.
 - **Browsers:** Google Chrome and the system libraries Playwright's Chromium needs.
 
-The apt packages match those in [GitHub's `ubuntu-24.04` runner image](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md), but the image is much smaller. GitHub's `ubuntu-latest` also comes with several versions each of Node.js, Python, Java, Go, Ruby and .NET, plus databases and cloud tools. The sandbox image has no Ruby, Java, .NET, PHP or pnpm. If a step needs something missing, install it natively:
+The apt packages match those in [GitHub's `ubuntu-24.04` runner image](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md), but the image is much smaller. GitHub's `ubuntu-latest` also comes with several versions each of Node.js, Python, Java, Go, Ruby and .NET, plus databases and cloud tools. The sandbox image has no Ruby, Java, .NET, PHP or `pnpm`. If a step needs something missing, install it natively:
 
 - System packages with `apt-get`, for example `apt-get update && apt-get install -y python3-pip`. Steps run as root.
 - Language versions with the usual `setup-*` actions in GitHub Actions jobs, or with version managers and install scripts in pipeline steps.
