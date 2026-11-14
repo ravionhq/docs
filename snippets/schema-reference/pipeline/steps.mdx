@@ -100,7 +100,7 @@ Parallel step - executes children concurrently
 
 ### ApprovalStep
 
-Approval action step — pauses pipeline execution until a user explicitly approves. If timeout is omitted, the step waits indefinitely.
+Approval action step — pauses pipeline execution until a user explicitly approves. The step fails with APPROVAL_TIMEOUT after its timeout, or after 30 days when timeout is omitted or longer than 30 days.
 
 <ResponseField name="id" type="string" required>
   Unique step identifier, used for referencing in logs and dependencies
