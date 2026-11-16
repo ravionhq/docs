@@ -22,7 +22,7 @@ Ravion runs your GitHub Actions jobs on machines in your AWS account. Change a j
 Copy this prompt into your coding agent in the repository containing your GitHub Actions workflows:
 
 <Prompt description="Set up Ravion runners with automatic sizing and Spot where safe." icon="sparkles" actions={["copy", "cursor"]}>
-  Read https://www.ravion.com/docs/github-actions/migrate-workflows.md, https://www.ravion.com/docs/github-actions/runners.md and https://www.ravion.com/docs/github-actions/caching.md, then update this repository's GitHub Actions workflows to use Ravion runners. Follow the migration guide's checklist, which makes the same changes as Ravion's migration pull request, and use its migration preview when the Ravion CLI is signed in. Inspect each job and the scripts it calls before making changes.
+  Read https://www.ravion.com/docs/github-actions/migrate-workflows.md, https://www.ravion.com/docs/github-actions/runners.md and https://www.ravion.com/docs/github-actions/caching.md, then update this repository's GitHub Actions workflows to use Ravion runners. Follow the migration guide's checklist. Inspect each job and the scripts it calls before making changes.
 
 - Confirm the prerequisites in the runner guide. Ask me for the dedicated CI execution environment's given ID or unique ID (ee_…) if it isn't already known; don't invent one or use a production environment.
 - Prefer type=sandbox with cpu=auto, memory=auto and disk=auto. Automatic sizing also works without interruptible=true.
@@ -325,7 +325,7 @@ Each public repository gets its own runner group, and its jobs run without a dis
     The job's IAM role, Docker containers and GitHub OIDC.
   </Card>
   <Card title="Migrate workflows" icon="arrow-right-arrow-left" href="/github-actions/migrate-workflows">
-    Every change the migration pull request makes.
+    Every change to make when moving jobs.
   </Card>
   <Card title="Caching" icon="database" href="/github-actions/caching">
     Disk cache, Actions cache and artifacts.

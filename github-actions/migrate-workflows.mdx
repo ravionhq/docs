@@ -1,7 +1,7 @@
 ---
 title: "Migrate GitHub Actions workflows to Ravion runners"
 sidebarTitle: "Migrate workflows"
-description: "Every change Ravion's migration pull request makes when it moves GitHub Actions jobs to Ravion runners, so a coding agent or a person can make the same changes by hand."
+description: "Every change to make when you move GitHub Actions jobs to Ravion runners: labels, Spot, vendor actions, checkout, kept workspaces and AWS credentials. Written for coding agents."
 keywords: ["migrate GitHub Actions", "runs-on migration", "Blacksmith migration", "RunsOn migration", "Depot migration", "Namespace migration", "BuildJet migration", "coding agent"]
 "og:image": "https://www.ravion.com/og/docs/github-actions/migrate-workflows.png"
 "twitter:image": "https://www.ravion.com/og/docs/github-actions/migrate-workflows.png"
@@ -11,52 +11,18 @@ keywords: ["migrate GitHub Actions", "runs-on migration", "Blacksmith migration"
   GitHub Actions runners are in private preview. [Contact support](/contact-support) to request access.
 </Note>
 
-Ravion can open a migration pull request that moves a repository's GitHub Actions jobs to Ravion runners. This page lists every change that pull request makes, and every job it leaves alone, so you or a coding agent can make the same changes by hand and get the same result.
+Moving a job to Ravion runners takes more than a new `runs-on` label. This page lists every change to make, and every job to leave on its current runner, so you or a coding agent get jobs that use the disk cache, Spot hosts and automatic sizing safely.
 
 Copy this prompt into your coding agent in the repository containing your GitHub Actions workflows:
 
-<Prompt description="Migrate this repository's workflows the same way Ravion's migration pull request does." icon="sparkles" actions={["copy", "cursor"]}>
+<Prompt description="Move this repository's workflows to Ravion runners." icon="sparkles" actions={["copy", "cursor"]}>
   Read https://www.ravion.com/docs/github-actions/migrate-workflows.md and follow it to move this repository's GitHub Actions jobs to Ravion runners. Also read the pages it links to: runners.md, caching.md, aws-credentials.md and amazon-ecr.md under https://www.ravion.com/docs/github-actions/.
 
 - Ask me for the dedicated CI execution environment's ID if it isn't already known. Don't invent one or use a production environment.
-- Use the migration preview first if the Ravion CLI is signed in and this repository is connected through the Ravion GitHub App. Apply its diff, then work through its pull request description.
-- Otherwise, go through every job in .github/workflows with the checklist on that page, in order, and read the scripts each job calls before deciding.
+- Go through every job in .github/workflows with the checklist on that page, in order, and read the scripts each job calls before deciding.
 - Show me the diff, which jobs are interruptible and why, the jobs you left on their current runner and why, and the follow-ups you didn't make. Don't trigger workflows, deployments or other external changes without my approval.
 
 </Prompt>
-
-## Use the migration preview
-
-The migration preview runs the same code as the migration pull request, without opening one. Use it whenever you can: it's the only way to get exactly the same labels, the same interruptible decisions and the same edits.
-
-It needs a signed-in [Ravion CLI](/cli/overview), a repository connected through the Ravion GitHub App, and the unique ID (`ee_…`) of your CI execution environment.
-
-```bash
-# Find the CI execution environment's unique ID.
-ravion execution-environment list
-
-# Check the repository is one the migration can target.
-ravion execution-environment github-runner-migration-repositories ee_123
-
-# Start a preview of the repository's default branch. It returns a previewId.
-ravion execution-environment start-github-runner-migration-preview ee_123 --repositories acme/app --json
-
-# Fetch the result. Repeat every few seconds until status is completed or failed.
-ravion execution-environment github-runner-migration-preview ee_123 <previewId> --json
-```
-
-Each entry in `results` describes one repository:
-
-| Field | What it has |
-| --- | --- |
-| `diff` | A unified diff of `.github/workflows` against `baseSha`, the commit of the default branch the preview read. |
-| `decisions` | Each moved job's label, whether it's interruptible, and why. |
-| `skipped` | Each job left on its current runner, and why. |
-| `pullRequestBody` | The description the pull request would have, including follow-ups the preview can't make by editing YAML. |
-
-Apply the diff on a branch created from `baseSha`, for example with `git apply`. If the workflows on your branch have changed since, use the diff and `decisions` as the reference and make the same edits by hand. Then work through the follow-ups in `pullRequestBody`: [workspace reuse](#make-steps-work-on-a-kept-workspace), [Amazon ECR credentials](#give-amazon-ecr-jobs-aws-credentials) and [optional speedups](#report-optional-speedups).
-
-If you can't run the preview, follow the checklist below.
 
 ## Checklist
 
@@ -72,8 +38,8 @@ Leave these jobs on their current runner, and list them with the reason:
 - **ARM jobs that push container images.** A sandbox builds images for `linux/amd64`. Treat a job as pushing when it uses, for example, `docker push`, `docker buildx … --push`, `docker/build-push-action` with `push: true` or an expression, `ko`, `jib`, `crane`, `skopeo copy` or `redhat-actions/push-to-registry`. Also treat it as pushing when it logs in to a registry, or calls a `make`, `just`, `task` or package script target, a shell script or a local action whose name mentions pushing, or publishing or releasing an image. Move every other ARM job to a sandbox: tests and builds that don't ship an image run fine on x86_64. To keep a job on ARM, use an [EC2 label](/github-actions/runners#ec2) with an ARM `instance_size` instead.
 - **Jobs that call a reusable workflow** (`uses:` at the job level). Migrate the jobs inside the reusable workflow's own file instead.
 - **Jobs already on a Ravion label**, and jobs without `runs-on` or steps.
-- **Jobs that set up a vendor's remote Docker builder you can't safely remove.** See [Remove or swap vendor actions](#remove-or-swap-vendor-actions).
-- **Jobs that use RunsOn's `RUNS_ON_ECR_CACHE` anywhere except a Docker build's `cache-from` or `cache-to`.** See [Switch the RunsOn ECR cache](#switch-the-runson-ecr-cache-to-the-actions-cache).
+- **Jobs that set up a vendor's remote Docker builder you can't safely remove.** See [Remove vendor Docker builders safely](#remove-vendor-docker-builders-safely).
+- **Jobs that use RunsOn's `RUNS_ON_ECR_CACHE` anywhere except a Docker build's `cache-from` or `cache-to`.** See the RunsOn tab in [Make changes for your current runner](#make-changes-for-your-current-runner).
 
 Every other Linux job moves, whatever it runs on today: GitHub-hosted, Blacksmith, Depot, WarpBuild, Namespace, BuildJet, Ubicloud, RunsOn, Cirrus Runners or self-hosted.
 
@@ -107,51 +73,132 @@ Interruptible jobs can run on Spot hosts, and restart from the beginning if thei
 7. **Not interruptible** if you can't tell what the job does.
 8. **Interruptible** otherwise: it builds or checks code without changing anything outside the runner.
 
-### Remove or swap vendor actions
+### Make changes for your current runner
 
-Ravion runners serve the Actions cache, keep the disk between runs and come with Docker and Buildx, so vendor setup and cache actions aren't needed. In each moved job, change these steps:
+Ravion runners serve the Actions cache, keep the disk between runs and come with Docker and Buildx, so vendor setup and cache actions aren't needed. Pick the runner your jobs use today. Agents: apply every tab whose labels or actions appear in the repository.
 
-| Step `uses` | Change |
-| --- | --- |
-| `useblacksmith/cache`, `warpbuilds/cache`, `buildjet/cache`, `runs-on/cache`, `ubicloud/cache`, `cirruslabs/cache` | Swap for `actions/cache@v6`. Keep `path`, `key`, `restore-keys`, `upload-chunk-size`, `enableCrossOsArchive`, `fail-on-cache-miss`, `lookup-only` and `save-always`; drop other inputs. Keep a `/restore` or `/save` subpath. |
-| `useblacksmith/build-push-action`, `depot/build-push-action` | Swap for `docker/build-push-action@v7`. Drop inputs it doesn't accept, such as Depot's `project` and `token`. |
-| `depot/bake-action` | Swap for `docker/bake-action@v7`, dropping inputs it doesn't accept. |
-| `useblacksmith/setup-node`, `buildjet/setup-node` | Swap for `actions/setup-node@v7`, dropping inputs it doesn't accept. |
-| `useblacksmith/setup-go`, `buildjet/setup-go` | Swap for `actions/setup-go@v7`. |
-| `useblacksmith/setup-python`, `buildjet/setup-python` | Swap for `actions/setup-python@v7`. |
-| `buildjet/setup-java` | Swap for `actions/setup-java@v6`. |
-| `useblacksmith/rust-cache` | Swap for `Swatinem/rust-cache@v2`, dropping `cache-provider`. |
-| `namespacelabs/nscloud-checkout-action` | Swap for `actions/checkout@v7`, dropping inputs it doesn't accept. |
-| `useblacksmith/stickydisk`, `namespacelabs/nscloud-cache-action` | Remove. The [disk cache](/github-actions/caching#disk-cache) replaces them. |
-| `namespacelabs/nscloud-setup`, `runs-on/action` | Remove. |
-| `jlumbroso/free-disk-space`, `easimon/maximize-build-space`, `adityagarg8/remove-unwanted-software` | Remove, unless a later step reads the step's outputs. Automatic sizing gives the job the disk it needs. |
-| `useblacksmith/setup-docker-builder`, `depot/setup-action`, `depot/use-action`, `namespacelabs/nscloud-setup-buildx-action` | Remove, if it's safe as described below. The runner provides Docker and Buildx. |
+When a change below swaps an action, keep a `/restore` or `/save` subpath and drop any `with` inputs the replacement doesn't accept. Don't edit steps through a YAML anchor or alias: if a change would edit a shared step list or an anchored input, leave the job on its current runner.
 
-Remove vendor Docker builder setup only when all of these are true. Otherwise leave the whole job on its current runner and say why:
+<Tabs>
+  <Tab title="GitHub-hosted">
+    Labels: `ubuntu-latest`, `ubuntu-24.04`, `ubuntu-22.04`, `ubuntu-24.04-arm`, and GitHub larger runners for Linux.
 
-- The setup step has nothing but `name`, `uses` and `if`, plus an `id` no step reads. Under `with`, it has only `platforms` set to `linux/amd64` or empty, and these settings: Depot's `project`, `token` and `version`, or Blacksmith's `cache-key`, `buildx-version`, `buildkit-version`, `nofallback`, `github-token`, `skip-integrity-check`, `max-parallelism` and `max-cache-size-mb`. Namespace's builder setup can't have any other `with` inputs.
+    | Step `uses` | Change |
+    | --- | --- |
+    | `jlumbroso/free-disk-space`, `easimon/maximize-build-space`, `adityagarg8/remove-unwanted-software` | Remove, unless a later step reads the step's outputs. Automatic sizing gives the job the disk it needs. |
+
+    Leave `rm -rf` steps that clear hosted-runner tool folders such as `/usr/share/dotnet` or `/opt/hostedtoolcache`. They're harmless on a sandbox. Leave `macos-*` and `windows-*` jobs, and larger runners whose platform isn't Linux.
+  </Tab>
+
+  <Tab title="Blacksmith">
+    Labels: `blacksmith-<n>vcpu-ubuntu-<version>`, with `-arm` for ARM.
+
+    | Step `uses` | Change |
+    | --- | --- |
+    | `useblacksmith/cache` | Swap for `actions/cache@v6`. Keep `path`, `key`, `restore-keys`, `upload-chunk-size`, `enableCrossOsArchive`, `fail-on-cache-miss`, `lookup-only` and `save-always`. |
+    | `useblacksmith/build-push-action` | Swap for `docker/build-push-action@v7`. |
+    | `useblacksmith/setup-node` | Swap for `actions/setup-node@v7`. |
+    | `useblacksmith/setup-go` | Swap for `actions/setup-go@v7`. |
+    | `useblacksmith/setup-python` | Swap for `actions/setup-python@v7`. |
+    | `useblacksmith/rust-cache` | Swap for `Swatinem/rust-cache@v2`, dropping `cache-provider`. |
+    | `useblacksmith/stickydisk` | Remove. The [disk cache](/github-actions/caching#disk-cache) replaces it. |
+    | `useblacksmith/setup-docker-builder` | Remove, if [the builder can be removed safely](#remove-vendor-docker-builders-safely). Its `cache-key`, `buildx-version`, `buildkit-version`, `nofallback`, `github-token`, `skip-integrity-check`, `max-parallelism` and `max-cache-size-mb` inputs can go with it. |
+  </Tab>
+
+  <Tab title="Depot">
+    Labels: `depot-ubuntu-<version>`, with `-arm` for ARM and `-<n>` for the vCPU count.
+
+    | Step `uses` | Change |
+    | --- | --- |
+    | `depot/build-push-action` | Swap for `docker/build-push-action@v7`, dropping Depot's `project` and `token`. |
+    | `depot/bake-action` | Swap for `docker/bake-action@v7`, dropping inputs it doesn't accept. |
+    | `depot/setup-action`, `depot/use-action` | Remove, if [the builder can be removed safely](#remove-vendor-docker-builders-safely). Their `project`, `token` and `version` inputs can go with them. |
+
+    A job that also uses `depot/bake-action` keeps its builder setup, so leave it on Depot. So do jobs that export a Docker cache to `registry.depot.dev`, or run the `depot` CLI in a script.
+  </Tab>
+
+  <Tab title="Namespace">
+    Labels: `nscloud-ubuntu-<version>`, optionally with `-amd64` or `-arm64` and a `-<cpu>x<memory>` shape, and `namespace-profile-…`.
+
+    | Step `uses` | Change |
+    | --- | --- |
+    | `namespacelabs/nscloud-checkout-action` | Swap for `actions/checkout@v7`, dropping inputs it doesn't accept. |
+    | `namespacelabs/nscloud-cache-action` | Remove. The [disk cache](/github-actions/caching#disk-cache) replaces it. |
+    | `namespacelabs/nscloud-setup` | Remove. |
+    | `namespacelabs/nscloud-setup-buildx-action` | Remove, if it has no `with` inputs and [the builder can be removed safely](#remove-vendor-docker-builders-safely). |
+
+    Leave jobs that export a Docker cache to `nscr.io`, or run the `nsc` CLI in a script, on Namespace.
+  </Tab>
+
+  <Tab title="RunsOn">
+    Labels: `runs-on=${{ github.run_id }}/runner=…`, or a list with `runs-on` and separate settings such as `runner=`, `family=`, `cpu=`, `ram=` and `volume=`. Leave a job whose settings come from any other expression.
+
+    | Step `uses` | Change |
+    | --- | --- |
+    | `runs-on/cache` | Swap for `actions/cache@v6`. Keep `path`, `key`, `restore-keys`, `upload-chunk-size`, `enableCrossOsArchive`, `fail-on-cache-miss`, `lookup-only` and `save-always`. |
+    | `runs-on/action` | Remove. |
+
+    RunsOn's `extras=ecr-cache` sets `RUNS_ON_ECR_CACHE` and logs Docker in to it. Ravion runners do neither. In `cache-from` and `cache-to` of `docker/build-push-action`, or of a Blacksmith or Depot build action being swapped for it, rewrite each entry that uses it:
+
+    ```yaml
+    # Before
+    cache-from: type=registry,ref=${{ env.RUNS_ON_ECR_CACHE }}:app
+    cache-to: type=registry,ref=${{ env.RUNS_ON_ECR_CACHE }}:app,mode=max,image-manifest=true,oci-mediatypes=true
+
+    # After
+    cache-from: type=gha,scope=app
+    cache-to: type=gha,scope=app,mode=max
+    ```
+
+    Use the tag as `scope`, keep `mode` and `ignore-error`, and drop the registry-only `image-manifest`, `oci-mediatypes` and `compression` options. If the job uses `RUNS_ON_ECR_CACHE` anywhere else, or in an entry with other options, leave it on RunsOn. See [Moving from RunsOn](/github-actions/amazon-ecr#moving-from-runson).
+
+    RunsOn jobs usually get AWS credentials from the instance role. Check them against [Give Amazon ECR jobs AWS credentials](#give-amazon-ecr-jobs-aws-credentials) and [AWS credentials](/github-actions/aws-credentials#compared-with-other-runners).
+  </Tab>
+
+  <Tab title="BuildJet">
+    Labels: `buildjet-<n>vcpu-ubuntu-<version>`, with `-arm` for ARM.
+
+    | Step `uses` | Change |
+    | --- | --- |
+    | `buildjet/cache` | Swap for `actions/cache@v6`. Keep `path`, `key`, `restore-keys`, `upload-chunk-size`, `enableCrossOsArchive`, `fail-on-cache-miss`, `lookup-only` and `save-always`. |
+    | `buildjet/setup-node` | Swap for `actions/setup-node@v7`. |
+    | `buildjet/setup-go` | Swap for `actions/setup-go@v7`. |
+    | `buildjet/setup-python` | Swap for `actions/setup-python@v7`. |
+    | `buildjet/setup-java` | Swap for `actions/setup-java@v6`. |
+  </Tab>
+
+  <Tab title="WarpBuild">
+    Labels: `warp-ubuntu-<version>-x64-<n>x` or `warp-ubuntu-<version>-arm64-<n>x`.
+
+    | Step `uses` | Change |
+    | --- | --- |
+    | `warpbuilds/cache` | Swap for `actions/cache@v6`. Keep `path`, `key`, `restore-keys`, `upload-chunk-size`, `enableCrossOsArchive`, `fail-on-cache-miss`, `lookup-only` and `save-always`. |
+  </Tab>
+
+  <Tab title="Ubicloud and Cirrus">
+    Labels: `ubicloud`, `ubicloud-standard-<n>` or `ubicloud-premium-<n>`, with `-arm` for ARM, and `ghcr.io/cirruslabs/ubuntu-runner-amd64:<version>` or `-arm64`, with an optional `-xs` to `-xl` size. Leave `ubicloud-gpu…` and Cirrus GPU runners.
+
+    | Step `uses` | Change |
+    | --- | --- |
+    | `ubicloud/cache`, `cirruslabs/cache` | Swap for `actions/cache@v6`. Keep `path`, `key`, `restore-keys`, `upload-chunk-size`, `enableCrossOsArchive`, `fail-on-cache-miss`, `lookup-only` and `save-always`. |
+  </Tab>
+
+  <Tab title="Self-hosted">
+    Labels: `self-hosted`, alone or with other labels. Treat the job as Linux x64 unless a label names macOS, Windows, a GPU or ARM.
+
+    Self-hosted machines often have tools, credentials or network access that a sandbox doesn't. Read each job's steps and the scripts they call, and list what it relied on: preinstalled tools to install in a step, an instance role to replace with [GitHub OIDC](/github-actions/aws-credentials#use-github-oidc), and private hosts the execution environment's VPC must reach.
+  </Tab>
+</Tabs>
+
+#### Remove vendor Docker builders safely
+
+Remove a Blacksmith, Depot or Namespace Docker builder setup step only when all of these are true. Otherwise leave the whole job on its current runner and say why:
+
+- The setup step has nothing but `name`, `uses` and `if`, plus an `id` no step reads, and only the inputs its tab says can go. A `platforms` input is fine when it's empty or `linux/amd64`.
 - No Docker build in the job sets `builder` or `outputs`, builds for platforms other than `linux/amd64`, or exports a cache other than `type=inline`, `type=gha`, or `type=registry` to a registry that isn't `registry.depot.dev` or `nscr.io`.
 - The job doesn't use `docker/bake-action` or `depot/bake-action`.
 - No `run` step uses `docker buildx create`, `docker buildx use`, `--builder`, `depot` or `nsc`.
 - Removing the vendor steps leaves the job with at least one step.
-
-Don't edit steps through a YAML anchor or alias. If a cleanup would change a shared step list or an anchored input, leave the job on its current runner.
-
-### Switch the RunsOn ECR cache to the Actions cache
-
-RunsOn's `extras=ecr-cache` sets `RUNS_ON_ECR_CACHE` and logs Docker in to it. Ravion runners do neither. In `cache-from` and `cache-to` of `docker/build-push-action` (or the Blacksmith or Depot build action being swapped for it), rewrite each entry that uses it:
-
-```yaml
-# Before
-cache-from: type=registry,ref=${{ env.RUNS_ON_ECR_CACHE }}:app
-cache-to: type=registry,ref=${{ env.RUNS_ON_ECR_CACHE }}:app,mode=max,image-manifest=true,oci-mediatypes=true
-
-# After
-cache-from: type=gha,scope=app
-cache-to: type=gha,scope=app,mode=max
-```
-
-Use the tag as `scope`, keep `mode` and `ignore-error`, and drop the registry-only `image-manifest`, `oci-mediatypes` and `compression` options. If the job uses `RUNS_ON_ECR_CACHE` anywhere else, or in an entry with other options, leave it on RunsOn. See [Moving from RunsOn](/github-actions/amazon-ecr#moving-from-runson).
 
 ### Narrow `.next` caches to `.next/cache`
 
@@ -204,7 +251,7 @@ Also check jobs whose `services:`, `container:` or Docker containers call AWS. C
 
 ### Report optional speedups
 
-The migration pull request doesn't make these changes, but lists them so you can decide. Report the ones that apply:
+Don't make these changes as part of the migration. Report the ones that apply so they can be decided separately:
 
 - **Shallow checkout.** `fetch-depth: 0` downloads the full history. Use `fetch-depth: 1` if the job doesn't need old commits.
 - **Cache keys unique to each run.** An `actions/cache` key with `github.sha` or `github.run_id` and no `restore-keys` never restores. Add a restore key.
