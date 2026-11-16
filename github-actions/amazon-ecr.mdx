@@ -161,10 +161,10 @@ Sandboxes are x86_64 only, so images built on a sandbox are `linux/amd64`. To bu
 
 RunsOn's `extras=ecr-cache` creates an ECR repository for Docker caches, sets `RUNS_ON_ECR_CACHE`, and logs Docker in to it. Ravion runners do none of these, so a ref built from `${{ env.RUNS_ON_ECR_CACHE }}` is empty. Either:
 
-- Switch the cache to `type=gha`. The migration preview does this for `cache-from` and `cache-to` inputs of `docker/build-push-action` that use `RUNS_ON_ECR_CACHE`, using the tag as the cache scope. It leaves jobs that use `RUNS_ON_ECR_CACHE` anywhere else, such as in a `run` script, on RunsOn.
+- Switch the cache to `type=gha`, using the tag as the cache scope. See the RunsOn tab in [Migrate workflows](/github-actions/migrate-workflows#make-changes-for-your-current-runner). Leave jobs that use `RUNS_ON_ECR_CACHE` anywhere else, such as in a `run` script, on RunsOn.
 - Keep the ECR cache. Replace `${{ env.RUNS_ON_ECR_CACHE }}` with your repository URL and log in as in [Push images and Buildx caches to ECR](#push-images-and-buildx-caches-to-ecr).
 
-On RunsOn, the instance role usually supplies AWS credentials for `amazon-ecr-login` and ECR pushes. The migration preview lists jobs that use ECR without `aws-actions/configure-aws-credentials`, because they need the OIDC setup above on Ravion.
+On RunsOn, the instance role usually supplies AWS credentials for `amazon-ecr-login` and ECR pushes. Jobs that use ECR without `aws-actions/configure-aws-credentials` need the OIDC setup above on Ravion.
 
 ## Next steps
 

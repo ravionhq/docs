@@ -22,7 +22,7 @@ On sandboxes, the disk cache usually makes path caches unnecessary; keep `action
 
 ## Disk cache
 
-On sandboxes, `disk_cache=auto` is the default. When a job ends, Ravion saves the sandbox's whole disk, and the job's next run starts with it: packages, installed tools, `node_modules`, Docker layers and your checkout. See [Why sandboxes are fast](/concepts/sandboxes#why-sandboxes-are-fast).
+On sandboxes, `disk_cache=auto` is the default for GitHub Actions jobs, so you don't need to add it to the label. Pipeline steps default to `off`. When a job ends, Ravion saves the sandbox's whole disk, and the job's next run starts with it: packages, installed tools, `node_modules`, Docker layers and your checkout. See [Why sandboxes are fast](/concepts/sandboxes#why-sandboxes-are-fast).
 
 | Value | What it does |
 | --- | --- |
@@ -35,13 +35,42 @@ On sandboxes, `disk_cache=auto` is the default. When a job ends, Ravion saves th
 - On the default branch, only runs from triggers GitHub trusts for caches, such as `push`, `schedule` and `workflow_dispatch`, save. Runs from `pull_request_target`, `issue_comment` or `workflow_run` only read.
 - A key shares one disk across branches, so only runs from those trusted triggers save to it, on any branch.
 - A job with GitHub's `cache-mode: read` or `cache-mode: none` never saves its disk.
-- Pull requests from forks never restore or save a disk.
+- In private repositories, pull requests from forks never restore or save a disk.
+- Public repositories keep their disks apart from your private repositories. See [Public repositories](/github-actions/runners#public-repositories).
+
+### What Docker keeps between runs
+
+Each job starts with no containers and no networks of its own, as on GitHub-hosted runners, so a `docker run --name postgres` or `docker network create smoke` that worked on the last run works again. When Ravion saves the disk, it keeps what makes Docker fast and removes what a job creates and expects to be gone:
+
+| Kept | Removed when the disk is saved |
+| --- | --- |
+| Images, including ones the job built or pulled | Containers, running or stopped |
+| The BuildKit build cache and Buildx builder state | Networks the job created |
+| Named volumes, such as those from `docker volume create` or Docker Compose | Anonymous volumes |
+
+Images that no container in the run used, and that the run didn't pull, build, load, import or tag, are removed too.
+
+### Keep restored files at checkout
+
+`actions/checkout` runs `git clean -ffdx` by default, which deletes ignored files such as `node_modules` and build output that the disk cache restored. Set `clean: false` to keep them:
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    clean: false
+```
+
+Leave the default for jobs that publish, deploy or check that the tree is clean.
+
+Because each run starts with the last run's files, steps that expect an empty folder can fail from the second run on, such as `mkdir` without `-p` or `git clone` into a folder that exists. See [Make steps work on a kept workspace](/github-actions/migrate-workflows#make-steps-work-on-a-kept-workspace).
 
 ## Actions cache
 
 On sandboxes, `actions/cache` and actions that use the GitHub Actions cache API work without workflow changes. Ravion stores entries in the `actions-cache/` prefix of an S3 bucket in your account and keeps a hot copy on the host disk.
 
 Cache reads try the job's branch, then the pull request's base branch, then the repository's default branch. Writes go to the job's own branch. On the default branch, only trusted triggers such as `push`, `schedule` and `workflow_dispatch` can write; other events can read only. Existing keys aren't overwritten.
+
+When several jobs save the same key at once, one save wins and the others skip saving without failing, as on GitHub. `actions/cache` logs `Failed to save: Unable to reserve cache with key …, another job may be creating this cache.`, and Buildx `cache-to: type=gha` skips the layers another build is already writing. You don't need `ignore-error=true` for this. One difference from GitHub remains: jobs on different hosts that save the same key at the same moment can both upload. The first upload to finish is kept, and neither job fails.
 
 GitHub's `cache-mode` controls whether a job restores or saves entries:
 

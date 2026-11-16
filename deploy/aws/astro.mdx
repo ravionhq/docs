@@ -48,7 +48,7 @@ environments:
           name: astro-site-production
           routing: filesystem
           build_source: railpack
-          source_repo: my-org/my-astro-site
+          source_repo: github.com/my-org/my-astro-site
           railpack_build_cmd: npm run build
 ```
 
@@ -111,7 +111,7 @@ environments:
             moduleGivenIdRef: cluster
           name: astro-ssr-production-web
           build_source: railpack
-          source_repo: my-org/my-astro-app
+          source_repo: github.com/my-org/my-astro-app
           railpack_build_cmd: npm run build
           railpack_start_cmd: node ./dist/server/entry.mjs
           container_port: 4321
