@@ -21,6 +21,7 @@ Copy this prompt into your coding agent in the repository containing your GitHub
 - Ask me for the dedicated CI execution environment's ID if it isn't already known. Don't invent one or use a production environment.
 - Go through every job in .github/workflows, and read the scripts each job calls before deciding.
 - Show me the diff, which jobs are interruptible and why, the jobs you left on their current runner and why, and the follow-ups you didn't make. Don't trigger workflows, deployments or other external changes without my approval.
+- If something in the guide doesn't work or is unclear, or you hit a Ravion bug, report it with ravion bug or ravion feedback, as described in https://www.ravion.com/docs/report-bugs-and-feedback.md.
 
 </Prompt>
 
@@ -161,6 +162,10 @@ Don't remove explicit cache steps as part of the migration, such as `actions/cac
 - Check that every workflow still parses, no job IDs changed, and only the moved jobs' `runs-on` changed.
 - The first run on each branch starts with a cold cache.
 - If a job fails, it's most likely a tool GitHub's image has and [Ravion's image](/github-actions/runners#the-runner-image) doesn't. Install it with a `setup-*` action or a `run` step.
+
+<Note>
+  Hit a bug, or something in this guide that didn't work or was unclear? Report it with `ravion bug` or `ravion feedback`. Include the repository, workflow, job and the run's URL. See [Report bugs and feedback](/report-bugs-and-feedback). For urgent issues, also email [support@ravion.com](mailto:support@ravion.com).
+</Note>
 
 ## Next steps
 
