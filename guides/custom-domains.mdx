@@ -40,7 +40,7 @@ A domain can be on only one module across all Ravion organizations.
 
 ### Set up an ECS web service
 
-Every service gets a default address under its cluster's domain, like `web.acme.ravion.app`. Ravion owns `ravion.app`, so default addresses work with no DNS setup. A custom domain replaces the default address.
+Every service gets a default address under its cluster's domain, like `web.acme.ravion.app`. Ravion owns `ravion.app`, so default addresses work with no DNS setup. Custom domains are served alongside the default address unless you turn it off.
 
 The cluster needs exactly one ALB, public or private, with HTTPS enabled, and the service needs a load balancer attachment. `rvn-eks-addons` 0.17.0 and later has the same **Ravion-managed domains** setting for its shared ALB.
 
@@ -59,8 +59,8 @@ The cluster's own certificate inputs and the services' listener rule inputs are 
 
 Services on the cluster pick up managed domains automatically. On the service's **Config** tab, under **Domains**:
 
-- **Default Ravion domain** sets the service's address under the cluster domain. It defaults to the service's module ID: `web` becomes `web.acme.ravion.app`. Use a name no other service on the cluster uses.
-- **Custom domains** takes the domains you own, like `app.example.com`. When you set any, the service serves only those domains and drops the default address. Remove them all to go back to the default address.
+- **Default Ravion domain** serves the service under the cluster domain. It's on by default. **Subdomain** sets the name and defaults to the service's module ID: `web` becomes `web.acme.ravion.app`. Use a name no other service on the cluster uses.
+- **Custom domains** takes the domains you own, like `app.example.com`. The service serves them alongside the default address. To serve only your custom domains, turn off **Default Ravion domain**. Turning it off requires at least one custom domain.
 
 Apply the service, then [add the DNS records](#add-the-dns-records). In the project config file, the same settings look like this:
 
