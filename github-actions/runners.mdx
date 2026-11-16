@@ -22,16 +22,16 @@ Ravion runs your GitHub Actions jobs on machines in your AWS account. Change a j
 Copy this prompt into your coding agent in the repository containing your GitHub Actions workflows:
 
 <Prompt description="Set up Ravion runners with automatic sizing and Spot where safe." icon="sparkles" actions={["copy", "cursor"]}>
-  Read https://www.ravion.com/docs/github-actions/runners.md and https://www.ravion.com/docs/github-actions/caching.md, then update this repository's GitHub Actions workflows to use Ravion runners. Inspect each job and the scripts it calls before making changes.
+  Read https://www.ravion.com/docs/github-actions/migrate-workflows.md, https://www.ravion.com/docs/github-actions/runners.md and https://www.ravion.com/docs/github-actions/caching.md, then update this repository's GitHub Actions workflows to use Ravion runners. Follow the migration guide's checklist, which makes the same changes as Ravion's migration pull request, and use its migration preview when the Ravion CLI is signed in. Inspect each job and the scripts it calls before making changes.
 
 - Confirm the prerequisites in the runner guide. Ask me for the dedicated CI execution environment's given ID or unique ID (ee_…) if it isn't already known; don't invent one or use a production environment.
 - Prefer type=sandbox with cpu=auto, memory=auto and disk=auto. Automatic sizing also works without interruptible=true.
 - Add interruptible=true only when the entire job is safe to stop and rerun from the beginning, such as tests, lint or builds without external side effects. Spot loss restarts the job, not just the interrupted step. Leave it off for publishing, deployments, migrations, pushing commits or tags, and any job whose retry safety is uncertain. Do not use type=ec2-spot as a shortcut.
 - Use the execution environment ID in `ee`. Use either one slash-separated ravion/ label or a runs-on list with a bare ravion entry and separate key=value entries. Do not add self-hosted or unrelated labels.
 - Give each job a unique id using the GitHub run ID, run attempt, a distinct job-specific name and matrix index. Follow the guide's Unique labels example, replacing its test name for each job; do not copy the same name into every job.
-- Keep disk_cache=auto (the default) for sandbox jobs unless the job requires a clean disk. Keep checkout and dependency installation steps: a warm cache is not guaranteed. Public-repository jobs have no disk cache; confirm Allow public repositories is enabled before migrating them.
-- Check OS, architecture and tool requirements. Leave Windows and macOS jobs unchanged. Flag ARM or whole-instance requirements rather than silently moving them to a sandbox; EC2 needs an explicit instance size, not sandbox auto-sizing labels. Install missing tools explicitly rather than assuming the tools on GitHub's hosted image are available.
-- Preserve workflow triggers, permissions, secrets, matrices, dependencies and job behavior. Don't remove existing cache steps as part of this change without explaining why it is safe.
+- Keep disk_cache=auto (the default) for sandbox jobs unless the job requires a clean disk. Add clean: false to actions/checkout and make steps work on a kept workspace, as the migration guide describes. Keep checkout and dependency installation steps: a warm cache is not guaranteed. Public-repository jobs have no disk cache; confirm Allow public repositories is enabled before migrating them.
+- Check OS, architecture and tool requirements. Leave Windows, macOS and GPU jobs unchanged. Move ARM jobs to sandboxes only when they don't push container images, as the migration guide describes, and flag whole-instance requirements rather than silently moving them; EC2 needs an explicit instance size, not sandbox auto-sizing labels. Install missing tools explicitly rather than assuming the tools on GitHub's hosted image are available.
+- Preserve workflow triggers, permissions, secrets, matrices, dependencies, job IDs, job names and job behavior. Swap or remove the vendor runner actions the migration guide lists, such as Blacksmith, Depot, Namespace or RunsOn caches and builders. Don't remove other cache steps as part of this change without explaining why it is safe.
 - Validate the workflow YAML and show the diff, which jobs are interruptible and why, and any prerequisites or incompatible jobs that still need attention. Do not trigger workflows, deployments or other external changes without my approval.
 
 </Prompt>
@@ -196,7 +196,7 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=auto/memory=auto/disk=auto/in
 Every run teaches Ravion what the job needs. Sizes grow fast when a job needs more, come down gradually when it needs less, then settle. Each job runs on the right machine at the right cost.
 
 - Automatic CPU, memory and disk work with or without `interruptible=true`. You can mix automatic and fixed values.
-- Automatic sizing starts at 4 vCPU, 16 GiB memory and 40 GiB disk. Fixed values stay fixed.
+- Automatic sizing starts at the size of the runner the job last ran on before Ravion, when its labels say how big that was, such as `blacksmith-8vcpu-ubuntu-2404`. Otherwise it starts at 4 vCPU, 16 GiB memory and 40 GiB disk. Fixed values stay fixed.
 - Sizes are learned per repository, workflow file and job name.
 - For interruptible jobs, Ravion can test smaller sizes. If a job runs out of memory or disk, Ravion gives it more and reruns it automatically, up to twice per workflow run. GitHub shows the failed attempt, then the rerun.
 
@@ -323,6 +323,9 @@ Each public repository gets its own runner group, and its jobs run without a dis
 <CardGroup cols={2}>
   <Card title="AWS credentials" icon="key" href="/github-actions/aws-credentials">
     The job's IAM role, Docker containers and GitHub OIDC.
+  </Card>
+  <Card title="Migrate workflows" icon="arrow-right-arrow-left" href="/github-actions/migrate-workflows">
+    Every change the migration pull request makes.
   </Card>
   <Card title="Caching" icon="database" href="/github-actions/caching">
     Disk cache, Actions cache and artifacts.

@@ -37,6 +37,20 @@ On sandboxes, `disk_cache=auto` is the default. When a job ends, Ravion saves th
 - A job with GitHub's `cache-mode: read` or `cache-mode: none` never saves its disk.
 - Pull requests from forks never restore or save a disk.
 
+### Keep restored files at checkout
+
+`actions/checkout` runs `git clean -ffdx` by default, which deletes ignored files such as `node_modules` and build output that the disk cache restored. Set `clean: false` to keep them:
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    clean: false
+```
+
+Leave the default for jobs that publish, deploy or check that the tree is clean.
+
+Because each run starts with the last run's files, steps that expect an empty folder can fail from the second run on, such as `mkdir` without `-p` or `git clone` into a folder that exists. See [Make steps work on a kept workspace](/github-actions/migrate-workflows#make-steps-work-on-a-kept-workspace).
+
 ## Actions cache
 
 On sandboxes, `actions/cache` and actions that use the GitHub Actions cache API work without workflow changes. Ravion stores entries in the `actions-cache/` prefix of an S3 bucket in your account and keeps a hot copy on the host disk.
