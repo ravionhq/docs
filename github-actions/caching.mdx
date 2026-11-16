@@ -58,6 +58,8 @@ On sandboxes, `actions/cache` and actions that use the GitHub Actions cache API 
 
 Cache reads try the job's branch, then the pull request's base branch, then the repository's default branch. Writes go to the job's own branch. On the default branch, only trusted triggers such as `push`, `schedule` and `workflow_dispatch` can write; other events can read only. Existing keys aren't overwritten.
 
+When several jobs save the same key at once, one save wins and the others skip saving without failing, as on GitHub. `actions/cache` logs `Failed to save: Unable to reserve cache with key …, another job may be creating this cache.`, and Buildx `cache-to: type=gha` skips the layers another build is already writing. You don't need `ignore-error=true` for this. One difference from GitHub remains: jobs on different hosts that save the same key at the same moment can both upload. The first upload to finish is kept, and neither job fails.
+
 GitHub's `cache-mode` controls whether a job restores or saves entries:
 
 | `cache-mode` | What it does |

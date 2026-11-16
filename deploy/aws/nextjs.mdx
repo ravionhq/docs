@@ -63,7 +63,7 @@ environments:
             moduleGivenIdRef: cluster
           name: nextjs-production-web
           build_source: railpack
-          source_repo: my-org/my-nextjs-app
+          source_repo: github.com/my-org/my-nextjs-app
           railpack_build_cmd: npm run build
           railpack_start_cmd: node .next/standalone/server.js
           container_port: 3000
@@ -96,7 +96,7 @@ environments:
           name: nextjs-static-production
           routing: filesystem
           build_source: railpack
-          source_repo: my-org/my-nextjs-site
+          source_repo: github.com/my-org/my-nextjs-site
           output_directory: out
           railpack_build_cmd: npm run build
 ```
