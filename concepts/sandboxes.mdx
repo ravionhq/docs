@@ -121,7 +121,7 @@ To shorten that wait:
 
 - Choose **High performance** or **Ludicrous** if the gaps between bursts are short. Recently emptied hosts stay up for up to 2 or 5 minutes.
 - Set **Idle hosts to keep running** to **Fixed** with the number of hosts you want ready. Ravion keeps that many idle hosts around the clock.
-- Use **Peak** or **Rolling average** only for steady workloads. They count the hosts busy in your busiest minute, so one large burst keeps that many idle hosts running for the whole window, 7 days by default.
+- Use **Peak** or **Rolling average** only for steady workloads. **Peak** counts the hosts busy in your busiest minute, so one large burst keeps that many idle hosts running for the whole window, 7 days by default. **Rolling average** keeps your average daily peak over that window, so a burst raises it less, but a daily burst still keeps that many idle hosts running all day.
 
 ## Why sandboxes are fast
 
