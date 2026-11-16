@@ -283,7 +283,7 @@ Both describe the host the job started on. The **Set up job** step also shows th
 
 `run` steps on the sandbox get both variables. Docker containers don't, including `services:` and `container:`. If your job's steps run in a `container:`, or a tool in a container needs them, pass them in yourself, for example with `docker run -e RAVION_HOST_INSTANCE_TYPE -e RAVION_HOST_CPU_MODEL …`.
 
-When you compare job times with another runner, compare jobs that ran on the same CPU model. Sandbox hosts mix instance types, such as `c8id`, `m8id`, `r8id`, `i7i` and `i7ie`, and their CPUs differ in speed.
+When you compare job times with another runner, compare jobs that ran on the same CPU model. Sandbox hosts mix instance types, such as `c8id`, `m8id`, `r8id`, `i7i` and `i7ie`, and their processors differ in speed.
 
 ### AWS credentials
 
