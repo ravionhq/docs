@@ -47,7 +47,7 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=auto/memory=auto/disk=auto/di
 ```
 
 - Put your execution environment's ID in `ee`. Keep CPU, memory, disk and `disk_cache` on `auto`; don't carry the old runner's size over.
-- Make `id` unique to the job: the run ID, the run attempt, the workflow file name and the job ID (`ci-test` for job `test` in `ci.yml`). For a matrix job, add the matrix values, such as `-${{ matrix.node }}`, or `-${{ strategy.job-index }}`.
+- Make `id` unique to the job: the run ID, the run attempt, the workflow file name and the job ID (`ci-test` for job `test` in `ci.yml`). For a matrix job, add `-${{ strategy.job-index }}`; joined matrix values can collide. If a reusable workflow is called more than once in the same run, add a value each caller passes in, such as an input, because both calls share everything else.
 - Replace the whole value, including `self-hosted` and vendor labels. If `runs-on` is a YAML alias shared with jobs that don't move, give the moved job its own value.
 
 #### Decide whether a job is interruptible
