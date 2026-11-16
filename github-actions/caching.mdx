@@ -47,7 +47,7 @@ Each job starts with no containers and no networks of its own, as on GitHub-host
 | The BuildKit build cache and Buildx builder state | Networks the job created |
 | Named volumes, such as those from `docker volume create` or Docker Compose | Anonymous volumes |
 
-Images that no container in the run used, and that the run didn't pull, build or tag, are removed when the disk is saved.
+Images that no container in the run used, and that the run didn't pull, build, load, import or tag, are removed when the disk is saved.
 
 ### Keep restored files at checkout
 
