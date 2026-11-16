@@ -276,6 +276,7 @@ Set `cpu`, `memory` or `disk` to `auto` and Ravion sizes the sandbox from the st
 - Every run teaches Ravion what the step needs. Sizes grow fast when a step needs more, come down gradually when it needs less, then settle. Sizes are learned per pipeline step and execution environment.
 - For interruptible steps, Ravion can test smaller sizes. If a step runs out of memory or disk, Ravion gives it more and retries it in the same pipeline run, up to twice per step. The step's log shows each retry.
 - If Java (`java.lang.OutOfMemoryError: Java heap space`) or Node (`JavaScript heap out of memory`) runs out of heap, check whether your command sets a heap limit with `-Xmx` (Java) or `--max-old-space-size` (Node). Raise that limit if needed. Interruptible steps can also get more memory and retry automatically.
+- Pipeline steps get a Node heap limit of 75% of the sandbox's memory: Ravion adds `--max-old-space-size` to `NODE_OPTIONS` unless it already sets one. That way Node can use the memory a bigger sandbox gives it. GitHub Actions jobs don't get this: Ravion leaves their `NODE_OPTIONS` as GitHub sets it. See [GitHub Actions runners](/github-actions/runners#automatic-sizing).
 
 For steps with side effects, leave `interruptible` off:
 
