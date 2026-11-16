@@ -48,7 +48,7 @@ environments:
           name: sveltekit-static-production
           routing: filesystem
           build_source: railpack
-          source_repo: my-org/my-sveltekit-site
+          source_repo: github.com/my-org/my-sveltekit-site
           output_directory: build
           railpack_build_cmd: npm run build
 ```
@@ -90,7 +90,7 @@ environments:
             moduleGivenIdRef: cluster
           name: sveltekit-production-web
           build_source: railpack
-          source_repo: my-org/my-sveltekit-app
+          source_repo: github.com/my-org/my-sveltekit-app
           railpack_build_cmd: npm run build
           railpack_start_cmd: node build
           container_port: 3000
