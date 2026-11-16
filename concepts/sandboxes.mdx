@@ -102,26 +102,19 @@ flowchart LR
   classDef store fill:#23000A,stroke:#571D04,color:#FDDDC9
 ```
 
-Ravion terminates hosts it no longer needs. A host always runs for at least about a minute, which covers EC2's one-minute minimum charge. After its last step ends, how long an empty host stays up depends on the [performance profile](#performance-profiles):
+Ravion terminates hosts it no longer needs, usually within a few minutes of their last step. The [performance profile](#performance-profiles) sets how long empty hosts are kept in case more work arrives.
 
-| Profile | How long an empty host stays up |
-| --- | --- |
-| **Low cost** | Shut down right away, unless a step is expected before a new host could boot. Then it's kept for up to about 100 seconds. |
-| **Balanced** (default) | Same as Low cost. |
-| **High performance** | The most recently emptied host stays up for 120 seconds, and the next one for 30 seconds. Others shut down right away. |
-| **Ludicrous** | The three most recently emptied hosts stay up for 300, 120 and 60 seconds. Others shut down right away. |
-
-To keep hosts ready between bursts, set [**Idle hosts to keep running**](#sandbox-settings). The reserve only keeps hosts that are already running; it doesn't launch hosts to fill it. Idle hosts in the reserve incur compute charges.
+To keep hosts ready between bursts of work, set [**Idle hosts to keep running**](#sandbox-settings). Idle hosts incur compute charges.
 
 ### Bursty fan-out workloads
 
-When a workflow queues many jobs at once, such as a matrix of test shards, Ravion plans hosts for every waiting job in one batch and packs them onto as few hosts as fit. As the jobs finish, the hosts empty and shut down as the table above describes. If your fan-outs are more than a minute or two apart, each one usually launches new hosts and waits about 40 seconds for them. See [Startup time](/github-actions/runners#startup-time).
+When a workflow queues many jobs at once, such as a matrix of test shards, Ravion launches hosts for all of them together. When the jobs finish, those hosts shut down. If your bursts are far apart, each one may wait for new hosts to boot. See [Startup time](/github-actions/runners#startup-time).
 
 To shorten that wait:
 
-- Choose **High performance** or **Ludicrous** if the gaps between bursts are short. Recently emptied hosts stay up for up to 2 or 5 minutes.
-- Set **Idle hosts to keep running** to **Fixed** with the number of hosts you want ready. Ravion keeps that many idle hosts around the clock.
-- Use **Peak** or **Rolling average** only for steady workloads. **Peak** counts the hosts busy in your busiest minute, so one large burst keeps that many idle hosts running for the whole window, 7 days by default. **Rolling average** keeps your average daily peak over that window, so a burst raises it less, but a daily burst still keeps that many idle hosts running all day.
+- Choose **High performance** or **Ludicrous** if the gaps between bursts are short. They keep recently emptied hosts for a few minutes.
+- Set **Idle hosts to keep running** to **Fixed** with the number of hosts you want ready at all times.
+- Use **Peak** or **Rolling average** for steady workloads. **Peak** follows your busiest minute, so one large burst keeps that many idle hosts running for the whole window.
 
 ## Why sandboxes are fast
 
@@ -220,32 +213,12 @@ The step's or job's IAM role is served inside the sandbox at the instance metada
 
 ## CPU and memory
 
-### What `cpu` books
+`cpu` is the number of vCPUs a sandbox books on its host. AWS cost in [**Usage**](#track-cost-and-hosts) is attributed by what each step or job books.
 
-`cpu` is the number of vCPUs a sandbox books on its host. Ravion places sandboxes by their bookings, and attributes AWS cost to a step or job by what it booked. The Ravion fee for GitHub Actions jobs is per minute, whatever the size.
-
-### What the sandbox sees
-
-A sandbox can boot more vCPUs than it booked, so `nproc` can show more than `cpu`. For example, a `cpu=8` sandbox can show up to 16. The host holds the sandbox to its booking with a CPU quota. If the sandbox stays throttled at that quota, the host raises it one vCPU at a time, up to the vCPUs it booted. Once the sandbox is calm for two minutes, the host gives the extra vCPUs back one at a time.
-
-- The extra vCPUs are best effort. Ravion doesn't reserve them, and you aren't billed for them.
-- A sandbox boots up to twice the vCPUs it booked, and never more than 32 vCPUs or the CPUs of one NUMA node on its host.
-- The quota is set on the host, outside the VM. Inside the sandbox, you won't see cgroup CPU limits.
-- If a tool sizes its worker pool from `nproc`, it may start more workers than the job booked. Set the worker count explicitly, such as `--max-workers` or `-j`, if that matters to you.
-
-### When a host is busy
-
-Sandboxes on a host share its CPU in proportion to what they booked. While the host has spare CPU, a sandbox can use more than it booked, up to the vCPUs it booted.
-
-On the **Low cost** and **Balanced** [profiles](#performance-profiles), Ravion books each host to up to 150% of its vCPUs, because most steps use well under what they booked. If every sandbox on a full host is busy at once, each still gets at least two thirds of what it booked. **High performance** and **Ludicrous** don't book past a host's vCPUs, so each sandbox always gets what it booked.
-
-### Memory
-
-Hosts never overcommit memory. The memory a sandbox books is reserved on its host and backed by huge pages.
-
-- Sandboxes have no swap. When a sandbox runs out of memory, the Linux out-of-memory killer in the sandbox stops a process, and the step usually fails.
-- If a sandbox thrashes with almost no free memory for about three minutes without reaching the out-of-memory killer, Ravion stops the step so it doesn't hang until its timeout. The log says the step ran out of memory.
-- With `memory=auto` on an interruptible step, Ravion can start the sandbox below its full memory and grow it as the step needs more, up to its size. If the host can't grow it, the step can run out of memory, and its next runs book the full size. See [Automatic sizing](#automatic-sizing).
+- **`nproc` can show more than `cpu`.** A sandbox can use more vCPUs than it booked when its host has CPU to spare. The extra vCPUs are best effort: they aren't reserved, and you aren't billed for them. If a tool sizes its worker pool from `nproc`, set the worker count explicitly.
+- **No CPU limits inside the sandbox.** Ravion enforces the booking from the host, so you won't see cgroup CPU limits in the VM.
+- **Busy hosts.** When a host is busy, sandboxes share its CPU in proportion to what they booked. On **High performance** and **Ludicrous**, each sandbox always gets what it booked. **Low cost** and **Balanced** pack hosts more tightly, so a sandbox on a very busy host can get somewhat less.
+- **Memory.** A sandbox's memory is reserved on its host. Sandboxes have no swap. When a sandbox runs out of memory, the Linux out-of-memory killer stops a process, and the step usually fails. With `memory=auto` on an interruptible step, Ravion gives it more memory and retries. See [Automatic sizing](#automatic-sizing).
 
 ## Get started
 
@@ -355,18 +328,16 @@ Go to [**Settings / Execution environments**](https://app.ravion.com/org/setting
 
 ### Performance profiles
 
-The performance profile sets how tightly Ravion packs hosts and how long it keeps empty ones. In the API, it's the `performanceProfile` field, with the values `LOW_COST`, `BALANCED`, `HIGH_PERFORMANCE` and `LUDICROUS`.
+The performance profile trades cost for speed. In the API, it's the `performanceProfile` field: `LOW_COST`, `BALANCED`, `HIGH_PERFORMANCE` or `LUDICROUS`.
 
-| Profile | Host CPU that shared steps can book | Empty hosts kept |
+| Profile | Packing | Empty hosts |
 | --- | --- | --- |
-| **Low cost** | Up to 150% of the host's vCPUs | Only when a step is expected |
-| **Balanced** (default) | Up to about 140% of the host's vCPUs | Only when a step is expected |
-| **High performance** | Up to 85% of the host's vCPUs | 120 s and 30 s for the two most recently emptied |
-| **Ludicrous** | Up to 70% of the host's vCPUs | 300 s, 120 s and 60 s for the three most recently emptied |
+| **Low cost** | Packs hosts the most tightly | Shut down as soon as they're not needed |
+| **Balanced** (default) | Packs hosts tightly | Shut down as soon as they're not needed |
+| **High performance** | Leaves CPU headroom on each host | A few kept for up to 2 minutes |
+| **Ludicrous** | Leaves the most CPU headroom | A few kept for up to 5 minutes |
 
-On **Low cost** and **Balanced**, Ravion can also book an automatically sized, interruptible step below its size when that saves launching a host, and let it use more while the host has CPU to spare. Automatic CPU sizing favors the cheapest size on **Low cost**, and gives more weight to speed on each profile after it.
-
-Booking past a host's vCPUs and below a step's size only apply to steps that share a host. A step too large to share a host can still run on its own. The profile doesn't change automatic memory and disk headroom, Spot use, or **Idle hosts to keep running**. See [CPU and memory](#cpu-and-memory) and [Host lifecycle](#host-lifecycle).
+The profile also guides [automatic sizing](#automatic-sizing) toward cheaper or faster CPU sizes. It doesn't change Spot use or **Idle hosts to keep running**.
 
 To stop using sandboxes, switch your steps and module builds back to EC2. Running `ravion execution-environment update <id> --sandboxes null` removes the hosts, but the next sandbox step sets them up again.
 
@@ -392,8 +363,8 @@ To list an environment's hosts from the terminal, run `ravion execution-environm
 `interruptible: true` means a step can be stopped partway and started over. Builds, tests and lint usually can.
 
 - Interruptible steps can run on Spot hosts, or on spare room on On-Demand hosts. Ravion tries several Spot instance types and Availability Zones, then falls back to On-Demand.
-- When AWS reclaims a Spot host, it gives two minutes' notice. A step expected to finish in time runs to its end. Otherwise, Ravion tries to move the running sandbox live to another host, and the step carries on there. The step's log shows `Sandbox moved from host … to host …`.
-- If an interruptible step can't be moved, or loses its host without notice, Ravion reruns it from the start on another host, up to three attempts in all. The last attempt always runs On-Demand, and is never moved. Sandboxes with more than 16 GiB of memory aren't moved.
+- When AWS reclaims a Spot host, Ravion may move a running step to another host, and the step carries on there.
+- If a step can't be moved, Ravion reruns it from the start on another host. The last retry always runs On-Demand.
 - If a step that isn't interruptible loses its host, the step fails.
 
 Leave `interruptible` off for steps with side effects that aren't safe to repeat, such as database migrations and deploys.
@@ -473,11 +444,10 @@ Your own `GOCACHEPROG`, sccache, `TURBO_*` or Bazel remote settings take precede
   | | Fixed value | `auto` |
   | --- | --- | --- |
   | `cpu` | 1 to 32 vCPUs | 2 to 32 vCPUs |
-  | `memory` | At least 1 GiB, up to what the largest host leaves | 2 to 256 GiB |
-  | `disk` | At least 1 GiB, up to what the largest host leaves | 14 to 2,000 GiB |
+  | `memory` | Up to what fits on the largest host | 2 to 256 GiB |
+  | `disk` | Up to what fits on the largest host | 14 to 2,000 GiB |
 
-  If a fixed size fits no host, the step or job fails with an error that names the largest host type and what it leaves for sandboxes.
-- **Hosts.** By default, hosts come from the `c8id`, `m8id`, `r8id`, `i7i` and `i7ie` families, up to 64 vCPUs and 512 GiB of memory. Larger `metal` sizes are used only for sandboxes that fit nothing smaller. Each host keeps 1 vCPU and a few GiB of memory for itself, and runs up to 64 sandboxes. Restrict **Machine types** to change which hosts Ravion can launch.
+  If a fixed size fits no host, the step or job fails with an error that says what the largest host can take. Each host keeps some CPU and memory for itself.
 - **Account and region targets.** With `aws_account_id` and `region`, Ravion uses that account and region's execution environment, and creates one in the default VPC if none exists. Use `execution_environment_id` to choose the network.
 - **Step size.** A step's `cpu`, `memory` and `disk` must fit an instance type available in your region. If you restrict **Machine types**, include one large enough.
 - **Cold starts.** With no reserve, a step after an idle period waits for a new host to launch. Keep idle hosts running to shorten the wait. See [Bursty fan-out workloads](#bursty-fan-out-workloads).

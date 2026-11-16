@@ -125,7 +125,7 @@ Public-repository jobs take a few seconds longer.
 
 For private repositories, Ravion takes the job only once its sandbox is up, so while a host boots the job shows **Queued** in GitHub, not **In progress**. Public-repository jobs are taken right away for identity checks, so they show **In progress** while the host boots.
 
-After its last job, a host stays up for between a few seconds and a few minutes, depending on the [performance profile](/concepts/sandboxes#performance-profiles). To avoid boot waits after quiet periods or between bursts of jobs, keep hosts on hand with [sandbox settings](/concepts/sandboxes#sandbox-settings). See [Bursty fan-out workloads](/concepts/sandboxes#bursty-fan-out-workloads).
+To avoid boot waits after quiet periods or between bursts of jobs, keep hosts on hand with [sandbox settings](/concepts/sandboxes#sandbox-settings). See [Bursty fan-out workloads](/concepts/sandboxes#bursty-fan-out-workloads).
 
 ## Requirements
 
@@ -212,34 +212,19 @@ The job's log shows the size Ravion picked and why.
 
 ### CPU, memory and limits
 
-`cpu` is what the job books on its host, and what its AWS cost in [**Usage**](#track-cost-and-usage) is based on. The Ravion fee is per job minute, whatever the size.
+`cpu` is what the job books, and what its AWS cost in [**Usage**](#track-cost-and-usage) is based on. The Ravion fee is per job minute, whatever the size.
 
-The sandbox can boot more vCPUs than it booked, so `nproc` can show more than `cpu`. For example, a `cpu=8` job can show up to 16. The host holds the job to its booking with a CPU quota set outside the VM, so you won't see cgroup CPU limits inside the job. If the job keeps hitting its quota, the host raises it one vCPU at a time. When the host is busy, jobs share its CPU in proportion to what they booked, so the extra vCPUs are best effort. They aren't billed. If a tool sizes its worker pool from `nproc`, set the worker count explicitly when that matters.
+- `nproc` can show more vCPUs than `cpu`. The extra vCPUs are best effort and not billed. If a tool sizes its worker pool from `nproc`, set the worker count explicitly.
+- Sandboxes have no swap. A job that runs out of memory hits the Linux out-of-memory killer.
+- `cpu` goes up to 32. With `auto`, memory goes up to 256 GiB and disk up to 2,000 GiB. A fixed size that fits no host fails the job.
 
-Memory is reserved for the job, and the sandbox has no swap. A job that runs out of memory hits the Linux out-of-memory killer. With `memory=auto` and `interruptible=true`, Ravion gives the job more memory and reruns it, as [Automatic sizing](#automatic-sizing) describes.
-
-| | Fixed value | `auto` |
-| --- | --- | --- |
-| `cpu` | 1 to 32 vCPUs | 2 to 32 vCPUs |
-| `memory` | Up to what the largest host leaves | 2 to 256 GiB |
-| `disk` | Up to what the largest host leaves | 14 to 2,000 GiB |
-
-If a fixed size fits no host, the job fails, and its annotation names the largest host type and what it leaves for sandboxes.
-
-See [CPU and memory](/concepts/sandboxes#cpu-and-memory) for how jobs share a host, and [Limits and caveats](/concepts/sandboxes#limits-and-caveats) for host limits.
+See [CPU and memory](/concepts/sandboxes#cpu-and-memory) and [Limits and caveats](/concepts/sandboxes#limits-and-caveats).
 
 ### If a Spot host is reclaimed
 
-AWS gives two minutes' notice before it reclaims a Spot host. A job expected to finish in time runs to its end. Otherwise, Ravion tries to move the running job live to another host, where it carries on. The job's GitHub log stays the same job, with no restart.
+When AWS reclaims a Spot host, Ravion may move a running job to another host, where it carries on without a restart. Otherwise, Ravion runs the same GitHub job again from the start on a new runner. The last retry runs On-Demand. Jobs without `interruptible=true` never run on Spot.
 
-If the job can't be moved, or its host is lost without notice, Ravion stops it and runs the same GitHub job again from the start on a new runner, up to three attempts in all. The last attempt runs On-Demand. The last attempt and jobs with more than 16 GiB of memory are never moved. Jobs without `interruptible=true` never run on Spot, and fail if their host is lost.
-
-When a job ran again, its log shows:
-
-- In the setup step, `Ravion runner retry: attempt=2 retries=1 previous_failure=spot_interrupted`. The reason is `sandbox_host_lost` when the host was lost without notice.
-- In the Ravion timing step, a title that ends with `/ runner retries 1`. Its timings cover the last attempt only.
-
-In [**Usage**](#track-cost-and-usage), the AWS cost includes the lost attempt's time on its host. AWS doesn't charge for a Spot host it reclaims in its first hour, so Usage shows that compute as $0. The Ravion fee counts only the attempt that finished.
+When a job ran again, its setup step shows a line such as `Ravion runner retry: attempt=2 retries=1 previous_failure=spot_interrupted`. The AWS cost in [**Usage**](#track-cost-and-usage) includes the interrupted attempt. The Ravion fee counts only the attempt that finished.
 
 ### EC2
 
@@ -347,7 +332,7 @@ Jobs from public repositories, including pull requests from forks, run only on s
 1. Go to [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments), choose the environment, then open **Config / Sandboxes**.
 2. Turn on **Allow public repositories**.
 
-Each public repository gets its own runner group and its own disk cache, kept apart from your private repositories. A pull request saves to a disk of its own. When it has none yet, it restores from its base branch, then the default branch. Jobs that receive secrets other than `GITHUB_TOKEN` restore a disk but never save one. [Automatic sizing](#automatic-sizing) works the same as for private repositories, including automatic reruns for interruptible jobs only. Jobs from public repositories with an invalid label, or that ask for EC2, stay queued.
+Each public repository gets its own runner group and its own disk cache, kept apart from your private repositories. Jobs that receive secrets other than `GITHUB_TOKEN` restore a disk but never save one. [Automatic sizing](#automatic-sizing) works the same as for private repositories, including automatic reruns for interruptible jobs only. Jobs from public repositories with an invalid label, or that ask for EC2, stay queued.
 
 ## Next steps
 

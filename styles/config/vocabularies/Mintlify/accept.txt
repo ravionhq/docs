@@ -230,6 +230,4 @@ SDKs
 Ubicloud
 worktrees?
 [Bb]ursty
-CPUs
 cgroups?
-[Oo]vercommit(ted)?
