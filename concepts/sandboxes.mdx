@@ -129,6 +129,8 @@ When `disk_cache` is on, Ravion saves the sandbox's entire root disk when a step
 - Docker images, layer cache and BuildKit `RUN --mount=type=cache` directories in `/var/lib/docker`
 - Your git checkout, so the next clone only fetches new commits
 
+Docker containers, networks and anonymous volumes don't come back. Ravion removes them when it saves the disk, so each run starts with none, as on a fresh runner. Images, build cache and named volumes stay. See [What Docker keeps between runs](/github-actions/caching#what-docker-keeps-between-runs).
+
 ### Restores stream instead of downloading
 
 A saved disk is stored as 2 MiB chunks, zstd-compressed and named by their content hash. A restore doesn't download the disk first:

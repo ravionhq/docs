@@ -38,6 +38,18 @@ On sandboxes, `disk_cache=auto` is the default for GitHub Actions jobs, so you d
 - In private repositories, pull requests from forks never restore or save a disk.
 - Public repositories keep their disks apart from your private repositories. See [Public repositories](/github-actions/runners#public-repositories).
 
+### What Docker keeps between runs
+
+Each job starts with no containers and no networks of its own, as on GitHub-hosted runners, so a `docker run --name postgres` or `docker network create smoke` that worked on the last run works again. When Ravion saves the disk, it keeps what makes Docker fast and removes what a job creates and expects to be gone:
+
+| Kept | Removed when the disk is saved |
+| --- | --- |
+| Images, including ones the job built or pulled | Containers, running or stopped |
+| The BuildKit build cache and Buildx builder state | Networks the job created |
+| Named volumes, such as those from `docker volume create` or Docker Compose | Anonymous volumes |
+
+Images that no container in the run used, and that the run didn't pull, build, load, import or tag, are removed too.
+
 ### Keep restored files at checkout
 
 `actions/checkout` runs `git clean -ffdx` by default, which deletes ignored files such as `node_modules` and build output that the disk cache restored. Set `clean: false` to keep them:
