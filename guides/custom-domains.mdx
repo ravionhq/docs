@@ -178,7 +178,7 @@ To move a domain that already serves traffic elsewhere:
 
 1. Add the domain to the module and add the validation record. The old site keeps serving traffic.
 2. Lower the TTL on the domain's current record to 60 seconds, and wait for the old TTL to expire.
-3. Test the new endpoint before switching DNS, using the routing CNAME's value as the target:
+3. Test the new endpoint before switching DNS, using the value of the routing CNAME as the target:
 
    ```bash
    dig +short <routing-target>
