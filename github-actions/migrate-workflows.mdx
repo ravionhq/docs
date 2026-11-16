@@ -114,7 +114,7 @@ Remove a vendor's Docker builder setup only if the default Buildx builder can do
 
 ### Narrow `.next` caches
 
-An `actions/cache` step that caches all of `.next` restores the last build's output over the newer one on the kept disk. When its key doesn't change with the source, change that path to `.next/cache`, the [Next.js build cache](https://nextjs.org/docs/app/guides/ci-build-caching).
+An `actions/cache` step that caches all of `.next` restores the last build's output over the newer one on the kept disk. When its key doesn't change with the source, change that path to `.next/cache`, the [Next.js build cache](https://nextjs.org/docs/app/guides/ci-build-caching). Leave the step alone if another step reads its outputs, such as `cache-hit` to skip `next build`, or another step uses the same key.
 
 ### Keep ignored files at checkout
 
