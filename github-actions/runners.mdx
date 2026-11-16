@@ -199,7 +199,6 @@ Every run teaches Ravion what the job needs. Sizes grow fast when a job needs mo
 - Automatic sizing starts at the size of the runner the job last ran on before Ravion, when its labels say how big that was, such as `blacksmith-8vcpu-ubuntu-2404`. Otherwise it starts at 4 vCPU, 16 GiB memory and 40 GiB disk. Fixed values stay fixed.
 - Sizes are learned per repository, workflow file and job name.
 - For interruptible jobs, Ravion can test smaller sizes. If a job runs out of memory or disk, Ravion gives it more and reruns it automatically, up to twice per workflow run. GitHub shows the failed attempt, then the rerun.
-- Ravion doesn't change a job's `NODE_OPTIONS`, so Node uses its default heap limit or the one your job sets. Node's default is about 2 GiB below 15 GiB of memory and about 4 GiB from there. If Node runs out of heap on a smaller machine, Ravion gives the job at least 16 GiB. If it still runs out with memory free, more memory won't help; set `--max-old-space-size` in your job, for example `NODE_OPTIONS: --max-old-space-size=12288`.
 
 For jobs that must not run twice, leave `interruptible` off:
 
@@ -231,7 +230,15 @@ EC2 runners start a whole instance per job, boot Amazon Linux 2023, and have no 
 
 Sandbox jobs boot an x86_64 Ubuntu 24.04 image with the apt packages [GitHub's `ubuntu-24.04` runner image](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) installs. These include build-essential, Clang 18 and the native build headers common gems, wheels and Node.js packages compile against, such as `zlib1g-dev`, `libssl-dev`, `libffi-dev`, `libyaml-dev`, `libpq-dev`, `libmysqlclient-dev`, `libxml2-dev` and `libreadline-dev`. It also has Node.js 24 with `npm` and Yarn 1, Go 1.26, Rust, Python 3.12, GitHub CLI (`gh`), Docker with Docker Compose, the AWS CLI, the PostgreSQL client, Google Chrome, `jq` and `yq`. Like GitHub's images, `apt-get install` doesn't ask for confirmation. See [What runs inside a sandbox](/concepts/sandboxes#what-runs-inside-a-sandbox) for the full list.
 
-Like GitHub-hosted runners, Ravion leaves `NODE_OPTIONS` unset in jobs. Ravion [pipeline steps](/concepts/sandboxes#automatic-sizing) get a default Node heap limit; GitHub Actions jobs don't.
+Sandbox jobs set `NODE_OPTIONS` to `--max-old-space-size=<MiB>`, 75% of the sandbox's memory, so Node can use the memory the job runs with. GitHub-hosted runners leave `NODE_OPTIONS` unset. A `NODE_OPTIONS` your workflow sets replaces Ravion's for that step.
+
+To run a command without it, unset it for that command:
+
+```yaml
+- run: env -u NODE_OPTIONS pnpm test
+```
+
+Setting `NODE_OPTIONS: ""` in the workflow gives an empty value, not an unset one. Node treats the two the same, but tests and tools that check whether `NODE_OPTIONS` is set don't.
 
 The image's Node.js 24 and Go 1.26 are in the Actions tool cache, so `actions/setup-node` and `actions/setup-go` asking for those versions use them without a download. Every other version starts out missing from the tool cache.
 
