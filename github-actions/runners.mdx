@@ -281,7 +281,7 @@ Both describe the host the job started on. The **Set up job** step also shows th
 - run: echo "Ran on $RAVION_HOST_INSTANCE_TYPE ($RAVION_HOST_CPU_MODEL)"
 ```
 
-`run` steps on the sandbox get both variables. Docker containers don't, including `services:` and `container:`. If your job's steps run in a `container:`, or a tool in a container needs them, pass them in yourself, for example with `docker run -e RAVION_HOST_INSTANCE_TYPE -e RAVION_HOST_CPU_MODEL …`.
+`run` steps that run directly on the sandbox get both variables. Docker containers don't, including `services:` and `container:`, so a job whose steps run in a `container:` can't read them. To record the host for such a job, drop `container:` and start the container from a `run` step on the sandbox instead. That step can forward the values, for example with `docker run -e RAVION_HOST_INSTANCE_TYPE -e RAVION_HOST_CPU_MODEL …`.
 
 When you compare job times with another runner, compare jobs that ran on the same CPU model. Sandbox hosts mix instance types, such as `c8id`, `m8id`, `r8id`, `i7i` and `i7ie`, and their processors differ in speed.
 
