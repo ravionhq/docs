@@ -49,10 +49,6 @@ rss: true
 
 ## Platform
 
-### Breaking changes
-
-- **Restricted Terraform workspace names:** Ravion state backend workspace names must now be 1–90 letters, digits, underscores, or hyphens. Because `ravion_state_backend_workspace` can't be changed after creation, [contact support](/contact-support) before changing anything if an existing workspace name no longer meets this format.
-
 ### Features
 
 - **Terms of use:** Read Ravion's Terms of Use from the website footer or Privacy Policy.
@@ -64,6 +60,7 @@ rss: true
 - Dashboard sidebars now show more of long pipeline names, and clipped names and descriptions across cards, sidebars, and breadcrumbs reveal their full text on hover.
 - Deployment resource drawers now use their border instead of a heavy shadow to separate them from the page.
 - Website option selectors now mark the selected or hovered option with corner brackets.
+- Ravion state backend workspace names are now validated as 1–90 letters, digits, underscores, or hyphens.
 
 ### Fixes
 
