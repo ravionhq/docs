@@ -146,13 +146,15 @@ Also check the scripts each job calls for steps that exit when a path exists, ap
 
 A Ravion job's AWS role has no permissions by default. Jobs that used ECR or other AWS services through their old runner's instance role need [GitHub OIDC](/github-actions/aws-credentials#use-github-oidc), and ECR jobs need the login steps in [Amazon ECR](/github-actions/amazon-ecr). Docker containers in the job, including `services:` and `container:`, [can't reach the job's credentials](/github-actions/aws-credentials#docker-containers-cant-reach-the-endpoint). Creating an IAM role changes your AWS account, so list it as a follow-up if you can't do it.
 
+### Fix checkout depth and cache keys
+
+- **Shallow checkout.** Change `fetch-depth: 0` to `1` when the job doesn't use git history. Keep it for jobs that compute versions or changelogs, run `git describe`, diff against a base branch, or use tools like `changesets` or `nx affected`.
+- **Keys that never restore.** Add `restore-keys` to an `actions/cache` key built from `github.sha` or `github.run_id`, using the key's stable prefix, so later runs restore the most recent entry.
+- **Keys that never change.** Fix `hashFiles` patterns that only search the repository root, such as `hashFiles('**.ts')`, to `hashFiles('**/*.ts')`.
+
 ### Report optional speedups
 
-Don't make these changes as part of the migration, but report the ones that apply:
-
-- `fetch-depth: 0` when the job doesn't need history.
-- Cache keys that never restore, such as keys with `github.sha` and no `restore-keys`, and keys that never change, such as `hashFiles('**.ts')`, which only hashes the repository root.
-- Explicit cache steps, such as `actions/cache`, `Swatinem/rust-cache` or `type=gha` Docker caches, that the disk cache may make redundant. Keep the install commands and any cache other jobs need.
+Don't remove explicit cache steps as part of the migration, such as `actions/cache`, `Swatinem/rust-cache` or `type=gha` Docker caches. The disk cache may make them redundant, but other runners, cold disks or other jobs may still need them. Report the ones that look redundant so they can be decided separately.
 
 ## After the migration
 
