@@ -240,6 +240,25 @@ The image is still much smaller than GitHub's hosted runner images. Their `ubunt
 
 With the disk cache on, what you install usually stays for later runs. Only runs whose trigger can write the cache save their disk, so some jobs install on every run. See [Disk cache](/github-actions/caching#disk-cache).
 
+### The host's CPU
+
+Inside a sandbox, `/proc/cpuinfo` and `lscpu` show a generic CPU model: `Intel(R) Xeon(R) Processor` on an Intel host, or `AMD EPYC` on an AMD host. Firecracker, the virtual machine monitor sandboxes run on, replaces the real model name so a sandbox looks the same on every host. To find out what your job ran on, use these environment variables instead:
+
+| Variable | Example | Value |
+| --- | --- | --- |
+| `RAVION_HOST_INSTANCE_TYPE` | `c8id.8xlarge` | The EC2 instance type of the host. |
+| `RAVION_HOST_CPU_MODEL` | `Intel(R) Xeon(R) 6975P-C` | The CPU model name the host reports. |
+
+Both describe the host the job started on. The **Set up job** step also shows them under the sandbox's size, for example `Host: c8id.8xlarge · Intel(R) Xeon(R) 6975P-C`. On `type=ec2` runners, `/proc/cpuinfo` already shows the real model, and the **Set up job** step shows it as `CPU: …`.
+
+```yaml
+- run: echo "Ran on $RAVION_HOST_INSTANCE_TYPE ($RAVION_HOST_CPU_MODEL)"
+```
+
+`run` steps on the sandbox get both variables. Docker containers don't, including `services:` and `container:`. If your job's steps run in a `container:`, or a tool in a container needs them, pass them in yourself, for example with `docker run -e RAVION_HOST_INSTANCE_TYPE -e RAVION_HOST_CPU_MODEL …`.
+
+When you compare job times with another runner, compare jobs that ran on the same CPU model. Sandbox hosts mix instance types, such as `c8id`, `m8id`, `r8id`, `i7i` and `i7ie`, and their CPUs differ in speed.
+
 ### AWS credentials
 
 Each sandbox job gets its own IAM role, served at the standard instance metadata endpoint (`169.254.169.254`, IMDSv2 only). The AWS CLI and SDKs in `run` steps find it with no setup. Set `AWS_REGION` yourself, because the endpoint doesn't provide one.
