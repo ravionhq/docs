@@ -155,7 +155,7 @@ A typical ECS bundle (ECR API, ECR Docker registry, CloudWatch Logs, Secrets Man
 | S3 gateway endpoint            | No       | `true`               | Free gateway endpoint keeping S3 traffic off the NAT gateway           |
 | DynamoDB gateway endpoint      | No       | `false`              | Free gateway endpoint keeping DynamoDB traffic off the NAT gateway     |
 | Interface endpoints            | No       | —                    | Interface VPC endpoints (PrivateLink) for private AWS service access   |
-| Flow Logs                      | No       | `true`               | Enable VPC Flow Logs (required for SOC 2)                              |
+| Flow Logs                      | No       | `false`              | Enable VPC Flow Logs (required for SOC 2)                              |
 | Tags                           | No       | Environment, Project | Custom tags applied to all resources                                   |
 
 ### VPC Peering
@@ -176,7 +176,7 @@ Connect this VPC to existing VPCs for private communication without traversing t
 
 ### SOC 2 compliance
 
-**Flow Logs** are on by default and capture network traffic metadata for security auditing. Flow logs record:
+Enable **Flow Logs** to capture network traffic metadata for security auditing. Flow logs record:
 
 - Source and destination IP addresses
 - Ports and protocols
