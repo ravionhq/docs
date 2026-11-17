@@ -396,6 +396,7 @@
               "cli/reference/shell-completion",
               "cli/reference/signup",
               "cli/reference/stack",
+              "cli/reference/support",
               "cli/reference/switch",
               "cli/reference/terraform",
               "cli/reference/user",

@@ -1,0 +1,48 @@
+---
+title: "ravion support"
+sidebarTitle: "support"
+description: "Manage supports"
+"og:image": "https://www.ravion.com/og/docs/cli/reference/support.png"
+"twitter:image": "https://www.ravion.com/og/docs/cli/reference/support.png"
+---
+
+{/* This page is generated from the Ravion CLI source. Do not edit by hand. */}
+
+## `ravion support`
+
+Manage supports
+
+**Aliases:** `supports`
+
+### `ravion support options`
+
+Get support request options
+
+```bash
+ravion support options [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+### `ravion support request`
+
+Contact Ravion support
+
+```bash
+ravion support request [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--message <string>` | yes | What is going on. Supports multiline text. |
+| `--priority <string>` | yes | How urgently support should respond: normal for general issues or questions, high when deployments are impaired, critical when production is down. Critical pages Ravion on-call and requires a paid plan. Available values: normal, high, critical. |
+| `--json` |  | emit response as JSON |
+| `--page-url <string>` |  | The page or URL the request is about, such as the dashboard page it was sent from. |
+| `--user-agent <string>` |  | The client's user agent, to help support reproduce the problem. |
+
