@@ -29,36 +29,6 @@ ravion execution-environment cache <id> [flags]
 | `--mode <string>` | yes | mode. Available values: DELETE_CACHE, KILL_JOBS_AND_DELETE_CACHE. |
 | `--json` |  | emit response as JSON |
 
-### `ravion execution-environment check-github-runner-migration-github-app`
-
-Check GitHub App installations for runners
-
-```bash
-ravion execution-environment check-github-runner-migration-github-app <id> [flags]
-```
-
-**Flags:**
-
-| Flag | Required | Description |
-| --- | --- | --- |
-| `--json` |  | emit response as JSON |
-| `-v, --verbose` |  | show full output |
-
-### `ravion execution-environment close-github-runner-migration-pull-request`
-
-Close a GitHub runner migration pull request
-
-```bash
-ravion execution-environment close-github-runner-migration-pull-request <executionEnvironmentId> [flags]
-```
-
-**Flags:**
-
-| Flag | Required | Description |
-| --- | --- | --- |
-| `--data <string>` | yes | Request data as JSON |
-| `--json` |  | emit response as JSON |
-
 ### `ravion execution-environment create`
 
 Create ExecutionEnvironment
@@ -127,66 +97,6 @@ ravion execution-environment get <id> [flags]
 | --- | --- | --- |
 | `--json` |  | emit response as JSON |
 
-### `ravion execution-environment github-runner-migration-preview`
-
-Get a GitHub Actions runner migration preview
-
-```bash
-ravion execution-environment github-runner-migration-preview <id> <previewId> [flags]
-```
-
-**Flags:**
-
-| Flag | Required | Description |
-| --- | --- | --- |
-| `--json` |  | emit response as JSON |
-
-### `ravion execution-environment github-runner-migration-pull-request-description`
-
-Get a GitHub runner migration pull request description
-
-```bash
-ravion execution-environment github-runner-migration-pull-request-description <executionEnvironmentId> [flags]
-```
-
-**Flags:**
-
-| Flag | Required | Description |
-| --- | --- | --- |
-| `--pull-request-number <int>` | yes | pullRequestNumber |
-| `--repository <string>` | yes | repository |
-| `--json` |  | emit response as JSON |
-
-### `ravion execution-environment github-runner-migration-repositories`
-
-List GitHub runner migration repositories
-
-```bash
-ravion execution-environment github-runner-migration-repositories <id> [flags]
-```
-
-**Flags:**
-
-| Flag | Required | Description |
-| --- | --- | --- |
-| `--json` |  | emit response as JSON |
-| `-v, --verbose` |  | show full output |
-
-### `ravion execution-environment github-runner-migration-results`
-
-List GitHub runner migration results
-
-```bash
-ravion execution-environment github-runner-migration-results <executionEnvironmentId> [flags]
-```
-
-**Flags:**
-
-| Flag | Required | Description |
-| --- | --- | --- |
-| `--json` |  | emit response as JSON |
-| `-v, --verbose` |  | show full output |
-
 ### `ravion execution-environment list`
 
 List ExecutionEnvironments
@@ -247,37 +157,6 @@ ravion execution-environment sandbox-hosts <id> [flags]
 | --- | --- | --- |
 | `--json` |  | emit response as JSON |
 | `-v, --verbose` |  | show full output |
-
-### `ravion execution-environment start-github-runner-migration`
-
-Start a GitHub Actions runner migration
-
-```bash
-ravion execution-environment start-github-runner-migration <id> [flags]
-```
-
-**Flags:**
-
-| Flag | Required | Description |
-| --- | --- | --- |
-| `--data <string>` |  | Request data as JSON |
-| `--json` |  | emit response as JSON |
-
-### `ravion execution-environment start-github-runner-migration-preview`
-
-Preview a GitHub Actions runner migration
-
-```bash
-ravion execution-environment start-github-runner-migration-preview <id> [flags]
-```
-
-**Flags:**
-
-| Flag | Required | Description |
-| --- | --- | --- |
-| `--json` |  | emit response as JSON |
-| `--mode <string>` |  | mode. Available values: migrate, compare. |
-| `--repositories <strings>` |  | repositories |
 
 ### `ravion execution-environment update`
 
