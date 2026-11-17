@@ -110,7 +110,8 @@ ravion execution-environment download-artifact <id> [flags]
 | Flag | Required | Description |
 | --- | --- | --- |
 | `--key <string>` | yes | The artifact's key, as printed in the job log |
-| `--output <string>` |  | Where to save the artifact (default: &lt;name&gt;.zip) |
+| `--force` |  | Replace the file at the save path if one is already there |
+| `--output <string>` |  | Where to save the artifact (default: the file name the download gives, &lt;name&gt;.zip for an archive) |
 
 ### `ravion execution-environment get`
 
