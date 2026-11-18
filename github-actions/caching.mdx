@@ -155,7 +155,7 @@ If a sandbox job is rerun after its host is lost, Ravion replaces an artifact up
 
 You can also set `githubActionsArtifactStorage` to `S3` on the environment's sandbox pool with the [API](/api-reference/overview). The change applies from the next job. Workflows don't change.
 
-Ravion creates a bucket named `ravion-artifacts-<execution environment ID>` in the environment's AWS account and region. It's separate from the bucket that holds the disk cache and Actions cache, so artifacts keep their own retention and access. Creating it needs AWS account role policy 1.0.62 or later. With an older policy, saving the setting fails with an error that names the bucket. To update it, go to [**Settings / AWS accounts**](https://app.ravion.com/org/settings/aws-accounts), open the account and click **Update AWS Permissions**.
+Ravion creates a bucket named `ravion-artifacts-<execution environment ID>` in the environment's AWS account and region. It's separate from the bucket that holds the disk cache and Actions cache, so artifacts keep their own retention and access. Creating it needs AWS account role policy 1.0.62 or later. With an older policy, saving the setting fails with an error that names the bucket. The [download links](#download-artifacts-kept-in-s3) need policy 1.0.71 or later. To update the policy, go to [**Settings / AWS accounts**](https://app.ravion.com/org/settings/aws-accounts), open the account and click **Update AWS Permissions**.
 
 How artifacts are kept:
 
