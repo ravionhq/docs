@@ -203,7 +203,7 @@ Sandboxes boot an x86_64 Ubuntu 24.04 image. Like GitHub's images, `apt-get inst
 
 The apt packages match those in [GitHub's `ubuntu-24.04` runner image](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md), but the image is much smaller. GitHub's `ubuntu-latest` also comes with several versions each of Node.js, Python, Java, Go, Ruby and .NET, plus databases and cloud tools. The sandbox image has no Ruby, Java, .NET, PHP or `pnpm`. If a step needs something missing, install it natively:
 
-- System packages with `apt-get`, for example `apt-get update && apt-get install -y python3-pip`. Pipeline steps run as root. GitHub Actions jobs run as the `runner` user with passwordless `sudo`, so they need `sudo apt-get`. See [The job user](/github-actions/runners#the-job-user).
+- System packages with `apt-get`, for example `apt-get update && apt-get install -y python3-pip`. Pipeline steps run as root. GitHub Actions jobs run as the `runner` user, so they need `sudo apt-get`. `sudo` asks for no password. See [The job user](/github-actions/runners#the-job-user).
 - Language versions with the usual `setup-*` actions in GitHub Actions jobs, or with version managers and install scripts in pipeline steps.
 - Anything else by downloading its binary or installer in a command.
 

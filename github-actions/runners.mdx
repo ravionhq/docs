@@ -268,7 +268,7 @@ With the disk cache on, what you install usually stays for later runs. Only runs
 
 ### The job user
 
-As on GitHub's hosted runners, `run` steps that run directly on the sandbox run as the `runner` user (uid 1001), not as root. `HOME` is `/home/runner`, and the workspace is under `/home/runner/work`. The user has passwordless `sudo` and is in the `docker`, `adm` and `systemd-journal` groups, so `docker` works without `sudo`.
+As on GitHub's hosted runners, `run` steps that run directly on the sandbox run as the `runner` user (user ID 1001), not as root. `HOME` is `/home/runner`, and the workspace is under `/home/runner/work`. The user can run `sudo` without a password and is in the `docker`, `adm` and `systemd-journal` groups, so `docker` works without `sudo`.
 
 Commands that write outside the workspace and `/home/runner` need `sudo`. Examples are `apt-get` and creating directories under `/var`, `/opt` or `/etc`. To give a job a directory of its own, create it once and hand it to `runner`:
 
