@@ -328,6 +328,7 @@ Go to [**Settings / Execution environments**](https://app.ravion.com/org/setting
 | **Machine types** | Automatic | Leave empty to let Ravion choose. Add types only to restrict the choice or customize host disks. |
 | **Use spot hosts for interruptible steps** | On | Lets [interruptible steps](#interruptible-steps-and-spot-hosts) run on Spot hosts. |
 | **Idle hosts to keep running** | None | Idle hosts kept running for faster starts. **Fixed** keeps a set number. **Peak** keeps as many as were busy in your busiest minute. **Rolling average** keeps your average daily peak. Peak and Rolling average look back 7 days by default. Idle hosts incur compute charges. See [Bursty fan-out workloads](#bursty-fan-out-workloads). |
+| **GitHub Actions artifacts** | GitHub | Where GitHub Actions jobs on these sandboxes keep artifacts. **S3** keeps them in a `ravion-artifacts-` bucket in your AWS account instead of on GitHub. See [Store artifacts in S3](/github-actions/caching#store-artifacts-in-s3). |
 
 ### Performance profiles
 
