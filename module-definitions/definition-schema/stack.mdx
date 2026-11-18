@@ -466,6 +466,9 @@ Trigger filter configuration
   pattern is a `!` exclusion, all changed files are included first, so
   `paths: ["!docs/**"]` means "any change outside docs/".
   The trigger fires when at least one changed file counts.
+  For a GitHub push, the changed files are what the push changed on the
+  branch, so files a merged branch brought in from elsewhere don't count.
+  For a new branch or a force push, the pushed commits' files are used.
 
   _(templateable)_
 </ResponseField>
