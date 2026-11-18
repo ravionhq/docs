@@ -260,11 +260,27 @@ The image's Node.js 24 and Go 1.26 are in the Actions tool cache, so `actions/se
 
 The image is still much smaller than GitHub's hosted runner images. Their `ubuntu-latest` also comes with several versions each of Node.js, Python, Java, Go, Ruby and .NET, plus databases and cloud tools. The Ravion image has no Ruby, Java, .NET, PHP or `pnpm`. If a job needs something missing, install it natively in a `run` step:
 
-- System packages with `apt-get`, for example `apt-get update && apt-get install -y python3-pip`. Jobs run as root.
+- System packages with `apt-get` and `sudo`, for example `sudo apt-get update && sudo apt-get install -y python3-pip`.
 - Language versions with the usual `setup-*` actions, such as `ruby/setup-ruby`, `actions/setup-java`, `actions/setup-python` or `pnpm/action-setup`.
 - Anything else by downloading its binary or installer.
 
 With the disk cache on, what you install usually stays for later runs. Only runs whose trigger can write the cache save their disk, so some jobs install on every run. See [Disk cache](/github-actions/caching#disk-cache).
+
+### The job user
+
+As on GitHub's hosted runners, sandbox jobs run as the `runner` user (uid 1001), not as root. `HOME` is `/home/runner`, and the workspace is under `/home/runner/work`. The user has passwordless `sudo` and is in the `docker`, `adm` and `systemd-journal` groups, so `docker` works without `sudo`.
+
+Commands that write outside the workspace and `/home/runner` need `sudo`. Examples are `apt-get` and creating directories under `/var`, `/opt` or `/etc`. To give a job a directory of its own, create it once and hand it to `runner`:
+
+```yaml
+- run: |
+    sudo mkdir -p /var/cache/my-ci
+    sudo chown runner:runner /var/cache/my-ci
+```
+
+Without `sudo`, these commands fail with `Permission denied`.
+
+Before November 17, 2026, sandbox jobs ran as root from `/root/actions-runner/_work`. If a workflow written for that fails with `Permission denied`, add `sudo` to the commands that need root. The first run after the change starts with a fresh disk cache.
 
 ### The host's CPU
 
