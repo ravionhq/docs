@@ -268,7 +268,7 @@ With the disk cache on, what you install usually stays for later runs. Only runs
 
 ### The job user
 
-As on GitHub's hosted runners, sandbox jobs run as the `runner` user (uid 1001), not as root. `HOME` is `/home/runner`, and the workspace is under `/home/runner/work`. The user has passwordless `sudo` and is in the `docker`, `adm` and `systemd-journal` groups, so `docker` works without `sudo`.
+As on GitHub's hosted runners, `run` steps that run directly on the sandbox run as the `runner` user (uid 1001), not as root. `HOME` is `/home/runner`, and the workspace is under `/home/runner/work`. The user has passwordless `sudo` and is in the `docker`, `adm` and `systemd-journal` groups, so `docker` works without `sudo`.
 
 Commands that write outside the workspace and `/home/runner` need `sudo`. Examples are `apt-get` and creating directories under `/var`, `/opt` or `/etc`. To give a job a directory of its own, create it once and hand it to `runner`:
 
@@ -279,6 +279,8 @@ Commands that write outside the workspace and `/home/runner` need `sudo`. Exampl
 ```
 
 Without `sudo`, these commands fail with `Permission denied`.
+
+In a `container:` job, steps run inside the job's image instead, as that image's user and with its tools. The image might have no `runner` account or `sudo`, so this section doesn't apply there. Many images run as root, so their steps don't need `sudo`.
 
 Before November 17, 2026, sandbox jobs ran as root from `/root/actions-runner/_work`. If a workflow written for that fails with `Permission denied`, add `sudo` to the commands that need root. The first run after the change starts with a fresh disk cache.
 
