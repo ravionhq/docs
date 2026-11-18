@@ -217,7 +217,7 @@ The step's or job's IAM role is served inside the sandbox at the instance metada
 
 `cpu` is the number of vCPUs a sandbox books on its host. AWS cost in [**Usage**](#track-cost-and-hosts) is attributed by what each step or job books.
 
-- **`nproc` can show more than `cpu`.** A sandbox can use more vCPUs than it booked when its host has CPU to spare. The extra vCPUs are best effort: they aren't reserved, and you aren't billed for them. If a tool sizes its worker pool from `nproc`, set the worker count explicitly.
+- **`nproc` can show more than `cpu`.** A sandbox can use more vCPUs than it booked when its host has CPU to spare. The extra vCPUs are best effort: they aren't reserved. They're part of the host you pay AWS for, but [**Usage**](#track-cost-and-hosts) attributes a sandbox's cost by what it booked, not by what it used. If a tool sizes its worker pool from `nproc`, set the worker count explicitly.
 - **No CPU limits inside the sandbox.** Ravion enforces the booking from the host, so you won't see cgroup CPU limits in the VM.
 - **Busy hosts.** When a host is busy, sandboxes share its CPU in proportion to what they booked. On **High performance** and **Ludicrous**, each sandbox always gets what it booked. **Low cost** and **Balanced** pack hosts more tightly, so a sandbox on a very busy host can get somewhat less.
 - **Memory.** A sandbox's memory is reserved on its host. Sandboxes have no swap. When a sandbox runs out of memory, the Linux out-of-memory killer stops a process, and the step usually fails. With `memory=auto` on an interruptible step, Ravion gives it more memory and retries. See [Automatic sizing](#automatic-sizing).
