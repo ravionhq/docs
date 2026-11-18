@@ -393,6 +393,7 @@
               "cli/reference/project",
               "cli/reference/report",
               "cli/reference/service-account",
+              "cli/reference/setup",
               "cli/reference/shell-completion",
               "cli/reference/signup",
               "cli/reference/stack",
