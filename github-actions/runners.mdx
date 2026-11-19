@@ -107,6 +107,12 @@ flowchart TB
 
 Sandbox jobs run on the same autoscaling fleet as sandbox pipeline steps. See [Sandboxes](/concepts/sandboxes) for how hosts are placed, scaled, cached and priced.
 
+### When GitHub's webhooks are late
+
+GitHub's webhooks sometimes arrive late or not at all, especially during GitHub incidents. Ravion doesn't rely on them alone. It keeps checking GitHub for queued jobs that use Ravion labels and starts runners for them, so a delayed or dropped webhook doesn't leave your jobs stuck in **Queued**. You don't need to configure anything or rerun anything.
+
+GitHub still assigns every job to a runner. If GitHub Actions stops handing out jobs entirely, no runner can start them, and Ravion picks them up as soon as GitHub recovers.
+
 ## Startup time
 
 In our benchmarks, these are the p50 times for a sandbox job, from GitHub queueing it to its first step:
