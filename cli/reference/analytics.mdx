@@ -1,0 +1,439 @@
+---
+title: "ravion analytics"
+sidebarTitle: "analytics"
+description: "Read analytics"
+"og:image": "https://www.ravion.com/og/docs/cli/reference/analytics.png"
+"twitter:image": "https://www.ravion.com/og/docs/cli/reference/analytics.png"
+---
+
+{/* This page is generated from the Ravion CLI source. Do not edit by hand. */}
+
+## `ravion analytics`
+
+Read analytics
+
+### `ravion analytics ci`
+
+Read CI job analytics: totals, daily trends, rankings, single jobs, test timings, and runner right-sizing
+
+**Aliases:** `cis`
+
+#### `ravion analytics ci cost-breakdown`
+
+CI costs by repository, pipeline or job
+
+```bash
+ravion analytics ci cost-breakdown [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--from <string>` | yes | First day of the range (UTC), inclusive. |
+| `--group-by <string>` | yes | How /ci/analytics/costs/breakdown groups costs. Available values: repository, pipeline, job. |
+| `--to <string>` | yes | Last day of the range (UTC), inclusive. Must be on or after from; the range covers at most 400 days. |
+| `--code-source-id <string>` |  | Only GitHub Actions jobs of this code source (repository). Returns 403 when the caller cannot read it. |
+| `--conclusion <string>` |  | Only jobs that ended this way. Available values: success, failure, cancelled, timed_out, skipped. |
+| `--execution-environment-id <string>` |  | Only jobs that ran in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | How many items to return, 1 to 100. Defaults to 25. |
+| `--name <string>` |  | With scopeId, only the workflow job or pipeline step of this name, as Workload.name gives it. |
+| `--pipeline-id <string>` |  | Only steps of this pipeline. Returns 403 when the caller cannot read it. |
+| `--runner-size <string>` |  | Only jobs booked at this runner size, as Job.runnerSize labels it (for example "8 vCPU / 32 GiB"). |
+| `--scope-id <string>` |  | With name (and source), only one workflow job or pipeline step: the code source ID for GitHub Actions jobs, the pipeline ID for pipeline steps. |
+| `--source <string>` |  | Only jobs from this source. Available values: github_actions, pipeline. |
+| `-v, --verbose` |  | show full output |
+
+#### `ravion analytics ci cost-periods`
+
+CI costs this billing period and last
+
+```bash
+ravion analytics ci cost-periods [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--code-source-id <string>` |  | Only GitHub Actions jobs of this code source (repository). Returns 403 when the caller cannot read it. |
+| `--conclusion <string>` |  | Only jobs that ended this way. Available values: success, failure, cancelled, timed_out, skipped. |
+| `--execution-environment-id <string>` |  | Only jobs that ran in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--name <string>` |  | With scopeId, only the workflow job or pipeline step of this name, as Workload.name gives it. |
+| `--pipeline-id <string>` |  | Only steps of this pipeline. Returns 403 when the caller cannot read it. |
+| `--runner-size <string>` |  | Only jobs booked at this runner size, as Job.runnerSize labels it (for example "8 vCPU / 32 GiB"). |
+| `--scope-id <string>` |  | With name (and source), only one workflow job or pipeline step: the code source ID for GitHub Actions jobs, the pipeline ID for pipeline steps. |
+| `--source <string>` |  | Only jobs from this source. Available values: github_actions, pipeline. |
+| `-v, --verbose` |  | show full output |
+
+#### `ravion analytics ci costs`
+
+CI costs
+
+```bash
+ravion analytics ci costs [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--from <string>` | yes | First day of the range (UTC), inclusive. |
+| `--to <string>` | yes | Last day of the range (UTC), inclusive. Must be on or after from; the range covers at most 400 days. |
+| `--code-source-id <string>` |  | Only GitHub Actions jobs of this code source (repository). Returns 403 when the caller cannot read it. |
+| `--compare` |  | Also return the previous period's figures as previous. |
+| `--conclusion <string>` |  | Only jobs that ended this way. Available values: success, failure, cancelled, timed_out, skipped. |
+| `--daily` |  | Also return each day's costs as days. |
+| `--execution-environment-id <string>` |  | Only jobs that ran in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--name <string>` |  | With scopeId, only the workflow job or pipeline step of this name, as Workload.name gives it. |
+| `--pipeline-id <string>` |  | Only steps of this pipeline. Returns 403 when the caller cannot read it. |
+| `--runner-size <string>` |  | Only jobs booked at this runner size, as Job.runnerSize labels it (for example "8 vCPU / 32 GiB"). |
+| `--scope-id <string>` |  | With name (and source), only one workflow job or pipeline step: the code source ID for GitHub Actions jobs, the pipeline ID for pipeline steps. |
+| `--source <string>` |  | Only jobs from this source. Available values: github_actions, pipeline. |
+
+#### `ravion analytics ci daily`
+
+CI jobs per day
+
+```bash
+ravion analytics ci daily [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--from <string>` | yes | First day of the range (UTC), inclusive. |
+| `--to <string>` | yes | Last day of the range (UTC), inclusive. Must be on or after from; the range covers at most 400 days. |
+| `--code-source-id <string>` |  | Only GitHub Actions jobs of this code source (repository). Returns 403 when the caller cannot read it. |
+| `--conclusion <string>` |  | Only jobs that ended this way. Available values: success, failure, cancelled, timed_out, skipped. |
+| `--execution-environment-id <string>` |  | Only jobs that ran in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--name <string>` |  | With scopeId, only the workflow job or pipeline step of this name, as Workload.name gives it. |
+| `--pipeline-id <string>` |  | Only steps of this pipeline. Returns 403 when the caller cannot read it. |
+| `--runner-size <string>` |  | Only jobs booked at this runner size, as Job.runnerSize labels it (for example "8 vCPU / 32 GiB"). |
+| `--scope-id <string>` |  | With name (and source), only one workflow job or pipeline step: the code source ID for GitHub Actions jobs, the pipeline ID for pipeline steps. |
+| `--source <string>` |  | Only jobs from this source. Available values: github_actions, pipeline. |
+| `-v, --verbose` |  | show full output |
+
+#### `ravion analytics ci distribution`
+
+CI run-time distribution
+
+```bash
+ravion analytics ci distribution [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--from <string>` | yes | First day of the range (UTC), inclusive. |
+| `--to <string>` | yes | Last day of the range (UTC), inclusive. Must be on or after from; the range covers at most 400 days. |
+| `--code-source-id <string>` |  | Only GitHub Actions jobs of this code source (repository). Returns 403 when the caller cannot read it. |
+| `--conclusion <string>` |  | Only jobs that ended this way. Available values: success, failure, cancelled, timed_out, skipped. |
+| `--execution-environment-id <string>` |  | Only jobs that ran in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--name <string>` |  | With scopeId, only the workflow job or pipeline step of this name, as Workload.name gives it. |
+| `--pipeline-id <string>` |  | Only steps of this pipeline. Returns 403 when the caller cannot read it. |
+| `--runner-size <string>` |  | Only jobs booked at this runner size, as Job.runnerSize labels it (for example "8 vCPU / 32 GiB"). |
+| `--scope-id <string>` |  | With name (and source), only one workflow job or pipeline step: the code source ID for GitHub Actions jobs, the pipeline ID for pipeline steps. |
+| `--source <string>` |  | Only jobs from this source. Available values: github_actions, pipeline. |
+
+#### `ravion analytics ci facets`
+
+CI analytics filter values
+
+```bash
+ravion analytics ci facets [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--from <string>` | yes | First day of the range (UTC), inclusive. |
+| `--to <string>` | yes | Last day of the range (UTC), inclusive. Must be on or after from; the range covers at most 400 days. |
+| `--code-source-id <string>` |  | Only GitHub Actions jobs of this code source (repository). Returns 403 when the caller cannot read it. |
+| `--conclusion <string>` |  | Only jobs that ended this way. Available values: success, failure, cancelled, timed_out, skipped. |
+| `--execution-environment-id <string>` |  | Only jobs that ran in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--name <string>` |  | With scopeId, only the workflow job or pipeline step of this name, as Workload.name gives it. |
+| `--pipeline-id <string>` |  | Only steps of this pipeline. Returns 403 when the caller cannot read it. |
+| `--runner-size <string>` |  | Only jobs booked at this runner size, as Job.runnerSize labels it (for example "8 vCPU / 32 GiB"). |
+| `--scope-id <string>` |  | With name (and source), only one workflow job or pipeline step: the code source ID for GitHub Actions jobs, the pipeline ID for pipeline steps. |
+| `--source <string>` |  | Only jobs from this source. Available values: github_actions, pipeline. |
+
+#### `ravion analytics ci job-tests`
+
+A CI run's tests
+
+```bash
+ravion analytics ci job-tests <stepExecutionId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+#### `ravion analytics ci jobs`
+
+List CI jobs
+
+```bash
+ravion analytics ci jobs [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--from <string>` | yes | First day of the range (UTC), inclusive. |
+| `--to <string>` | yes | Last day of the range (UTC), inclusive. Must be on or after from; the range covers at most 400 days. |
+| `--code-source-id <string>` |  | Only GitHub Actions jobs of this code source (repository). Returns 403 when the caller cannot read it. |
+| `--conclusion <string>` |  | Only jobs that ended this way. Available values: success, failure, cancelled, timed_out, skipped. |
+| `--cursor <string>` |  | The nextCursor of the previous page. |
+| `--execution-environment-id <string>` |  | Only jobs that ran in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | How many jobs to return, 1 to 100. Defaults to 50. |
+| `--name <string>` |  | With scopeId, only the workflow job or pipeline step of this name, as Workload.name gives it. |
+| `--pipeline-id <string>` |  | Only steps of this pipeline. Returns 403 when the caller cannot read it. |
+| `--runner-size <string>` |  | Only jobs booked at this runner size, as Job.runnerSize labels it (for example "8 vCPU / 32 GiB"). |
+| `--scope-id <string>` |  | With name (and source), only one workflow job or pipeline step: the code source ID for GitHub Actions jobs, the pipeline ID for pipeline steps. |
+| `--source <string>` |  | Only jobs from this source. Available values: github_actions, pipeline. |
+| `-v, --verbose` |  | show full output |
+
+#### `ravion analytics ci metrics`
+
+CI job metrics
+
+```bash
+ravion analytics ci metrics <stepExecutionId> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
+#### `ravion analytics ci rightsize`
+
+Right-size CI jobs
+
+```bash
+ravion analytics ci rightsize [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--from <string>` | yes | First day of the range (UTC), inclusive. |
+| `--to <string>` | yes | Last day of the range (UTC), inclusive. Must be on or after from; the range covers at most 400 days. |
+| `--actionable` |  | Only jobs whose suggestion moves the size (down or up). |
+| `--code-source-id <string>` |  | Only GitHub Actions jobs of this code source (repository). Returns 403 when the caller cannot read it. |
+| `--conclusion <string>` |  | Only jobs that ended this way. Available values: success, failure, cancelled, timed_out, skipped. |
+| `--execution-environment-id <string>` |  | Only jobs that ran in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | How many jobs to return, 1 to 200. Defaults to 50. |
+| `--name <string>` |  | With scopeId, only the workflow job or pipeline step of this name, as Workload.name gives it. |
+| `--pipeline-id <string>` |  | Only steps of this pipeline. Returns 403 when the caller cannot read it. |
+| `--runner-size <string>` |  | Only jobs booked at this runner size, as Job.runnerSize labels it (for example "8 vCPU / 32 GiB"). |
+| `--scope-id <string>` |  | With name (and source), only one workflow job or pipeline step: the code source ID for GitHub Actions jobs, the pipeline ID for pipeline steps. |
+| `--source <string>` |  | Only jobs from this source. Available values: github_actions, pipeline. |
+| `-v, --verbose` |  | show full output |
+
+#### `ravion analytics ci runs`
+
+CI run times
+
+```bash
+ravion analytics ci runs [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--from <string>` | yes | First day of the range (UTC), inclusive. |
+| `--to <string>` | yes | Last day of the range (UTC), inclusive. Must be on or after from; the range covers at most 400 days. |
+| `--code-source-id <string>` |  | Only GitHub Actions jobs of this code source (repository). Returns 403 when the caller cannot read it. |
+| `--conclusion <string>` |  | Only jobs that ended this way. Available values: success, failure, cancelled, timed_out, skipped. |
+| `--execution-environment-id <string>` |  | Only jobs that ran in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--name <string>` |  | With scopeId, only the workflow job or pipeline step of this name, as Workload.name gives it. |
+| `--pipeline-id <string>` |  | Only steps of this pipeline. Returns 403 when the caller cannot read it. |
+| `--runner-size <string>` |  | Only jobs booked at this runner size, as Job.runnerSize labels it (for example "8 vCPU / 32 GiB"). |
+| `--scope-id <string>` |  | With name (and source), only one workflow job or pipeline step: the code source ID for GitHub Actions jobs, the pipeline ID for pipeline steps. |
+| `--source <string>` |  | Only jobs from this source. Available values: github_actions, pipeline. |
+| `-v, --verbose` |  | show full output |
+
+#### `ravion analytics ci sample`
+
+Sample a CI run
+
+```bash
+ravion analytics ci sample [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--from <string>` | yes | First day of the range (UTC), inclusive. |
+| `--percentile <string>` | yes | Which percentile run /ci/analytics/sample returns. Available values: p50, p90, p95, p99, max. |
+| `--to <string>` | yes | Last day of the range (UTC), inclusive. Must be on or after from; the range covers at most 400 days. |
+| `--code-source-id <string>` |  | Only GitHub Actions jobs of this code source (repository). Returns 403 when the caller cannot read it. |
+| `--conclusion <string>` |  | Only jobs that ended this way. Available values: success, failure, cancelled, timed_out, skipped. |
+| `--execution-environment-id <string>` |  | Only jobs that ran in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--metric <string>` |  | Defaults to duration. Available values: duration, cpu, memory. |
+| `--name <string>` |  | With scopeId, only the workflow job or pipeline step of this name, as Workload.name gives it. |
+| `--pipeline-id <string>` |  | Only steps of this pipeline. Returns 403 when the caller cannot read it. |
+| `--runner-size <string>` |  | Only jobs booked at this runner size, as Job.runnerSize labels it (for example "8 vCPU / 32 GiB"). |
+| `--scope-id <string>` |  | With name (and source), only one workflow job or pipeline step: the code source ID for GitHub Actions jobs, the pipeline ID for pipeline steps. |
+| `--source <string>` |  | Only jobs from this source. Available values: github_actions, pipeline. |
+
+#### `ravion analytics ci series`
+
+CI job trends
+
+```bash
+ravion analytics ci series [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--from <string>` | yes | First day of the range (UTC), inclusive. |
+| `--granularity <string>` | yes | Time bucket size for /ci/analytics/series. Available values: hour, day, week. |
+| `--to <string>` | yes | Last day of the range (UTC), inclusive. Must be on or after from; the range covers at most 400 days. |
+| `--code-source-id <string>` |  | Only GitHub Actions jobs of this code source (repository). Returns 403 when the caller cannot read it. |
+| `--conclusion <string>` |  | Only jobs that ended this way. Available values: success, failure, cancelled, timed_out, skipped. |
+| `--execution-environment-id <string>` |  | Only jobs that ran in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--name <string>` |  | With scopeId, only the workflow job or pipeline step of this name, as Workload.name gives it. |
+| `--pipeline-id <string>` |  | Only steps of this pipeline. Returns 403 when the caller cannot read it. |
+| `--runner-size <string>` |  | Only jobs booked at this runner size, as Job.runnerSize labels it (for example "8 vCPU / 32 GiB"). |
+| `--scope-id <string>` |  | With name (and source), only one workflow job or pipeline step: the code source ID for GitHub Actions jobs, the pipeline ID for pipeline steps. |
+| `--source <string>` |  | Only jobs from this source. Available values: github_actions, pipeline. |
+| `-v, --verbose` |  | show full output |
+
+#### `ravion analytics ci summary`
+
+Summarize CI jobs
+
+```bash
+ravion analytics ci summary [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--from <string>` | yes | First day of the range (UTC), inclusive. |
+| `--to <string>` | yes | Last day of the range (UTC), inclusive. Must be on or after from; the range covers at most 400 days. |
+| `--code-source-id <string>` |  | Only GitHub Actions jobs of this code source (repository). Returns 403 when the caller cannot read it. |
+| `--compare` |  | Also return the previous period's figures as previous. |
+| `--conclusion <string>` |  | Only jobs that ended this way. Available values: success, failure, cancelled, timed_out, skipped. |
+| `--execution-environment-id <string>` |  | Only jobs that ran in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--name <string>` |  | With scopeId, only the workflow job or pipeline step of this name, as Workload.name gives it. |
+| `--pipeline-id <string>` |  | Only steps of this pipeline. Returns 403 when the caller cannot read it. |
+| `--runner-size <string>` |  | Only jobs booked at this runner size, as Job.runnerSize labels it (for example "8 vCPU / 32 GiB"). |
+| `--scope-id <string>` |  | With name (and source), only one workflow job or pipeline step: the code source ID for GitHub Actions jobs, the pipeline ID for pipeline steps. |
+| `--source <string>` |  | Only jobs from this source. Available values: github_actions, pipeline. |
+
+#### `ravion analytics ci tests`
+
+Rank a CI job's tests
+
+```bash
+ravion analytics ci tests [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--from <string>` | yes | First day of the range (UTC), inclusive. |
+| `--to <string>` | yes | Last day of the range (UTC), inclusive. Must be on or after from; the range covers at most 400 days. |
+| `--code-source-id <string>` |  | Only GitHub Actions jobs of this code source (repository). Returns 403 when the caller cannot read it. |
+| `--conclusion <string>` |  | Only jobs that ended this way. Available values: success, failure, cancelled, timed_out, skipped. |
+| `--execution-environment-id <string>` |  | Only jobs that ran in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | How many tests to return, 1 to 100. Defaults to 25. |
+| `--name <string>` |  | With scopeId, only the workflow job or pipeline step of this name, as Workload.name gives it. |
+| `--pipeline-id <string>` |  | Only steps of this pipeline. Returns 403 when the caller cannot read it. |
+| `--q <string>` |  | Only tests whose name, classname or suite contains this text, ignoring case. |
+| `--ranking <string>` |  | Defaults to slowest. Available values: slowest, failing. |
+| `--runner-size <string>` |  | Only jobs booked at this runner size, as Job.runnerSize labels it (for example "8 vCPU / 32 GiB"). |
+| `--scope-id <string>` |  | With name (and source), only one workflow job or pipeline step: the code source ID for GitHub Actions jobs, the pipeline ID for pipeline steps. |
+| `--source <string>` |  | Only jobs from this source. Available values: github_actions, pipeline. |
+| `-v, --verbose` |  | show full output |
+
+#### `ravion analytics ci top`
+
+Rank CI jobs
+
+```bash
+ravion analytics ci top [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--from <string>` | yes | First day of the range (UTC), inclusive. |
+| `--kind <string>` | yes | Which ranking /ci/analytics/top returns. Available values: slowest, flakiest, oversized. |
+| `--to <string>` | yes | Last day of the range (UTC), inclusive. Must be on or after from; the range covers at most 400 days. |
+| `--code-source-id <string>` |  | Only GitHub Actions jobs of this code source (repository). Returns 403 when the caller cannot read it. |
+| `--conclusion <string>` |  | Only jobs that ended this way. Available values: success, failure, cancelled, timed_out, skipped. |
+| `--execution-environment-id <string>` |  | Only jobs that ran in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | How many items to return, 1 to 50. Defaults to 10. |
+| `--name <string>` |  | With scopeId, only the workflow job or pipeline step of this name, as Workload.name gives it. |
+| `--pipeline-id <string>` |  | Only steps of this pipeline. Returns 403 when the caller cannot read it. |
+| `--runner-size <string>` |  | Only jobs booked at this runner size, as Job.runnerSize labels it (for example "8 vCPU / 32 GiB"). |
+| `--scope-id <string>` |  | With name (and source), only one workflow job or pipeline step: the code source ID for GitHub Actions jobs, the pipeline ID for pipeline steps. |
+| `--source <string>` |  | Only jobs from this source. Available values: github_actions, pipeline. |
+| `-v, --verbose` |  | show full output |
+
+#### `ravion analytics ci workloads`
+
+List CI workloads
+
+```bash
+ravion analytics ci workloads [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--from <string>` | yes | First day of the range (UTC), inclusive. |
+| `--to <string>` | yes | Last day of the range (UTC), inclusive. Must be on or after from; the range covers at most 400 days. |
+| `--code-source-id <string>` |  | Only GitHub Actions jobs of this code source (repository). Returns 403 when the caller cannot read it. |
+| `--compare` |  | Also return the previous period's figures as previous. |
+| `--conclusion <string>` |  | Only jobs that ended this way. Available values: success, failure, cancelled, timed_out, skipped. |
+| `--cursor <string>` |  | The nextCursor of the previous page. |
+| `--execution-environment-id <string>` |  | Only jobs that ran in this execution environment. |
+| `--json` |  | emit response as JSON |
+| `--limit <int>` |  | How many rows to return, 1 to 100. Defaults to 25. |
+| `--name <string>` |  | With scopeId, only the workflow job or pipeline step of this name, as Workload.name gives it. |
+| `--order <string>` |  | Defaults to desc. Available values: asc, desc. |
+| `--pipeline-id <string>` |  | Only steps of this pipeline. Returns 403 when the caller cannot read it. |
+| `--q <string>` |  | Only names or repositories containing this text, ignoring case. |
+| `--runner-size <string>` |  | Only jobs booked at this runner size, as Job.runnerSize labels it (for example "8 vCPU / 32 GiB"). |
+| `--scope-id <string>` |  | With name (and source), only one workflow job or pipeline step: the code source ID for GitHub Actions jobs, the pipeline ID for pipeline steps. |
+| `--sort <string>` |  | Defaults to runs. Available values: name, runs, failureRate, runMsP50, runMsP90, runMinutes, vcpuMinutes, lastRunAt. |
+| `--source <string>` |  | Only jobs from this source. Available values: github_actions, pipeline. |
+| `-v, --verbose` |  | show full output |
+

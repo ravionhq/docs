@@ -365,6 +365,7 @@
             "boost": 0.5,
             "pages": [
               "cli/reference/alert",
+              "cli/reference/analytics",
               "cli/reference/api-key",
               "cli/reference/aws",
               "cli/reference/billing",
@@ -380,6 +381,7 @@
               "cli/reference/feature-flag",
               "cli/reference/feedback",
               "cli/reference/git",
+              "cli/reference/github-actions",
               "cli/reference/infrastructure-event",
               "cli/reference/integration",
               "cli/reference/login",
