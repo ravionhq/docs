@@ -38,13 +38,49 @@ Ravion recognizes these filenames in any directory, including nested directories
 
 All patterns accept `.yaml`, `.yml`, `.json`, `.jsonc`, and `.cue`. For example, use `ravion.jsonc`, `shop.ravion.cue`, or `ravion-pipeline.deploy.json`. Names are case-sensitive. Files named `pipeline.yaml` or `ravion.yaml.bak` are not scanned, and nothing inside a `.github` directory is scanned: a GitHub Actions workflow at `.github/workflows/ravion.yml` is left to GitHub.
 
-The extension selects the parser. JSON must be valid JSON; JSONC also supports comments and trailing commas. CUE files can use definitions, expressions, and standard-library imports, but must evaluate to a concrete config object. Each CUE file is evaluated independently: sibling files, repository-local imports, and external CUE modules are not loaded.
+The extension selects the parser. JSON must be valid JSON; JSONC also supports comments and trailing commas. CUE files can use definitions, expressions, and standard-library imports, but must evaluate to a concrete config object. A CUE file outside a CUE module is evaluated on its own. A CUE file inside a module is evaluated with its package; see [CUE modules](#cue-modules).
 
 All supported formats use the same validation and automation: pull requests receive a dry-run plan, and merges into the default branch apply the changes. Direct commits to the default branch also apply changes.
 
 The filename makes a file eligible for scanning; its contents determine whether it is a project config or a pipeline config. Ravion compares the top-level fields against the two schemas. Project configs describe `project` and `environments`; pipeline configs describe `steps` and `variants`, with a `pipeline` block identifying their target. A pipeline config can therefore live in a file named `ravion.yaml`, although `ravion-pipeline.yaml` makes its purpose clearer.
 
 Ravion plans or applies changed files, not every file on each push. It also checks other recognized, non-ignored config files for conflicting target references.
+
+### CUE modules
+
+A `.cue` config file is in a CUE module when its directory, or a parent directory, has a `cue.mod/module.cue`. Ravion evaluates such a file the way `cue export .:<package>` evaluates its directory, using the file's own package:
+
+- the other files of its package, in its directory and in parent directories up to the module root
+- packages it imports from inside the module
+- files it embeds with `@embed`, inside the module
+
+For example, to keep a Fluent Bit config in a file of its own and pass it as a module input:
+
+```text
+platform/ravion/
+├── cue.mod/module.cue
+├── ravion.cue
+└── firelens/loki.conf
+```
+
+```cue platform/ravion/ravion.cue
+@extern(embed)
+
+package ravion
+
+_firelensLokiConfig: _ @embed(file="firelens/loki.conf", type=text)
+```
+
+A file in a module is planned and applied when any file it loaded changes, not only the config file. An edit to `firelens/loki.conf` plans `ravion.cue` on the pull request and applies it on merge. Files added to or removed from its package, or matched by an `@embed` glob, count too.
+
+Limits:
+
+- Modules that depend on other CUE modules (`deps` in `module.cue`) are refused: Ravion does not fetch from a CUE registry.
+- Two Ravion config files in the same CUE package are refused, because they would be evaluated as one document. Give each config file its own package or directory.
+- One evaluation reads at most 1,000 files and 10 MiB. Symbolic links and submodules are not read.
+- In a repository too large for GitHub to list its whole tree, a config file is planned only when it changes itself, not when only a file it loads changes.
+
+`ravion project config apply --file` and `ravion pipeline config apply --file` (CLI 1.47.0 and later) evaluate a CUE file the same way.
 
 ## Exclude files with .ravionignore
 
