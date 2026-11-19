@@ -86,7 +86,9 @@
             "group": "GitHub Actions",
             "pages": [
               "github-actions/runners",
+              "github-actions/migrate-workflows",
               "github-actions/aws-credentials",
+              "github-actions/amazon-ecr",
               "github-actions/caching"
             ]
           },
@@ -363,6 +365,7 @@
             "boost": 0.5,
             "pages": [
               "cli/reference/alert",
+              "cli/reference/analytics",
               "cli/reference/api-key",
               "cli/reference/aws",
               "cli/reference/billing",
@@ -378,6 +381,7 @@
               "cli/reference/feature-flag",
               "cli/reference/feedback",
               "cli/reference/git",
+              "cli/reference/github-actions",
               "cli/reference/infrastructure-event",
               "cli/reference/integration",
               "cli/reference/login",
@@ -391,9 +395,11 @@
               "cli/reference/project",
               "cli/reference/report",
               "cli/reference/service-account",
+              "cli/reference/setup",
               "cli/reference/shell-completion",
               "cli/reference/signup",
               "cli/reference/stack",
+              "cli/reference/support",
               "cli/reference/switch",
               "cli/reference/terraform",
               "cli/reference/user",

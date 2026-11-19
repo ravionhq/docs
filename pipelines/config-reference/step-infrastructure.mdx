@@ -114,7 +114,7 @@ Spot EC2 instance infrastructure
 </ResponseField>
 
 <ResponseField name="permissions" type="AwsPermissions">
-  IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. EC2 runners always keep AmazonSSMManagedInstanceCore, CloudWatchAgentServerPolicy, and any inline policies Ravion adds (such as access to referenced secrets).
+  IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. Both EC2 runners and sandboxes always keep any inline policies Ravion adds (such as access to referenced secrets). EC2 runners also always keep AmazonSSMManagedInstanceCore and CloudWatchAgentServerPolicy. Sandbox steps get no baseline policies: their role has only the step defaults or listed policies plus those inline policies.
 
   See: [AwsPermissions](#awspermissions)
 
@@ -189,7 +189,7 @@ On-demand EC2 instance infrastructure
 </ResponseField>
 
 <ResponseField name="permissions" type="AwsPermissions">
-  IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. EC2 runners always keep AmazonSSMManagedInstanceCore, CloudWatchAgentServerPolicy, and any inline policies Ravion adds (such as access to referenced secrets).
+  IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. Both EC2 runners and sandboxes always keep any inline policies Ravion adds (such as access to referenced secrets). EC2 runners also always keep AmazonSSMManagedInstanceCore and CloudWatchAgentServerPolicy. Sandbox steps get no baseline policies: their role has only the step defaults or listed policies plus those inline policies.
 
   See: [AwsPermissions](#awspermissions)
 
@@ -267,7 +267,7 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
 </ResponseField>
 
 <ResponseField name="permissions" type="AwsPermissions">
-  IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. EC2 runners always keep AmazonSSMManagedInstanceCore, CloudWatchAgentServerPolicy, and any inline policies Ravion adds (such as access to referenced secrets).
+  IAM permissions for the runner role — "attach" to add managed policies to the step defaults, or "replace" to use the listed managed policies instead of the step defaults. Accepts AWS managed and customer managed policy ARNs. Both EC2 runners and sandboxes always keep any inline policies Ravion adds (such as access to referenced secrets). EC2 runners also always keep AmazonSSMManagedInstanceCore and CloudWatchAgentServerPolicy. Sandbox steps get no baseline policies: their role has only the step defaults or listed policies plus those inline policies.
 
   See: [AwsPermissions](#awspermissions)
 
@@ -414,8 +414,8 @@ has no sandbox pool, so the step fails until a pool is enabled on it.
 
 ### AwsPermissions
 
-IAM policies configuration for runner roles
-Used by EC2-backed steps to specify additional permissions
+IAM policies configuration for the step's runner role
+Used by EC2 and sandbox steps to change the step's AWS permissions
 
 One of: [AwsPermissionsAttach](#awspermissionsattach), [AwsPermissionsReplace](#awspermissionsreplace).
 

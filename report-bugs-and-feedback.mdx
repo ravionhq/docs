@@ -23,6 +23,15 @@ ravion feedback "Dry-run output for proj_2eK7jP9oWaX5lI3QsVb0rUcMgFd is hard to 
 
 Use `ravion bug` when something is broken and `ravion feedback` when something is confusing, harder than it should be, or missing. Both are also available as `ravion report bug` and `ravion report feedback`.
 
+## Before you report a bug
+
+The bug may already be fixed. Before filing, rule that out:
+
+1. Upgrade the CLI to the latest release with `brew upgrade ravionhq/tap/ravion`, or rerun the [install script](/cli/installation). `ravion bug` refuses to file a report from an outdated CLI unless you pass `--allow-outdated`.
+2. If the failure involves a module, such as a failed Terraform plan or stack run, check for a newer version with `ravion module version list --type <module-type>`. Read its release notes, bump the module's `version` in your [project config file](/config-as-code/project-config-file), apply it, and retry.
+
+Report the bug if it still happens on the latest CLI and module versions, and name those versions in the report.
+
 ## What to include
 
 - What happened, then what you expected.
@@ -68,6 +77,8 @@ On success the CLI prints `Report submitted.` and exits `0`. Bug reports also pr
 ## For AI agents
 
 Nothing about these commands is interactive — no prompts, no editor, nothing read from stdin — so agents can call them directly. Exit `0` means the report was submitted and `1` means anything else. There is no `--json` output.
+
+Agents should upgrade the CLI and the affected modules to their latest versions and retry before filing a bug, as described in [Before you report a bug](#before-you-report-a-bug). Upgrading a module changes infrastructure, so agents should show the user the plan before it applies.
 
 Agents should paste the IDs they are already holding rather than describing resources in prose. Ravion auto-detects opencode, Claude Code, Codex, Gemini CLI, Cursor, and Aider; pass `--agent` for anything else.
 

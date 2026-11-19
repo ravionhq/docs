@@ -39,6 +39,109 @@ rss: true
 {/* ravion-changelog:october-26-2026 */}
 {/* ravion-changelog:november-2-2026 */}
 {/* ravion-changelog:november-9-2026 */}
+{/* ravion-changelog:november-16-2026 */}
+<Update
+  label="November 16, 2026"
+  rss={{
+    title: "Lower pipeline and GitHub Actions runner costs, product-specific AWS roles, clearer EKS events, and more reliable Terraform applies and pipeline cancellation",
+  }}
+>
+
+## Platform
+
+### Features
+
+- **Terms of use:** Read Ravion's Terms of Use from the website footer or Privacy Policy.
+
+### Improvements
+
+- Pipeline runs and [GitHub Actions runners](https://www.ravion.com/docs/github-actions/runners) now cost significantly less to run.
+- [EKS deployment details](https://www.ravion.com/docs/modules/deploy) now show lifecycle milestones with repeated warnings grouped together, plus an Events tab with the full event stream and a warnings-only filter.
+- Pipeline run canvases now align parallel branches and skipped stacks, show stage names on one subtitle line, and list every skipped step in the title tooltip.
+- Dashboard sidebars now show more of long pipeline names, and clipped names and descriptions across cards, sidebars, and breadcrumbs reveal their full text on hover.
+- Deployment resource drawers now use their border instead of a heavy shadow to separate them from the page.
+- Website option selectors now mark the selected or hovered option with corner brackets.
+- Ravion state backend workspace names are now validated as 1–90 letters, digits, underscores, or hyphens.
+
+### Fixes
+
+- [Stack outputs](https://www.ravion.com/docs/modules/stack) now reflect Terraform state after a failed apply instead of retaining outputs from the last successful apply.
+- OpenTofu stack applies now use the saved plan without failing on stale variable values left by an earlier plan.
+- Pipeline runs now show Queued with the waiting reason when all active steps are waiting on locks and no approval is pending.
+- Cancelling a stuck pipeline run now works when its workflow can no longer resume, allowing waiting runs to acquire its released locks.
+- [Approval steps](https://www.ravion.com/docs/pipelines/config-reference/steps#approvalstep) now limit approval waits to 30 days instead of allowing runs to wait indefinitely.
+- EKS deployment steps now show Queued while waiting for another deployment, and cancellation now interrupts deployments managed by the Ravion Operator.
+- EKS workload details now show the selected pod's state and lifecycle events instead of mixing in events from other pods.
+- Deployments started outside Ravion now explain why cancellation is unavailable instead of reporting an unexpected error or showing Cancelled while AWS continues the rollout.
+- Planned changes now show focused line diffs for edited text inside collection items and structured diffs for nested objects and arrays.
+- Pipeline and deployment input validation now consistently accepts values that match their configured patterns instead of intermittently reporting Invalid pattern.
+- Saving an execution environment now rejects deleted security groups, groups from another VPC, and groups without outbound HTTPS access, with an explanation.
+- Organization deletion blockers now link directly to each project's Settings page, where customers can delete it.
+- [Sandbox-backed pipeline steps](https://www.ravion.com/docs/concepts/sandboxes) now allow enough time to boot with a new base image and retained data instead of failing at the shorter warm-restore deadline.
+- Cancelling a pipeline step during boot now reports the cancellation instead of incorrectly reporting that the guest stopped responding.
+- Sandbox pools now avoid duplicate host launches and unnecessary bare-metal hosts for steps that fit ordinary instances.
+- Sandbox pools now use Spot placement scores even when AWS rejects the initial capacity requested for scoring.
+- Retiring an idle sandbox host no longer causes false host-connection failures for waiting pipeline steps.
+- EC2 Spot launches and sandbox host launches now wait for newly created IAM instance profiles to propagate instead of failing launch attempts immediately.
+- Sandbox disk-cache cleanup now recovers when its settings fall out of sync, and deleted pools' cache buckets now clean up successfully.
+- Pipeline jobs now use the correct AWS product role immediately after an account stack update instead of temporarily failing with access-denied errors.
+- Docker builds in sandbox steps now avoid missing-parent-snapshot failures when replacing images or reusing saved build caches.
+- Cached Docker Buildx builders now start after a sandbox image update instead of repeatedly failing with a cgroup-parent error.
+- Sandbox steps now boot successfully when an updated image changes a cached tool path between a directory, file, or symbolic link.
+- Sandbox hosts without instance storage now avoid running out of memory from temporary files used during cold restores.
+- Docker containers in sandbox jobs can now access the job's AWS role credentials instead of timing out at the metadata endpoint.
+- Native Ruby and Python dependency builds in the default sandbox image now have the development headers they need, including zlib and PostgreSQL headers.
+- Sandbox steps now support setting the time zone with `timedatectl set-timezone` instead of silently leaving date-sensitive work in UTC.
+- Sandbox steps using `gh api --slurp` now run successfully instead of failing with an unknown-flag error.
+- Deployments now verify that their AWS account belongs to the correct organization before accessing it.
+- Pipeline approvals now validate the approver's authorization and the matching step before accepting an approval.
+- Terraform state API requests now return a 413 response when they exceed 64 KiB for locks or 16 MiB for state versions.
+- Kubernetes product demos now show the selected pod's state and events, and deployment demos no longer show an extra border beside open drawers.
+- Same-page links in website text now stay in the current tab.
+
+## AWS account IAM policy 1.0.68 → 1.0.71
+
+- **Product-specific roles:** Choose the products each AWS account uses in account settings, then update its CloudFormation stack to grant only the permissions those products need. Deployments and Terraform also require the pipeline execution role.
+- **Terraform administrator permissions:** Only the Terraform product role can grant a pipeline step administrator access, and no Ravion role can modify the connection stack's own roles or policies.
+
+Update your AWS account connection in organization settings.
+
+## Modules
+
+### [Aurora Database](https://www.ravion.com/docs/module-definitions/catalog/rvn-aurora) [1.6.0](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%401.6.0) → [1.7.0](https://github.com/ravionhq/modules/releases/tag/rvn-aurora%401.7.0)
+
+- Receive low-free-storage alarms for cluster instances on both database engines.
+
+### [AWS Application Load Balancer](https://www.ravion.com/docs/module-definitions/catalog/rvn-aws-alb) [1.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-alb%401.4.0) → [1.5.0](https://github.com/ravionhq/modules/releases/tag/rvn-aws-alb%401.5.0)
+
+- Receive unhealthy-target alarms, including for target groups attached after the load balancer was created.
+
+### [CloudFront CDN](https://www.ravion.com/docs/module-definitions/catalog/rvn-cloudfront) [1.8.0](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%401.8.0) → [1.9.0](https://github.com/ravionhq/modules/releases/tag/rvn-cloudfront%401.9.0)
+
+- Configure how long each origin can take to connect and respond, including connection timeouts and attempts.
+
+### [ECS Cluster](https://www.ravion.com/docs/module-definitions/catalog/rvn-ecs-cluster) [2.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%402.4.0) → [2.5.0](https://github.com/ravionhq/modules/releases/tag/rvn-ecs-cluster%402.5.0)
+
+- Receive alarms when targets behind shared application load balancers fail health checks.
+
+### [EKS Add-ons](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-addons) [1.2.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-addons%401.2.0) → [1.4.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-addons%401.4.0)
+
+- Receive unhealthy-target alarms for shared application load balancers and choose the actions those alarms trigger.
+- Reduce inter-zone traffic when writing metrics.
+
+### [EKS Web Service](https://www.ravion.com/docs/module-definitions/catalog/rvn-eks-web) [1.17.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-web%401.17.0) → [1.18.0](https://github.com/ravionhq/modules/releases/tag/rvn-eks-web%401.18.0)
+
+- Receive unhealthy-target alarms for the service's load balancer target group, with optional notification actions.
+
+## CLI [1.33.0](https://github.com/ravionhq/cli/releases/tag/v1.33.0) → [1.37.0](https://github.com/ravionhq/cli/releases/tag/v1.37.0)
+
+### Fixes
+
+- **[Service account identity](https://www.ravion.com/docs/cli/reference/whoami):** `ravion whoami` now reports a service account's actual policy roles instead of always showing Owner, including every assigned role in text and `--json` output.
+- **[Project config preview](https://www.ravion.com/docs/cli/reference/project):** `ravion project config apply --dry-run` now shows the changed values when an update comes only from drift in derived module inputs.
+
+</Update>
+
 <Update
   label="November 9, 2026"
   rss={{

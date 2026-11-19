@@ -91,6 +91,20 @@ ravion organization permitted-idps-update <id> [flags]
 | `--data <string>` | yes | Request data as JSON |
 | `--json` |  | emit response as JSON |
 
+### `ravion organization setup`
+
+Get organization setup progress
+
+```bash
+ravion organization setup <id> [flags]
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--json` |  | emit response as JSON |
+
 ### `ravion organization sso-portal-link`
 
 Get Admin Portal link for SAML SSO setup
@@ -149,4 +163,6 @@ ravion organization update <id> [flags]
 | `--billing-email <string>` |  | billingEmail |
 | `--json` |  | emit response as JSON |
 | `--name <string>` |  | name |
+| `--setup-use-cases <strings>` |  | What the organization chose to use Ravion for during setup. Omitted until chosen. |
+| `--terms-accepted` |  | Set to true to agree to Ravion's terms of service on the organization's behalf.         Recorded once, with the time and the member who agreed; setup completes only after it. |
 

@@ -123,6 +123,7 @@ prerendered
 Prisma
 Dockerfiles
 BuildKit
+Buildx
 multi-stage
 host-build
 dockerignore
@@ -226,3 +227,9 @@ Nx
 Gradle
 Karpenter
 SDKs
+Ubicloud
+worktrees?
+[Bb]ursty
+cgroups?
+Buildkite
+[Rr]ulesets?

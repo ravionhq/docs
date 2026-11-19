@@ -2,14 +2,10 @@
 title: "GitHub Actions runners"
 sidebarTitle: "Runners"
 description: "Run GitHub Actions jobs on Ravion sandboxes or EC2 instances in your own AWS account by changing one runs-on label."
-keywords: ["GitHub Actions runners", "self-sizing jobs", "automatic sizing"]
+keywords: ["GitHub Actions runners", "self-sizing jobs", "automatic sizing", "RunsOn alternative", "CI cost"]
 "og:image": "https://www.ravion.com/og/docs/github-actions/runners.png"
 "twitter:image": "https://www.ravion.com/og/docs/github-actions/runners.png"
 ---
-
-<Note>
-  GitHub Actions runners are in private preview. [Contact support](/contact-support) to request access.
-</Note>
 
 Ravion runs your GitHub Actions jobs on machines in your AWS account. Change a job's `runs-on` to a Ravion label, and Ravion starts a fresh runner for that one job, in the execution environment the label names.
 
@@ -22,16 +18,16 @@ Ravion runs your GitHub Actions jobs on machines in your AWS account. Change a j
 Copy this prompt into your coding agent in the repository containing your GitHub Actions workflows:
 
 <Prompt description="Set up Ravion runners with automatic sizing and Spot where safe." icon="sparkles" actions={["copy", "cursor"]}>
-  Read https://www.ravion.com/docs/github-actions/runners.md and https://www.ravion.com/docs/github-actions/caching.md, then update this repository's GitHub Actions workflows to use Ravion runners. Inspect each job and the scripts it calls before making changes.
+  Read https://www.ravion.com/docs/github-actions/migrate-workflows.md, https://www.ravion.com/docs/github-actions/runners.md and https://www.ravion.com/docs/github-actions/caching.md, then update this repository's GitHub Actions workflows to use Ravion runners. Follow the migration guide's checklist. Inspect each job and the scripts it calls before making changes.
 
 - Confirm the prerequisites in the runner guide. Ask me for the dedicated CI execution environment's given ID or unique ID (ee_…) if it isn't already known; don't invent one or use a production environment.
 - Prefer type=sandbox with cpu=auto, memory=auto and disk=auto. Automatic sizing also works without interruptible=true.
-- Add interruptible=true only when the entire job is safe to stop and rerun from the beginning, such as tests, lint or builds without external side effects. Spot loss restarts the job, not just the interrupted step. Leave it off for publishing, deployments, migrations, pushing commits or tags, and any job whose retry safety is uncertain. Do not use type=ec2-spot as a shortcut.
+- Add interruptible=true only when the entire job is safe to stop and rerun from the beginning, such as tests, lint or builds without external side effects. When a Spot host is reclaimed, Ravion usually moves the running job live to another host, but in rare cases it restarts the whole job, not just the interrupted step. Leave it off for publishing, deployments, migrations, pushing commits or tags, and any job whose retry safety is uncertain. Do not use type=ec2-spot as a shortcut.
 - Use the execution environment ID in `ee`. Use either one slash-separated ravion/ label or a runs-on list with a bare ravion entry and separate key=value entries. Do not add self-hosted or unrelated labels.
 - Give each job a unique id using the GitHub run ID, run attempt, a distinct job-specific name and matrix index. Follow the guide's Unique labels example, replacing its test name for each job; do not copy the same name into every job.
-- Keep disk_cache=auto (the default) for sandbox jobs unless the job requires a clean disk. Keep checkout and dependency installation steps: a warm cache is not guaranteed. Public-repository jobs have no disk cache; confirm Allow public repositories is enabled before migrating them.
-- Check OS, architecture and tool requirements. Leave Windows and macOS jobs unchanged. Flag ARM or whole-instance requirements rather than silently moving them to a sandbox; EC2 needs an explicit instance size, not sandbox auto-sizing labels. Install missing tools explicitly rather than assuming the tools on GitHub's hosted image are available.
-- Preserve workflow triggers, permissions, secrets, matrices, dependencies and job behavior. Don't remove existing cache steps as part of this change without explaining why it is safe.
+- Keep disk_cache=auto (the default) for sandbox jobs unless the job requires a clean disk. Add clean: false to actions/checkout and make steps work on a kept workspace, as the migration guide describes. Keep checkout and dependency installation steps: a warm cache is not guaranteed. Public-repository jobs keep a disk separate from private repositories; confirm Allow public repositories is enabled before migrating them.
+- Check OS, architecture and tool requirements. Leave Windows, macOS and GPU jobs unchanged. Move ARM jobs to sandboxes only when they don't push container images, as the migration guide describes, and flag whole-instance requirements rather than silently moving them; EC2 needs an explicit instance size, not sandbox auto-sizing labels. Install missing tools explicitly rather than assuming the tools on GitHub's hosted image are available.
+- Preserve workflow triggers, permissions, secrets, matrices, dependencies, job IDs, job names and job behavior. Swap or remove the vendor runner actions the migration guide lists, such as Blacksmith, Depot, Namespace or RunsOn caches and builders. Don't remove other cache steps as part of this change without explaining why it is safe.
 - Validate the workflow YAML and show the diff, which jobs are interruptible and why, and any prerequisites or incompatible jobs that still need attention. Do not trigger workflows, deployments or other external changes without my approval.
 
 </Prompt>
@@ -111,6 +107,12 @@ flowchart TB
 
 Sandbox jobs run on the same autoscaling fleet as sandbox pipeline steps. See [Sandboxes](/concepts/sandboxes) for how hosts are placed, scaled, cached and priced.
 
+### When GitHub's webhooks are late
+
+GitHub's webhooks sometimes arrive late or not at all, especially during GitHub incidents. Ravion doesn't rely on them alone. It keeps checking GitHub for queued jobs that use Ravion labels and starts runners for them, so a delayed or dropped webhook doesn't leave your jobs stuck in **Queued**. You don't need to configure anything or rerun anything.
+
+GitHub still assigns every job to a runner. If GitHub Actions stops handing out jobs entirely, no runner can start them, and Ravion picks them up as soon as GitHub recovers.
+
 ## Startup time
 
 In our benchmarks, these are the p50 times for a sandbox job, from GitHub queueing it to its first step:
@@ -125,7 +127,7 @@ Public-repository jobs take a few seconds longer.
 
 For private repositories, Ravion takes the job only once its sandbox is up, so while a host boots the job shows **Queued** in GitHub, not **In progress**. Public-repository jobs are taken right away for identity checks, so they show **In progress** while the host boots.
 
-To avoid boot waits after quiet periods, keep hosts on hand with [sandbox settings](/concepts/sandboxes#sandbox-settings).
+To avoid boot waits after quiet periods or between bursts of jobs, keep hosts on hand with [sandbox settings](/concepts/sandboxes#sandbox-settings). See [Bursty fan-out workloads](/concepts/sandboxes#bursty-fan-out-workloads).
 
 ## Requirements
 
@@ -174,11 +176,11 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=4/memory=16/disk=60/interrupt
 | --- | --- | --- | --- |
 | `ee` | Yes | None | Given ID or unique ID (`ee_…`) of the execution environment to run in. |
 | `type` | Yes | None | `sandbox`. |
-| `cpu` | Yes | None | vCPUs for the sandbox (maximum 32 due to [Firecracker's per-sandbox limit](/concepts/sandboxes#limits-and-caveats)), or `auto`. See [Automatic sizing](#automatic-sizing). |
+| `cpu` | Yes | None | vCPUs the job books (maximum 32 due to [Firecracker's per-sandbox limit](/concepts/sandboxes#limits-and-caveats)), or `auto`. See [CPU, memory and limits](#cpu-memory-and-limits). |
 | `memory` | Yes | None | Memory in GiB, or `auto`. |
-| `disk` | No | 10 GiB per vCPU, at least 14 GiB | GiB of host disk reserved for what the job writes, or `auto`. |
-| `disk_cache` | No | `auto` | Keep the job's disk between runs. See [Disk cache](/github-actions/caching#disk-cache). |
-| `interruptible` | No | `false` | Allow Spot hosts, and rerun the job from the start on a new host if its host is lost. See [Interruptible steps](/concepts/sandboxes#interruptible-steps-and-spot-hosts). |
+| `disk` | No | 10 GiB per vCPU, at least 14 GiB | GiB of host disk reserved for what the job writes, or `auto`. With `cpu=auto`, the default follows the size Ravion picks. |
+| `disk_cache` | No | `auto` | Keep the job's disk between runs. Pipeline steps default to `off` instead. See [Disk cache](/github-actions/caching#disk-cache). |
+| `interruptible` | No | `false` | Allow Spot hosts. If a Spot host is reclaimed, Ravion moves the running job live to another host, or in rare cases reruns it from the start. See [If a Spot host is reclaimed](#if-a-spot-host-is-reclaimed). |
 | `id` | Yes | None | A value that makes the label unique to one job. See [Unique labels](#unique-labels). |
 
 Mark jobs that are safe to run twice as `interruptible=true`, such as tests, lint and builds. Leave it off for jobs that publish, deploy or push.
@@ -196,7 +198,7 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=auto/memory=auto/disk=auto/in
 Every run teaches Ravion what the job needs. Sizes grow fast when a job needs more, come down gradually when it needs less, then settle. Each job runs on the right machine at the right cost.
 
 - Automatic CPU, memory and disk work with or without `interruptible=true`. You can mix automatic and fixed values.
-- Automatic sizing starts at 4 vCPU, 16 GiB memory and 40 GiB disk. Fixed values stay fixed.
+- Automatic sizing starts at the size of the runner the job last ran on before Ravion, when its labels say how big that was, such as `blacksmith-8vcpu-ubuntu-2404`. Otherwise it starts at 4 vCPU, 16 GiB memory and 40 GiB disk. Fixed values stay fixed.
 - Sizes are learned per repository, workflow file and job name.
 - For interruptible jobs, Ravion can test smaller sizes. If a job runs out of memory or disk, Ravion gives it more and reruns it automatically, up to twice per workflow run. GitHub shows the failed attempt, then the rerun.
 
@@ -209,6 +211,22 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=auto/memory=auto/disk=auto/id
 Ravion keeps extra memory and disk headroom and reduces them only after successful, representative measurements. It doesn't test smaller memory sizes or automatically rerun these jobs after a sizing failure. If a job runs out of memory or disk, fix the cause or set a fixed size before rerunning it. If the required size won't fit your execution environment, the job fails rather than running with fewer resources.
 
 The job's log shows the size Ravion picked and why.
+
+### CPU, memory and limits
+
+`cpu` is what the job books, and what its AWS cost in [**Usage**](#track-cost-and-usage) is based on. The Ravion fee is per job minute, whatever the size.
+
+- `nproc` can show more vCPUs than `cpu`. The extra vCPUs are best effort. They're part of the host you pay AWS for, but [**Usage**](#track-cost-and-usage) attributes the job's cost by `cpu`. If a tool sizes its worker pool from `nproc`, set the worker count explicitly.
+- Sandboxes have no swap. A job that runs out of memory hits the Linux out-of-memory killer.
+- `cpu` goes up to 32. With `auto`, memory goes up to 256 GiB and disk up to 2,000 GiB. A fixed size that fits no host fails the job.
+
+See [CPU and memory](/concepts/sandboxes#cpu-and-memory) and [Limits and caveats](/concepts/sandboxes#limits-and-caveats).
+
+### If a Spot host is reclaimed
+
+When AWS reclaims a Spot host, Ravion moves each running job live to another host, where it carries on without a restart or retry. In rare cases, such as when a move can't finish before AWS's deadline, Ravion runs the same GitHub job again from the start on a new runner, and the last retry runs On-Demand. Jobs without `interruptible=true` never run on Spot.
+
+When a job ran again, its setup step shows a line such as `Ravion runner retry: attempt=2 retries=1 previous_failure=spot_interrupted`. The AWS cost in [**Usage**](#track-cost-and-usage) includes the interrupted attempt. The Ravion fee counts only the attempt that finished.
 
 ### EC2
 
@@ -230,15 +248,62 @@ EC2 runners start a whole instance per job, boot Amazon Linux 2023, and have no 
 
 Sandbox jobs boot an x86_64 Ubuntu 24.04 image with the apt packages [GitHub's `ubuntu-24.04` runner image](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2404-Readme.md) installs. These include build-essential, Clang 18 and the native build headers common gems, wheels and Node.js packages compile against, such as `zlib1g-dev`, `libssl-dev`, `libffi-dev`, `libyaml-dev`, `libpq-dev`, `libmysqlclient-dev`, `libxml2-dev` and `libreadline-dev`. It also has Node.js 24 with `npm` and Yarn 1, Go 1.26, Rust, Python 3.12, GitHub CLI (`gh`), Docker with Docker Compose, the AWS CLI, the PostgreSQL client, Google Chrome, `jq` and `yq`. Like GitHub's images, `apt-get install` doesn't ask for confirmation. See [What runs inside a sandbox](/concepts/sandboxes#what-runs-inside-a-sandbox) for the full list.
 
+Sandbox jobs set `NODE_OPTIONS` to `--max-old-space-size=<MiB>`, 75% of the sandbox's memory, so Node can use the memory the job runs with. GitHub-hosted runners leave `NODE_OPTIONS` unset. A `NODE_OPTIONS` your workflow sets replaces Ravion's for that step.
+
+To run a command without it, unset it for that command:
+
+```yaml
+- run: env -u NODE_OPTIONS pnpm test
+```
+
+Setting `NODE_OPTIONS: ""` in the workflow gives an empty value, not an unset one. Node treats the two the same, but tests and tools that check whether `NODE_OPTIONS` is set don't.
+
 The image's Node.js 24 and Go 1.26 are in the Actions tool cache, so `actions/setup-node` and `actions/setup-go` asking for those versions use them without a download. Every other version starts out missing from the tool cache.
 
 The image is still much smaller than GitHub's hosted runner images. Their `ubuntu-latest` also comes with several versions each of Node.js, Python, Java, Go, Ruby and .NET, plus databases and cloud tools. The Ravion image has no Ruby, Java, .NET, PHP or `pnpm`. If a job needs something missing, install it natively in a `run` step:
 
-- System packages with `apt-get`, for example `apt-get update && apt-get install -y python3-pip`. Jobs run as root.
+- System packages with `apt-get` and `sudo`, for example `sudo apt-get update && sudo apt-get install -y python3-pip`.
 - Language versions with the usual `setup-*` actions, such as `ruby/setup-ruby`, `actions/setup-java`, `actions/setup-python` or `pnpm/action-setup`.
 - Anything else by downloading its binary or installer.
 
 With the disk cache on, what you install usually stays for later runs. Only runs whose trigger can write the cache save their disk, so some jobs install on every run. See [Disk cache](/github-actions/caching#disk-cache).
+
+### The job user
+
+As on GitHub's hosted runners, `run` steps that run directly on the sandbox run as the `runner` user (user ID 1001), not as root. `HOME` is `/home/runner`, and the workspace is under `/home/runner/work`. The user can run `sudo` without a password and is in the `docker`, `adm` and `systemd-journal` groups, so `docker` works without `sudo`.
+
+Commands that write outside the workspace and `/home/runner` need `sudo`. Examples are `apt-get` and creating directories under `/var`, `/opt` or `/etc`. To give a job a directory of its own, create it once and hand it to `runner`:
+
+```yaml
+- run: |
+    sudo mkdir -p /var/cache/my-ci
+    sudo chown runner:runner /var/cache/my-ci
+```
+
+Without `sudo`, these commands fail with `Permission denied`.
+
+In a `container:` job, steps run inside the job's image instead, as that image's user and with its tools. The image might have no `runner` account or `sudo`, so this section doesn't apply there. Many images run as root, so their steps don't need `sudo`.
+
+Before November 17, 2026, sandbox jobs ran as root from `/root/actions-runner/_work`. If a workflow written for that fails with `Permission denied`, add `sudo` to the commands that need root. The first run after the change starts with a fresh disk cache.
+
+### The host's CPU
+
+Inside a sandbox, `/proc/cpuinfo` and `lscpu` show a generic CPU model: `Intel(R) Xeon(R) Processor` on an Intel host, or `AMD EPYC` on an AMD host. Firecracker, the virtual machine monitor sandboxes run on, replaces the real model name so a sandbox looks the same on every host. To find out what your job ran on, use these environment variables instead:
+
+| Variable | Example | Value |
+| --- | --- | --- |
+| `RAVION_HOST_INSTANCE_TYPE` | `c8id.8xlarge` | The EC2 instance type of the host. |
+| `RAVION_HOST_CPU_MODEL` | `Intel(R) Xeon(R) 6975P-C` | The CPU model name the host reports. |
+
+Both describe the host the job started on. The **Set up job** step also shows them under the sandbox's size, for example `Host: c8id.8xlarge · Intel(R) Xeon(R) 6975P-C`. On `type=ec2` runners, `/proc/cpuinfo` already shows the real model, and the **Set up job** step shows it as `CPU: …`.
+
+```yaml
+- run: echo "Ran on $RAVION_HOST_INSTANCE_TYPE ($RAVION_HOST_CPU_MODEL)"
+```
+
+`run` steps that run directly on the sandbox get both variables. Docker containers don't, including `services:` and `container:`, so a job whose steps run in a `container:` can't read them. To record the host for such a job, drop `container:` and start the container from a `run` step on the sandbox instead. That step can forward the values, for example with `docker run -e RAVION_HOST_INSTANCE_TYPE -e RAVION_HOST_CPU_MODEL …`.
+
+When you compare job times with another runner, compare jobs that ran on the same CPU model. Sandbox hosts mix instance types, such as `c8id`, `m8id`, `r8id`, `i7i` and `i7ie`, and their processors differ in speed.
 
 ### AWS credentials
 
@@ -246,8 +311,10 @@ Each sandbox job gets its own IAM role, served at the standard instance metadata
 
 Docker containers in the job, including `services:` and `container:`, can't reach the endpoint, and their requests time out. See [AWS credentials](/github-actions/aws-credentials) for how to give containers credentials without printing them in the job log, and how to use GitHub OIDC.
 
+Docker isn't logged in to any registry when a job starts, and the job role has no IAM policies by default. To push images or Buildx caches to Amazon ECR, see [Amazon ECR](/github-actions/amazon-ecr).
+
 <Note>
-  Runners are in private preview. If a job hits a problem you can't explain — a tool that won't install, a missing kernel feature, or anything unexpected — [contact support](/contact-support).
+  If a job hits a problem you can't explain — a tool that won't install, a missing kernel feature, or anything unexpected — [contact support](/contact-support).
 </Note>
 
 ### Unique labels
@@ -271,6 +338,33 @@ If two unfinished jobs share a label, Ravion fails both, and each job's annotati
 
 Invalid configuration in either label format fails a private job, and the job's annotation says which key is wrong. Unrelated extra labels (for example, `self-hosted`) or multiple Ravion namespaces leave the job queued.
 
+## Compared with RunsOn
+
+[RunsOn](https://runs-on.com) also runs GitHub Actions jobs in your AWS account, but it starts one EC2 instance per job. Each job gets a whole instance of a fixed EC2 size, billed from launch until the job ends. Ravion runs many jobs as sandboxes on shared hosts, so its cost depends on how well those hosts are used, and that improves as you run more jobs.
+
+### Why Ravion gets more efficient at scale
+
+- **Sizes that fit the job.** A RunsOn job rounds up to the next EC2 size, so a job that needs 5 vCPU pays for 8. With [automatic sizing](#automatic-sizing), Ravion sizes each sandbox in whole vCPUs and 1 GiB of memory, rather than rounding up to an EC2 size. Jobs without `interruptible=true` keep extra memory and disk headroom.
+- **Slightly tighter fits.** Automatic sizing also gives a job a little less than its peak when tests show that doesn't noticeably slow it down.
+- **Shared reserved compute.** Most jobs don't hit their CPU peak at the same moment. Ravion lets jobs on the same host share their reserved compute when that doesn't affect their performance, so each host runs more work.
+- **Better packing with more jobs.** The more jobs that run at once, the more ways Ravion has to fill each host. Short jobs fill the gaps beside long ones, so fewer hosts sit partly empty.
+- **Cheaper cache reads.** When a disk chunk is already on a neighboring host, Ravion reads it from there instead of from S3. More hosts mean more of these reads, and fewer S3 requests.
+- **Lower-cost instance types.** Ravion picks the lowest-cost instance types that fit the work, across Spot pools, and rarely needs storage-optimized instances.
+
+### Why a few runs don't show the real cost
+
+RunsOn costs about the same per job at any volume. Ravion doesn't, so a short trial overstates its cost:
+
+- **Hosts launch for one run.** With no other work running, each burst of jobs boots its own hosts. As jobs finish at different times, the hosts sit partly empty until the slowest job ends. At real volume, other runs fill that space.
+- **Sizing hasn't learned yet.** Automatic sizing starts generously and gets tighter over the first runs of each job.
+- **There's nothing to share.** Shared compute and neighboring-host cache reads need other jobs and hosts running at the same time.
+
+To compare costs, move a representative share of your real workload to Ravion with `cpu=auto`, `memory=auto` and `disk=auto`. Run it for a few days of normal traffic. Then compare the same days: Ravion's AWS and Ravion costs in [**Usage**](#track-cost-and-usage) against RunsOn's whole bill, including EBS volumes, public IPv4 addresses, its control plane and its license.
+
+<Tip>
+  Planning a comparison? [Contact support](/contact-support) and we'll help you set it up and review the results with you.
+</Tip>
+
 ## Track cost and usage
 
 Go to [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments) and choose your CI environment.
@@ -287,7 +381,7 @@ Jobs from public repositories, including pull requests from forks, run only on s
 1. Go to [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments), choose the environment, then open **Config / Sandboxes**.
 2. Turn on **Allow public repositories**.
 
-Each public repository gets its own runner group, and its jobs run without a disk cache. [Automatic sizing](#automatic-sizing) works the same as for private repositories, including automatic reruns for interruptible jobs only. Jobs from public repositories with an invalid label, or that ask for EC2, stay queued.
+Each public repository gets its own runner group and its own disk cache, kept apart from your private repositories. Jobs that receive secrets other than `GITHUB_TOKEN` restore a disk but never save one. [Automatic sizing](#automatic-sizing) works the same as for private repositories, including automatic reruns for interruptible jobs only. Jobs from public repositories with an invalid label, or that ask for EC2, stay queued.
 
 ## Next steps
 
@@ -295,8 +389,11 @@ Each public repository gets its own runner group, and its jobs run without a dis
   <Card title="AWS credentials" icon="key" href="/github-actions/aws-credentials">
     The job's IAM role, Docker containers and GitHub OIDC.
   </Card>
+  <Card title="Migrate workflows" icon="arrow-right-arrow-left" href="/github-actions/migrate-workflows">
+    Every change to make when moving jobs.
+  </Card>
   <Card title="Caching" icon="database" href="/github-actions/caching">
-    Disk cache, Actions cache and artifacts.
+    Disk cache, Actions cache and artifacts in S3.
   </Card>
   <Card title="Sandboxes" icon="box" href="/concepts/sandboxes">
     How the sandbox fleet, disk cache and Spot hosts work.

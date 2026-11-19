@@ -18,9 +18,10 @@ The agent installs the skill if it is missing, then installs the CLI, signs you 
 
 ## What the agent needs from you
 
-The agent handles the terminal work. Three things need you, because only you can do them:
+The agent handles the terminal work. Four things need you, because only you can do them:
 
 - **Approve the sign-in.** `ravion login` prints a URL and a short code for you to confirm in the browser. No account yet? [Sign up](https://app.ravion.com/signup) first — Ravion is free for individuals, and teams start with a free trial.
+- **Agree to the terms of service.** A new organization finishes a short first-run setup before it can create infrastructure. The agent finishes it with `ravion setup`, but only you can agree to Ravion's [Terms of Service](https://www.ravion.com/terms) on your organization's behalf, so it shows you the link and asks.
 - **Confirm the AWS account.** The agent runs `aws sts get-caller-identity` and asks whether that is the account Ravion should manage. It then connects it by deploying Ravion's CloudFormation stack, which creates a cross-account IAM role. Without AWS CLI credentials, connect it in [AWS accounts](https://app.ravion.com/org/settings/aws-accounts?connect=%7B%7D) instead.
 - **Connect your Git repository.** `ravion git connect` prints a URL that needs your Git permissions. Skip it if Ravion only deploys images from a registry.
 
@@ -63,6 +64,22 @@ npx add-mcp https://www.ravion.com/docs/mcp --name ravion-docs
   ```
 
   See [Install the Ravion CLI](/cli/installation) and [Authentication](/cli/authentication).
+</Accordion>
+
+<Accordion title="Finish organization setup yourself">
+  Until first-run setup is complete, Ravion refuses requests that create, change, or run infrastructure with `Ravion:Organization:SETUP_INCOMPLETE`. Reading, settings, and deleting still work. See what's left:
+
+  ```bash
+  ravion setup
+  ```
+
+  In a terminal, it asks you to agree to the [Terms of Service](https://www.ravion.com/terms) and what you'll use Ravion for. To answer with flags instead:
+
+  ```bash
+  ravion setup --accept-terms --use-case DEPLOYMENTS --use-case TERRAFORM
+  ```
+
+  The use cases are `DEPLOYMENTS`, `TERRAFORM`, `CI`, and `GITHUB_ACTIONS`; `CI` and `GITHUB_ACTIONS` also need a repository connected with `ravion git connect`. Then connect an AWS account, below. Ravion completes setup once every step is done; `ravion setup` reports `Setup is complete`.
 </Accordion>
 
 <Accordion title="Connect AWS from the AWS CLI yourself">

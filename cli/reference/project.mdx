@@ -85,7 +85,9 @@ ravion project create [flags]
 
 ### `ravion project delete`
 
-Delete Project
+Delete a project. Environments without module instances are deleted along with it. The
+CLI refuses while module instances or pipelines remain and prints the command to delete
+each. The command waits until the deletion finishes (up to 3 minutes).
 
 ```bash
 ravion project delete <id> [flags]

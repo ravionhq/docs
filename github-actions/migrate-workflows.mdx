@@ -1,0 +1,175 @@
+---
+title: "Migrate GitHub Actions workflows to Ravion runners"
+sidebarTitle: "Migrate workflows"
+description: "Every change to make when you move GitHub Actions jobs to Ravion runners: labels, Spot, vendor actions, checkout, kept workspaces and AWS credentials. Written for coding agents."
+keywords: ["migrate GitHub Actions", "runs-on migration", "Blacksmith migration", "RunsOn migration", "Depot migration", "Namespace migration", "BuildJet migration", "coding agent"]
+"og:image": "https://www.ravion.com/og/docs/github-actions/migrate-workflows.png"
+"twitter:image": "https://www.ravion.com/og/docs/github-actions/migrate-workflows.png"
+---
+
+Moving a job to Ravion runners takes more than a new `runs-on` label. A sandbox keeps its disk between runs, can run on Spot, and replaces the caches and builders other runner vendors provide. This page covers what to change so jobs use those safely.
+
+Copy this prompt into your coding agent in the repository containing your GitHub Actions workflows:
+
+<Prompt description="Move this repository's workflows to Ravion runners." icon="sparkles" actions={["copy", "cursor"]}>
+  Read https://www.ravion.com/docs/github-actions/migrate-workflows.md and follow it to move this repository's GitHub Actions jobs to Ravion runners. Read the pages it links to when a job needs them.
+
+- Ask me for the dedicated CI execution environment's ID if it isn't already known. Don't invent one or use a production environment.
+- Go through every job in .github/workflows, and read the scripts each job calls before deciding.
+- Show me the diff, which jobs are interruptible and why, the jobs you left on their current runner and why, and the follow-ups you didn't make. Don't trigger workflows, deployments or other external changes without my approval.
+- If something in the guide doesn't work or is unclear, or you hit a Ravion bug, report it with ravion bug or ravion feedback, as described in https://www.ravion.com/docs/report-bugs-and-feedback.md.
+
+</Prompt>
+
+## Checklist
+
+Work through every job in `.github/workflows`.
+
+### Decide which jobs move
+
+Move every Linux job, whatever it runs on today. Leave these on their current runner, and say why:
+
+- **macOS, Windows and GPU jobs.** Sandboxes are x86_64 Linux.
+- **ARM jobs that push container images**, because a sandbox would build them for `linux/amd64`. Count registry logins and scripts or targets named for pushing an image as pushing. Other ARM jobs, such as tests, move to sandboxes. To keep a job on ARM, use an [EC2 label](/github-actions/runners#ec2).
+- **`runs-on` that comes from the matrix or another value only known at run time.** If an expression just picks between literal labels, replace each Linux label inside it and keep the expression.
+- **Jobs that call a reusable workflow.** Migrate the jobs in the reusable workflow's file instead.
+- **Jobs whose vendor setup can't be removed safely.** See [Make changes for your current runner](#make-changes-for-your-current-runner).
+
+Don't rename moved jobs or workflow files. Automatic sizing starts a job at the size of the runner it last ran on, and learns its sizes, by workflow file and job name.
+
+### Replace `runs-on`
+
+```yaml
+runs-on: ravion/ee=github-actions/type=sandbox/cpu=auto/memory=auto/disk=auto/disk_cache=auto/interruptible=true/id=${{ github.run_id }}-${{ github.run_attempt }}-ci-test
+```
+
+- Put your execution environment's ID in `ee`. Keep CPU, memory, disk and `disk_cache` on `auto`; don't carry the old runner's size over.
+- Make `id` unique to the job: the run ID, the run attempt, the workflow file name and the job ID (`ci-test` for job `test` in `ci.yml`). For a matrix job, add `-${{ strategy.job-index }}`; joined matrix values can collide. If a reusable workflow is called more than once in the same run, add a value each caller passes in, such as an input, because both calls share everything else.
+- Replace the whole value, including `self-hosted` and vendor labels. If `runs-on` is a YAML alias shared with jobs that don't move, give the moved job its own value.
+
+#### Decide whether a job is interruptible
+
+Interruptible jobs can run on Spot hosts. When a Spot host is reclaimed, Ravion usually moves the running job live to another host, but in rare cases the job restarts from the beginning. Set `interruptible=true` only when running the whole job twice is harmless.
+
+- **Not interruptible:** jobs that publish, release or deploy, or could leave something half-changed: `npm publish`, `docker push`, `git push`, `gh release create`, `terraform apply`, `kubectl apply`, `prisma migrate deploy`, `goreleaser`, release actions and deploy actions. Every job in a workflow triggered by releases, tags or `release*` branches is also not interruptible. So is any job you can't classify.
+- **Interruptible:** tests, lint, builds that don't push, `terraform plan`, and AI review jobs such as `anthropics/claude-code-action`. Posting comments, updating pull requests and uploading artifacts or caches are safe to repeat.
+
+A GitHub `environment:` by itself doesn't decide it either way. Read the scripts the job calls.
+
+### Make changes for your current runner
+
+Ravion runners serve the Actions cache, keep the disk between runs and provide Docker and Buildx, so most vendor actions become unnecessary. Swap forks of standard actions for the standard action, and remove vendor cache, disk and builder setup. When you swap an action, drop inputs the standard one doesn't accept. Agents: apply every tab whose runner appears in the repository.
+
+<Tabs>
+  <Tab title="GitHub-hosted">
+    Remove disk-freeing actions such as `jlumbroso/free-disk-space` and `easimon/maximize-build-space`, unless a later step reads their outputs. Automatic sizing gives the job the disk it needs. GitHub larger runners for Linux move like any other job.
+  </Tab>
+
+  <Tab title="Blacksmith">
+    - Swap `useblacksmith/cache` for `actions/cache`, `useblacksmith/build-push-action` for `docker/build-push-action`, `useblacksmith/rust-cache` for `Swatinem/rust-cache`, and `useblacksmith/setup-*` for `actions/setup-*`.
+    - Remove `useblacksmith/stickydisk`. The [disk cache](/github-actions/caching#disk-cache) replaces it.
+    - Remove `useblacksmith/setup-docker-builder` if it's [safe to remove](#vendor-docker-builders).
+  </Tab>
+
+  <Tab title="Depot">
+    - Swap `depot/build-push-action` for `docker/build-push-action`, dropping `project` and `token`.
+    - Remove `depot/setup-action` and `depot/use-action` if the builder is [safe to remove](#vendor-docker-builders).
+    - Leave jobs that use `depot/bake-action`, push caches to `registry.depot.dev`, or run the `depot` CLI.
+  </Tab>
+
+  <Tab title="Namespace">
+    - Swap `namespacelabs/nscloud-checkout-action` for `actions/checkout`.
+    - Remove `namespacelabs/nscloud-cache-action` and `namespacelabs/nscloud-setup`.
+    - Remove `namespacelabs/nscloud-setup-buildx-action` if the builder is [safe to remove](#vendor-docker-builders).
+    - Leave jobs that push caches to `nscr.io` or run the `nsc` CLI.
+  </Tab>
+
+  <Tab title="RunsOn">
+    - Swap `runs-on/cache` for `actions/cache`, and remove `runs-on/action`.
+    - `RUNS_ON_ECR_CACHE` isn't set on Ravion. Switch Docker build caches that use it to the Actions cache, using the tag as the scope. Leave jobs that use it anywhere else on RunsOn. See [Moving from RunsOn](/github-actions/amazon-ecr#moving-from-runson).
+
+      ```yaml
+      # Before
+      cache-to: type=registry,ref=${{ env.RUNS_ON_ECR_CACHE }}:app,mode=max,image-manifest=true
+      # After
+      cache-to: type=gha,scope=app,mode=max
+      ```
+
+    - RunsOn jobs usually get AWS credentials from the instance role, which Ravion jobs don't have. See [AWS credentials](#aws-credentials).
+  </Tab>
+
+  <Tab title="Others">
+    For BuildJet, WarpBuild, Ubicloud and Cirrus Runners, swap the vendor's cache action, such as `buildjet/cache` or `warpbuilds/cache`, for `actions/cache`, and `buildjet/setup-*` for `actions/setup-*`. Leave GPU runners.
+
+    Self-hosted jobs often rely on preinstalled tools, an instance role or private network access. Install the tools in a step, use [GitHub OIDC](/github-actions/aws-credentials#use-github-oidc) for AWS, and check the execution environment's VPC can reach the hosts the job needs.
+  </Tab>
+</Tabs>
+
+#### Vendor Docker builders
+
+Remove a vendor's Docker builder setup only if the default Buildx builder can do the same job. Leave the job on its current runner if a build sets `builder` or `outputs`, targets a platform other than `linux/amd64`, uses Bake, exports its cache to the vendor's registry, or a script runs `docker buildx create` or `use`, or the vendor's CLI.
+
+### Narrow `.next` caches
+
+An `actions/cache` step that caches all of `.next` restores the last build's output over the newer one on the kept disk. When its key doesn't change with the source, change that path to `.next/cache`, the [Next.js build cache](https://nextjs.org/docs/app/guides/ci-build-caching). Leave the step alone if another step reads its outputs, such as `cache-hit` to skip `next build`, or another step uses the same key.
+
+### Keep ignored files at checkout
+
+`actions/checkout` runs `git clean -ffdx` by default, which deletes the `node_modules` and build output the [disk cache](/github-actions/caching#disk-cache) restored. Add `clean: false`:
+
+```yaml
+- uses: actions/checkout@v4
+  with:
+    clean: false
+```
+
+Keep the default for jobs that publish, deploy or release, use a GitHub `environment:`, or check that the tree is clean, for example with `git status --porcelain` or `git diff --exit-code`.
+
+### Make steps work on a kept workspace
+
+Each run starts with the files the job's last run left, so steps that expect an empty folder can fail from the second run on. Make them work either way, for example:
+
+| Before | After |
+| --- | --- |
+| `mkdir dist` | `mkdir -p dist` |
+| `ln -s ../shared shared` | `ln -sfn ../shared shared` |
+| `git remote add origin URL` | `git remote add origin URL \|\| git remote set-url origin URL` |
+| `git clone URL vendor/lib` | Clone only when `vendor/lib/.git` is missing; otherwise fetch and reset it. |
+| `git worktree add PATH REF` | Remove and prune an existing worktree at `PATH` first. |
+
+Also check the scripts each job calls for steps that exit when a path exists, append to files they expect to be empty, or collect files with a pattern such as `dist/**` or `reports/*.xml`. Delete only those paths first. Don't delete the whole workspace or turn off the disk cache: that throws away the speedup.
+
+### AWS credentials
+
+A Ravion job's AWS role has no permissions by default. Jobs that used ECR or other AWS services through their old runner's instance role need [GitHub OIDC](/github-actions/aws-credentials#use-github-oidc), and ECR jobs need the login steps in [Amazon ECR](/github-actions/amazon-ecr). Docker containers in the job, including `services:` and `container:`, [can't reach the job's credentials](/github-actions/aws-credentials#docker-containers-cant-reach-the-endpoint). Creating an IAM role changes your AWS account, so list it as a follow-up if you can't do it.
+
+### Fix checkout depth and cache keys
+
+- **Shallow checkout.** Change `fetch-depth: 0` to `1` when the job doesn't use git history. Keep it for jobs that compute versions or changelogs, run `git describe`, diff against a base branch, or use tools like `changesets` or `nx affected`.
+- **Keys that never restore.** Add `restore-keys` to an `actions/cache` key built from `github.sha` or `github.run_id`, using the key's stable prefix, so later runs restore the most recent entry.
+- **Keys that never change.** Fix `hashFiles` patterns that only search the repository root, such as `hashFiles('**.ts')`, to `hashFiles('**/*.ts')`.
+
+### Report optional speedups
+
+Don't remove explicit cache steps as part of the migration, such as `actions/cache`, `Swatinem/rust-cache` or `type=gha` Docker caches. The disk cache may make them redundant, but other runners, cold disks or other jobs may still need them. Report the ones that look redundant so they can be decided separately.
+
+## After the migration
+
+- Check that every workflow still parses, no job IDs changed, and only the moved jobs' `runs-on` changed.
+- The first run on each branch starts with a cold cache.
+- If a job fails, it's most likely a tool GitHub's image has and [Ravion's image](/github-actions/runners#the-runner-image) doesn't. Install it with a `setup-*` action or a `run` step.
+
+<Note>
+  Hit a bug, or something in this guide that didn't work or was unclear? Report it with `ravion bug` or `ravion feedback`. Include the repository, workflow, job and the run's URL. See [Report bugs and feedback](/report-bugs-and-feedback). For urgent issues, also email [support@ravion.com](mailto:support@ravion.com).
+</Note>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Runners" icon="server" href="/github-actions/runners">
+    Labels, sizing and requirements.
+  </Card>
+  <Card title="Caching" icon="database" href="/github-actions/caching">
+    Disk cache, Actions cache and artifacts.
+  </Card>
+</CardGroup>

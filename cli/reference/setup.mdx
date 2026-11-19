@@ -1,0 +1,40 @@
+---
+title: "ravion setup"
+sidebarTitle: "setup"
+description: "Show and finish your organization's first-run setup"
+"og:image": "https://www.ravion.com/og/docs/cli/reference/setup.png"
+"twitter:image": "https://www.ravion.com/og/docs/cli/reference/setup.png"
+---
+
+{/* This page is generated from the Ravion CLI source. Do not edit by hand. */}
+
+## `ravion setup`
+
+setup shows what your organization still needs before Ravion completes its first-run setup, and finishes the steps the CLI can do.
+
+Until setup is complete, the organization can read, change settings, and delete, but requests that create, change, or run infrastructure (projects, modules, pipelines, deployments, config apply) are refused with Ravion:Organization:SETUP_INCOMPLETE.
+
+Setup needs: agreement to Ravion's terms of service, what the organization will use Ravion for, a connected AWS account, and a connected repository when CI or GITHUB_ACTIONS is among the use cases. Ravion completes setup on its own once all of them are done.
+
+Agents: only a person may agree to the terms of service. Show the user https://www.ravion.com/terms and pass --accept-terms only after they say yes.
+
+```bash
+ravion setup [flags]
+```
+
+**Examples:**
+
+```bash
+ravion setup
+ravion setup --use-case DEPLOYMENTS --use-case TERRAFORM
+ravion setup --accept-terms --use-case CI --json
+```
+
+**Flags:**
+
+| Flag | Required | Description |
+| --- | --- | --- |
+| `--accept-terms` |  | agree to Ravion's terms of service (https://www.ravion.com/terms) on the organization's behalf; only with the user's explicit agreement |
+| `--json` |  | emit the setup progress as JSON |
+| `--use-case <strings>` |  | what the organization will use Ravion for: DEPLOYMENTS, TERRAFORM, CI, or GITHUB_ACTIONS (repeatable) |
+
