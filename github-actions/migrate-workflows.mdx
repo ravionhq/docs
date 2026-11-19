@@ -7,10 +7,6 @@ keywords: ["migrate GitHub Actions", "runs-on migration", "Blacksmith migration"
 "twitter:image": "https://www.ravion.com/og/docs/github-actions/migrate-workflows.png"
 ---
 
-<Note>
-  GitHub Actions runners are in private preview. [Contact support](/contact-support) to request access.
-</Note>
-
 Moving a job to Ravion runners takes more than a new `runs-on` label. A sandbox keeps its disk between runs, can run on Spot, and replaces the caches and builders other runner vendors provide. This page covers what to change so jobs use those safely.
 
 Copy this prompt into your coding agent in the repository containing your GitHub Actions workflows:
@@ -53,7 +49,7 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=auto/memory=auto/disk=auto/di
 
 #### Decide whether a job is interruptible
 
-Interruptible jobs can run on Spot hosts and restart from the beginning if their host is lost. Set `interruptible=true` only when running the whole job twice is harmless.
+Interruptible jobs can run on Spot hosts. When a Spot host is reclaimed, Ravion usually moves the running job live to another host, but in rare cases the job restarts from the beginning. Set `interruptible=true` only when running the whole job twice is harmless.
 
 - **Not interruptible:** jobs that publish, release or deploy, or could leave something half-changed: `npm publish`, `docker push`, `git push`, `gh release create`, `terraform apply`, `kubectl apply`, `prisma migrate deploy`, `goreleaser`, release actions and deploy actions. Every job in a workflow triggered by releases, tags or `release*` branches is also not interruptible. So is any job you can't classify.
 - **Interruptible:** tests, lint, builds that don't push, `terraform plan`, and AI review jobs such as `anthropics/claude-code-action`. Posting comments, updating pull requests and uploading artifacts or caches are safe to repeat.

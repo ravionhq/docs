@@ -7,10 +7,6 @@ keywords: ["GitHub Actions runners", "self-sizing jobs", "automatic sizing", "Ru
 "twitter:image": "https://www.ravion.com/og/docs/github-actions/runners.png"
 ---
 
-<Note>
-  GitHub Actions runners are in private preview. [Contact support](/contact-support) to request access.
-</Note>
-
 Ravion runs your GitHub Actions jobs on machines in your AWS account. Change a job's `runs-on` to a Ravion label, and Ravion starts a fresh runner for that one job, in the execution environment the label names.
 
 ## Quick setup
@@ -26,7 +22,7 @@ Copy this prompt into your coding agent in the repository containing your GitHub
 
 - Confirm the prerequisites in the runner guide. Ask me for the dedicated CI execution environment's given ID or unique ID (ee_…) if it isn't already known; don't invent one or use a production environment.
 - Prefer type=sandbox with cpu=auto, memory=auto and disk=auto. Automatic sizing also works without interruptible=true.
-- Add interruptible=true only when the entire job is safe to stop and rerun from the beginning, such as tests, lint or builds without external side effects. Spot loss restarts the job, not just the interrupted step. Leave it off for publishing, deployments, migrations, pushing commits or tags, and any job whose retry safety is uncertain. Do not use type=ec2-spot as a shortcut.
+- Add interruptible=true only when the entire job is safe to stop and rerun from the beginning, such as tests, lint or builds without external side effects. When a Spot host is reclaimed, Ravion usually moves the running job live to another host, but in rare cases it restarts the whole job, not just the interrupted step. Leave it off for publishing, deployments, migrations, pushing commits or tags, and any job whose retry safety is uncertain. Do not use type=ec2-spot as a shortcut.
 - Use the execution environment ID in `ee`. Use either one slash-separated ravion/ label or a runs-on list with a bare ravion entry and separate key=value entries. Do not add self-hosted or unrelated labels.
 - Give each job a unique id using the GitHub run ID, run attempt, a distinct job-specific name and matrix index. Follow the guide's Unique labels example, replacing its test name for each job; do not copy the same name into every job.
 - Keep disk_cache=auto (the default) for sandbox jobs unless the job requires a clean disk. Add clean: false to actions/checkout and make steps work on a kept workspace, as the migration guide describes. Keep checkout and dependency installation steps: a warm cache is not guaranteed. Public-repository jobs keep a disk separate from private repositories; confirm Allow public repositories is enabled before migrating them.
@@ -178,7 +174,7 @@ runs-on: ravion/ee=github-actions/type=sandbox/cpu=4/memory=16/disk=60/interrupt
 | `memory` | Yes | None | Memory in GiB, or `auto`. |
 | `disk` | No | 10 GiB per vCPU, at least 14 GiB | GiB of host disk reserved for what the job writes, or `auto`. With `cpu=auto`, the default follows the size Ravion picks. |
 | `disk_cache` | No | `auto` | Keep the job's disk between runs. Pipeline steps default to `off` instead. See [Disk cache](/github-actions/caching#disk-cache). |
-| `interruptible` | No | `false` | Allow Spot hosts, and rerun the job from the start on a new host if its host is lost. See [If a Spot host is reclaimed](#if-a-spot-host-is-reclaimed). |
+| `interruptible` | No | `false` | Allow Spot hosts. If a Spot host is reclaimed, Ravion moves the running job live to another host, or in rare cases reruns it from the start. See [If a Spot host is reclaimed](#if-a-spot-host-is-reclaimed). |
 | `id` | Yes | None | A value that makes the label unique to one job. See [Unique labels](#unique-labels). |
 
 Mark jobs that are safe to run twice as `interruptible=true`, such as tests, lint and builds. Leave it off for jobs that publish, deploy or push.
@@ -222,7 +218,7 @@ See [CPU and memory](/concepts/sandboxes#cpu-and-memory) and [Limits and caveats
 
 ### If a Spot host is reclaimed
 
-When AWS reclaims a Spot host, Ravion may move a running job to another host, where it carries on without a restart. Otherwise, Ravion runs the same GitHub job again from the start on a new runner. The last retry runs On-Demand. Jobs without `interruptible=true` never run on Spot.
+When AWS reclaims a Spot host, Ravion moves each running job live to another host, where it carries on without a restart or retry. In rare cases, such as when a move can't finish before AWS's deadline, Ravion runs the same GitHub job again from the start on a new runner, and the last retry runs On-Demand. Jobs without `interruptible=true` never run on Spot.
 
 When a job ran again, its setup step shows a line such as `Ravion runner retry: attempt=2 retries=1 previous_failure=spot_interrupted`. The AWS cost in [**Usage**](#track-cost-and-usage) includes the interrupted attempt. The Ravion fee counts only the attempt that finished.
 
@@ -312,7 +308,7 @@ Docker containers in the job, including `services:` and `container:`, can't reac
 Docker isn't logged in to any registry when a job starts, and the job role has no IAM policies by default. To push images or Buildx caches to Amazon ECR, see [Amazon ECR](/github-actions/amazon-ecr).
 
 <Note>
-  Runners are in private preview. If a job hits a problem you can't explain — a tool that won't install, a missing kernel feature, or anything unexpected — [contact support](/contact-support).
+  If a job hits a problem you can't explain — a tool that won't install, a missing kernel feature, or anything unexpected — [contact support](/contact-support).
 </Note>
 
 ### Unique labels
