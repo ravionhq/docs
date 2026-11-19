@@ -1,7 +1,7 @@
 ---
 title: "Caching for GitHub Actions"
 sidebarTitle: "Caching"
-description: "Use disk cache, Actions cache, and artifacts with Ravion GitHub Actions runners."
+description: "Use disk cache, Actions cache, and artifacts, including artifacts stored in S3 in your AWS account, with Ravion GitHub Actions runners."
 "og:image": "https://www.ravion.com/og/docs/github-actions/caching.png"
 "twitter:image": "https://www.ravion.com/og/docs/github-actions/caching.png"
 ---
@@ -12,7 +12,7 @@ GitHub Actions workflows on Ravion can use three storage layers:
 | --- | --- | --- | --- |
 | Disk cache | Sandboxes only | The whole disk | S3 in your account |
 | Actions cache | Sandboxes only | `actions/cache` and `setup-*` caching | S3 in your account |
-| Artifacts | All Ravion runners | Workflow artifacts | GitHub |
+| Artifacts | All Ravion runners | Workflow artifacts | GitHub, or S3 in your account on sandboxes |
 
 On sandboxes, the disk cache usually makes path caches unnecessary; keep `actions/cache` steps if you also run the workflow elsewhere.
 
@@ -138,10 +138,52 @@ To share a Buildx cache between branches or jobs, use `type=gha`. It goes throug
 
 ## Artifacts
 
-Artifacts work on all Ravion runners. Use `actions/upload-artifact` and `actions/download-artifact` as usual. GitHub stores the artifacts, and its retention and limits apply. Ravion stores nothing.
+Artifacts work on all Ravion runners. Use `actions/upload-artifact` and `actions/download-artifact` v4 or later as usual. By default, GitHub stores the artifacts, and its retention and limits apply.
+
+On sandboxes, you can keep artifacts in S3 in your own AWS account instead. Uploads and downloads then stay inside AWS, so you don't pay GitHub artifact storage or move artifact data out of AWS on every upload and download.
 
 If a sandbox job is rerun after its host is lost, Ravion replaces an artifact uploaded by the earlier attempt of that same job so the rerun's upload succeeds. Other artifact name conflicts are unchanged.
 
-<Note>
-  Making heavy use of artifacts? [Let us know](/contact-support). We're adding support for storing artifacts in S3 in your own AWS account, which will nearly eliminate artifact egress costs.
-</Note>
+### Store artifacts in S3
+
+1. Go to [**Settings / Execution environments**](https://app.ravion.com/org/settings/execution-environments), choose the environment, then open **Config / Sandboxes**.
+2. Set **GitHub Actions artifacts** to **S3**.
+
+You can also set `githubActionsArtifactStorage` to `S3` on the environment's sandbox pool with the [API](/api-reference/overview). The change applies from the next job. Workflows don't change.
+
+Ravion creates a bucket named `ravion-artifacts-<execution environment ID>` in the environment's AWS account and region. It's separate from the bucket that holds the disk cache and Actions cache, so artifacts keep their own retention and access. Creating it needs AWS account role policy 1.0.62 or later. With an older policy, saving the setting fails with an error that names the bucket. The [download links](#download-artifacts-kept-in-s3) need policy 1.0.71 or later. To update the policy, go to [**Settings / AWS accounts**](https://app.ravion.com/org/settings/aws-accounts), open the account and click **Update AWS Permissions**.
+
+How artifacts are kept:
+
+- **Layout.** Objects are keyed by retention, repository, workflow run and attempt, job and artifact name. Pull requests from forks and other untrusted jobs keep their artifacts apart from trusted jobs of the same repository.
+- **Retention.** An artifact is kept for at least the `retention-days` it sets, or 90 days when it sets none, as on GitHub. Ravion rounds up to the nearest of 1, 3, 7, 14, 30, 60, 90, 180 or 400 days, and an S3 lifecycle rule deletes it after that. Incomplete uploads are cleaned up after one day.
+- **Access.** Only jobs on this environment's sandboxes read and write the bucket. A job can only read, replace or delete its own workflow run's artifacts.
+- **Deleting the environment.** Its artifacts are deleted seven days later, so you can undo a delete made in error.
+
+### Download artifacts kept in S3
+
+Artifacts kept in S3 don't appear on the workflow run's page on GitHub. Instead, at the end of each job that uploaded artifacts, Ravion lists them with their sizes and download links in the job log, and adds a table of links to the job's summary.
+
+Opening a link requires signing in to Ravion. It redirects to an S3 link that expires after five minutes and is signed by a read-only role in your account, `rvn-sandbox-host-<execution environment ID>-artifacts`, so the download comes straight from your bucket. An archived artifact downloads as `<name>.zip`. One uploaded with `archive: false` keeps its own file name and type. An artifact past its retention returns a 404.
+
+From the CLI, pass the key printed in the job log:
+
+```bash
+ravion execution-environment download-artifact <execution environment ID> --key <key>
+```
+
+See [`ravion execution-environment download-artifact`](/cli/reference/execution-environment#ravion-execution-environment-download-artifact).
+
+### What finds artifacts kept in S3
+
+`actions/download-artifact` in a later job of the same workflow run finds artifacts from both S3 and GitHub, including after **Re-run failed jobs**. A job that uploads an artifact under a name already used by an earlier attempt shadows the earlier copy, as on GitHub.
+
+These don't see artifacts kept in S3:
+
+- Jobs on GitHub-hosted runners, EC2 runners or another execution environment's sandboxes.
+- `gh run download`, GitHub's REST API and the workflow run's page on GitHub.
+- `actions/download-artifact` with `run-id` set to another workflow run.
+
+If a workflow needs one of these, keep its artifacts on GitHub. The `github-pages` artifact always goes to GitHub so `actions/deploy-pages` keeps working. If the bucket can't take an upload, for example right after you switch to S3, that artifact goes to GitHub instead and the upload doesn't fail.
+
+Switching back to **GitHub** applies from the next job. Jobs on the environment's sandboxes still find artifacts already in the bucket until they expire.

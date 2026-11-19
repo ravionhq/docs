@@ -210,7 +210,7 @@ The job's log shows the size Ravion picked and why.
 
 `cpu` is what the job books, and what its AWS cost in [**Usage**](#track-cost-and-usage) is based on. The Ravion fee is per job minute, whatever the size.
 
-- `nproc` can show more vCPUs than `cpu`. The extra vCPUs are best effort and not billed. If a tool sizes its worker pool from `nproc`, set the worker count explicitly.
+- `nproc` can show more vCPUs than `cpu`. The extra vCPUs are best effort. They're part of the host you pay AWS for, but [**Usage**](#track-cost-and-usage) attributes the job's cost by `cpu`. If a tool sizes its worker pool from `nproc`, set the worker count explicitly.
 - Sandboxes have no swap. A job that runs out of memory hits the Linux out-of-memory killer.
 - `cpu` goes up to 32. With `auto`, memory goes up to 256 GiB and disk up to 2,000 GiB. A fixed size that fits no host fails the job.
 
@@ -387,7 +387,7 @@ Each public repository gets its own runner group and its own disk cache, kept ap
     Every change to make when moving jobs.
   </Card>
   <Card title="Caching" icon="database" href="/github-actions/caching">
-    Disk cache, Actions cache and artifacts.
+    Disk cache, Actions cache and artifacts in S3.
   </Card>
   <Card title="Sandboxes" icon="box" href="/concepts/sandboxes">
     How the sandbox fleet, disk cache and Spot hosts work.
