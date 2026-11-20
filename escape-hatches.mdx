@@ -1,0 +1,79 @@
+---
+title: "Escape hatches: when a Ravion default doesn't fit"
+sidebarTitle: "Escape hatches"
+description: "Every layer of Ravion can be configured, extended, or replaced, from module inputs to your own Terraform, Helm charts, and pipeline steps, so an unsupported need never leaves you stuck."
+"og:image": "https://www.ravion.com/og/docs/escape-hatches.png"
+"twitter:image": "https://www.ravion.com/og/docs/escape-hatches.png"
+---
+
+Sooner or later your team will need something Ravion doesn't do out of the box: an unusual deploy strategy, a resource the standard library doesn't cover, or a step in your release process no one else has. This page shows what to do when that happens.
+
+Nothing in Ravion is a dead end. Each layer has a lower one you can drop to, and each lower layer is plain Terraform, Helm, AWS, or shell commands that your team already knows. You change the one piece that doesn't fit and keep the rest.
+
+| If you need… | Drop to | Section |
+| ------------ | ------- | ------- |
+| A setting the form doesn't show | Module inputs and Terraform settings | [1](#1-change-a-module-input) |
+| An extra resource next to a service | Another module, or your own Terraform | [2](#2-add-infrastructure-next-to-a-module) |
+| A standard module that works differently | A fork of its open source Terraform | [3](#3-fork-a-standard-library-module) |
+| A kind of module Ravion doesn't have | Your own module definition | [4](#4-write-your-own-module-definition) |
+| Any Kubernetes tool or operator | Any Helm chart | [5](#5-install-anything-into-your-cluster) |
+| A different release process | Your own pipeline steps, or your existing CI | [6](#6-run-any-step-in-your-release-process) |
+| Different Terraform workflows | Your own change and destroy pipelines | [7](#7-replace-the-terraform-pipelines) |
+| Hands-on access in an incident | AWS, `kubectl`, `helm`, and Terraform state directly | [8](#8-use-the-underlying-tools-directly) |
+| To stop using Ravion | Plain AWS resources, Terraform state, Helm releases, and YAML | [9](#9-leave-and-keep-everything) |
+
+## 1. Change a module input
+
+Standard library modules expose nearly every option of the AWS resources behind them, with production defaults. Before you reach for anything else, check the module's inputs in the [catalog](/module-definitions/catalog), including its **Terraform settings**. Every input can also be set in your [project config file](/config-as-code/project-config-file), not just the dashboard.
+
+## 2. Add infrastructure next to a module
+
+Anything a module doesn't create can live beside it as another module in the same environment: an IAM policy, an SQS queue, a KMS key, or any other resource. Modules pass values to each other with [output references](/modules/output-references).
+
+For resources the standard library doesn't cover, run your own Terraform or OpenTofu as an [`rvn-stack`](/module-definitions/catalog/rvn-stack) module. You get the same plan, approval, apply, and resource history as every other module. Existing Terraform runs as is; see [Bring an existing Terraform stack](/migrate/existing-terraform-stack).
+
+## 3. Fork a standard library module
+
+Every standard library module is open source Terraform in [ravionhq/modules](https://github.com/ravionhq/modules). If a module almost fits, fork it, change what you need, and add it to your catalog as your own module. Existing resources can move into it without being recreated; see [Import into a standard module](/migrate/import-into-standard-module).
+
+## 4. Write your own module definition
+
+A [module definition](/module-definitions/definition-schema) describes a module's inputs, form, Terraform, build, deploy, logs, and metrics as config. Write one for anything your company runs, and it shows up in the catalog next to the standard library, with the same dashboard, CLI, API, and agent support. Platform teams use this to give developers a small set of approved building blocks.
+
+Deploys use the same engine as the standard library. A custom module can [deploy](/modules/deploy) to ECS with rolling, blue-green, canary, or linear strategies, to EC2, Lambda, or S3, or to EKS with [your own Helm chart](/module-definitions/definition-schema/eks-deployments).
+
+## 5. Install anything into your cluster
+
+[`rvn-eks-chart`](/module-definitions/catalog/rvn-eks-chart) installs any Helm chart from a Helm repository, an OCI registry, or a Git repository, with full control of its values. Use it for operators and controllers Ravion doesn't set up itself, such as Argo CD, Argo Rollouts, Istio, or a database operator. To keep Argo CD as your deploy tool alongside Ravion, see [Use Ravion with Argo CD](/guides/argo-cd).
+
+## 6. Run any step in your release process
+
+Ravion [pipelines](/concepts/pipelines) run whatever your release needs, in any order:
+
+- [`custom`](/pipelines/step-types#custom) steps run any shell commands in a [sandbox](/concepts/sandboxes) inside your VPC: smoke tests against a private endpoint, a feature flag flip, a call to an internal API, or a script that waits on your own health checks. Steps can [publish outputs](/pipelines/step-types#publishing-outputs) for later steps to use.
+- [`approval`](/pipelines/step-types#approval), [`parallel`](/pipelines/step-types#parallel), and [`trigger:pipeline`](/pipelines/step-types#triggerpipeline) steps let you gate, fan out, and chain releases.
+
+If you already have CI you like, keep it. GitHub Actions, CircleCI, Buildkite, or anything else can build the artifact and start a Ravion deploy with the [CLI](/cli/reference/deploy) or API.
+
+## 7. Replace the Terraform pipelines
+
+Every module's infrastructure changes run through a change pipeline and a destroy pipeline. You can pull the system pipelines, change them, for example to add policy checks, cost estimates, or extra approvals, and use your own instead. See [System pipelines and customization](/modules/stack#system-pipelines-and-customization).
+
+## 8. Use the underlying tools directly
+
+Everything Ravion creates is an ordinary resource in your AWS account. In an incident, or for a one-off task, the AWS console and CLI, `kubectl`, and `helm` all work as usual. [`ravion terraform state`](/cli/reference/terraform#ravion-terraform-state) runs Terraform's own `state` commands against any module's state.
+
+Changes you make by hand are overwritten by the next apply or deploy of that module. To keep a change, make it in the module's config or Terraform too.
+
+## 9. Leave and keep everything
+
+If you stop using Ravion, nothing you run stops with it:
+
+- Your infrastructure is plain AWS resources in your account, built from open source Terraform.
+- Your Terraform state lives in your own S3 backend, or in Ravion's managed backend, which you can pull at any time with `ravion terraform state pull`.
+- Your Kubernetes workloads are ordinary Helm releases.
+- Your projects and pipelines are config you can [pull as YAML](/config-as-code/project-config-file#pull-and-apply-with-the-cli) at any time.
+
+## Tell us what you hit
+
+If you need one of these escape hatches for something you think Ravion should do itself, tell us. Requests from teams with a real need shape the roadmap. See [Report bugs and feedback](/report-bugs-and-feedback).
