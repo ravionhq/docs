@@ -44,7 +44,7 @@ Deploys use the same engine as the standard library. A custom module can [deploy
 
 ## 5. Install anything into your cluster
 
-[`rvn-eks-chart`](/module-definitions/catalog/rvn-eks-chart) installs any Helm chart from a Helm repository, an OCI registry, or a Git repository, with full control of its values. Use it for operators and controllers Ravion doesn't set up itself, such as Argo CD, Argo Rollouts, Istio, or a database operator. To keep Argo CD as your deploy tool alongside Ravion, see [Use Ravion with Argo CD](/guides/argo-cd).
+[`rvn-eks-chart`](/module-definitions/catalog/rvn-eks-chart) installs any Helm chart from a Helm repository, an OCI registry, or a Git repository, with full control of its values. Use it for operators and controllers Ravion doesn't set up itself, such as Argo CD, Argo Rollouts, a service mesh, or a database operator. To keep Argo CD as your deploy tool alongside Ravion, see [Use Ravion with Argo CD](/guides/argo-cd).
 
 ## 6. Run any step in your release process
 
@@ -61,7 +61,7 @@ Every module's infrastructure changes run through a change pipeline and a destro
 
 ## 8. Use the underlying tools directly
 
-Everything Ravion creates is an ordinary resource in your AWS account. In an incident, or for a one-off task, the AWS console and CLI, `kubectl`, and `helm` all work as usual. [`ravion terraform state`](/cli/reference/terraform#ravion-terraform-state) runs Terraform's own `state` commands against any module's state.
+Everything Ravion creates is an ordinary resource in your AWS account. In an incident, or for a one-off task, the AWS console and CLI, `kubectl`, and `helm` all work as usual. [`ravion terraform state`](/cli/reference/terraform#ravion-terraform-state) runs the `terraform state` commands against any module's state.
 
 Changes you make by hand are overwritten by the next apply or deploy of that module. To keep a change, make it in the module's config or Terraform too.
 
