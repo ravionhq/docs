@@ -1,0 +1,171 @@
+---
+title: "Use Ravion with Argo CD"
+sidebarTitle: "Ravion with Argo CD"
+description: "Keep Argo CD for GitOps deploys to EKS while Ravion runs the cluster, add-ons, AWS infrastructure, and CI around it, or move workloads over one at a time."
+"og:image": "https://www.ravion.com/og/docs/guides/argo-cd.png"
+"twitter:image": "https://www.ravion.com/og/docs/guides/argo-cd.png"
+---
+
+Ravion and Argo CD aren't an either-or choice. Argo CD does one job well: it keeps Kubernetes in sync with manifests in Git. Ravion covers the rest of the job around it:
+
+- The EKS cluster and its add-ons, such as Karpenter, External Secrets, KEDA, and cert-manager.
+- The AWS infrastructure your apps need, such as RDS, ElastiCache, S3, SQS, and IAM, as versioned Terraform you can read.
+- CI and image builds in [sandboxes](/concepts/sandboxes) inside your VPC, with whole-disk caching.
+- One place to see infrastructure, builds, deploys, logs, and metrics, for people and agents.
+
+Keep Argo CD for the workloads it already deploys. Use Ravion for everything around them, and move workloads to Ravion deploys only if and when you want to.
+
+## Choose how to split the work
+
+| Setup | Ravion runs | Argo CD runs | Good fit when |
+| ----- | ----------- | ------------ | ------------- |
+| **Ravion around Argo CD** | Cluster, add-ons, AWS infrastructure | Every app deploy | You have an Argo CD setup you're happy with |
+| **Ravion builds, Argo CD deploys** | Cluster, add-ons, AWS infrastructure, CI and image builds | Syncing the new image tag | You want faster CI but keep GitOps as the deploy path |
+| **Side by side** | All of the above, plus deploys for some apps with [`rvn-eks-web`](/module-definitions/catalog/rvn-eks-web) and [`rvn-eks-worker`](/module-definitions/catalog/rvn-eks-worker) | The apps that already use it, or apps that need Argo Rollouts | You want to move some apps without moving all of them |
+
+All three setups use the same cluster. You can start with one and move to another later.
+
+## 1. Create or connect the cluster
+
+Create a cluster with [`rvn-eks-cluster`](/module-definitions/catalog/rvn-eks-cluster) and [`rvn-eks-addons`](/module-definitions/catalog/rvn-eks-addons), or [connect an EKS cluster you already run](/migrate/existing-eks-cluster). Connecting a cluster doesn't change anything Argo CD manages.
+
+## 2. Install Argo CD with Ravion
+
+If Argo CD already runs in the cluster, skip this step. Otherwise, add an [`rvn-eks-chart`](/module-definitions/catalog/rvn-eks-chart) module that installs the official chart. That puts Argo CD's own version and values under config as code, next to the rest of the cluster.
+
+| Field | Value |
+| ----- | ----- |
+| **Repository URL** | `https://argoproj.github.io/argo-helm` |
+| **Chart name** | `argo-cd` |
+| **Chart version** | Pin a version from [Artifact Hub](https://artifacthub.io/packages/helm/argo/argo-cd) |
+| **Namespace** | `argocd` |
+
+Set **Values** to the Argo CD settings you want, as JSON. For example, to keep the Argo CD server private:
+
+```json
+{
+  "server": {
+    "service": { "type": "ClusterIP" }
+  }
+}
+```
+
+Install [Argo Rollouts](https://argoproj.github.io/argo-rollouts/) the same way, with the `argo-rollouts` chart from the same repository, if you need canary or blue-green releases with analysis on Kubernetes.
+
+## 3. Give your apps their AWS infrastructure
+
+Create databases, caches, queues, and buckets as Ravion modules, such as [`rvn-aurora`](/module-definitions/catalog/rvn-aurora) or [`rvn-elasticache`](/module-definitions/catalog/rvn-elasticache). Each change runs through a Terraform plan, an optional approval, and an apply, with the history of every resource.
+
+To hand connection details to apps that Argo CD deploys, keep them in AWS Secrets Manager or Parameter Store and read them with the External Secrets Operator, which `rvn-eks-addons` installs by default. Argo CD then syncs an `ExternalSecret`, and the `SecretStore` it reads from, from Git like any other manifest, and no secret value ever lands in your GitOps repository.
+
+If you already manage this infrastructure with Terraform, run it in Ravion as is. See [Bring an existing Terraform stack](/migrate/existing-terraform-stack).
+
+## 4. Build in Ravion and hand the image to Argo CD
+
+In this setup, a Ravion pipeline builds the image and commits the new tag to your GitOps repository. Argo CD sees the commit and syncs. The build runs in a sandbox in your VPC with its disk cached between runs, so dependency installs and Docker layers don't start from scratch.
+
+This example keeps the image tag for each app in its own values file, such as `apps/web/values-prod.yaml` in an `acme/gitops` repository. A push to `main` in the app's repository starts the pipeline and passes the pushed commit in as the required `commit` input. The build checks out exactly that commit, so the image tag and the GitOps commit always name the code that was built, even when runs queue up or you retry an older one. To run it by hand, pass `commit` yourself.
+
+```yaml ravion-pipeline.yaml
+triggers:
+  - id: github_push
+    type: webhook:github
+    event: push
+    repo: https://github.com/acme/web
+    filter:
+      branch: main
+    run:
+      production:
+        input:
+          commit: << trigger.payload.commit >>
+inputs:
+  - id: commit
+    type: string
+    required: true
+variants:
+  - id: production
+    name: Production
+steps:
+  - id: build_web
+    name: Build web image
+    type: build:image
+    source:
+      type: git
+      repo: https://github.com/acme/web
+      branch: main
+      ref: << pipeline.input.commit >>
+    builder:
+      type: dockerfile
+    destinations:
+      - id: ecr
+        type: ecr
+        repository_arn: arn:aws:ecr:us-east-1:123456789012:repository/web
+        tags:
+          - << pipeline.input.commit >>
+    infrastructure:
+      type: sandbox
+      cpu: 4
+      memory: 8
+      execution_environment_id: ci-builders
+
+  - id: release_web
+    name: Point Argo CD at the new image
+    type: custom
+    environment_variables:
+      GITOPS_TOKEN:
+        from_secrets_manager:
+          key: arn:aws:secretsmanager:us-east-1:123456789012:secret:ci/gitops-AbCdEf
+          json_key: token
+    commands:
+      - |
+        set -euo pipefail
+        git clone --depth 1 "https://x-access-token:${GITOPS_TOKEN}@github.com/acme/gitops.git"
+        cd gitops
+        yq -i '.image.tag = "<< pipeline.input.commit >>"' apps/web/values-prod.yaml
+        git -c user.name="Ravion" -c user.email="ci@acme.dev" commit -am "web: deploy << pipeline.input.commit >>"
+        git push
+    infrastructure:
+      type: sandbox
+      cpu: 1
+      memory: 2
+      execution_environment_id: ci-builders
+```
+
+`git` and `yq` are already in the [sandbox image](/concepts/sandboxes). The token needs push access to the GitOps repository only.
+
+If you want the pipeline run to finish only when Argo CD reports the app healthy, add a step after the commit that downloads the `argocd` CLI and runs `argocd app wait web --sync --health`. Sandboxes run inside your VPC, so the step can reach a private Argo CD server without exposing it to the internet.
+
+Add an [`approval`](/pipelines/step-types#approval) step before `release_web` to gate production releases, or split staging and production with [variants](/pipelines/variants).
+
+## 5. Move an app to Ravion deploys, if you want to
+
+You never have to move an app off Argo CD. When you want to move one, run the Ravion version next to the Argo CD version and switch traffic, rather than handing the live objects from one tool to the other:
+
+1. Create an [`rvn-eks-web`](/module-definitions/catalog/rvn-eks-web) or [`rvn-eks-worker`](/module-definitions/catalog/rvn-eks-worker) module for it, or deploy its existing chart with [`rvn-eks-chart`](/module-definitions/catalog/rvn-eks-chart). Set its **Namespace** to one that Argo CD doesn't manage, so nothing in the old app can touch the new release, and deploy it from Ravion.
+2. Once the new release is healthy, move traffic to it, for example by pointing your DNS record or ingress host at the new service.
+3. Delete the app from Argo CD with a normal, cascading delete, so Argo CD removes the old objects. If the old app's manifests include shared resources, such as a `Namespace` object other workloads use, remove them from the app or annotate them with `argocd.argoproj.io/sync-options: Delete=false` first, so the delete leaves them in place.
+
+From then on, each deploy is a Helm release with a values diff, live progress, automatic rollback if pods never become ready, and pod-level diagnosis from the Ravion agent.
+
+<Note>
+  A non-cascading delete in Argo CD leaves the old objects in place, but it doesn't make them part of a Helm release. If Ravion's release renders objects with the same names in the same namespace, `helm upgrade --install` refuses to take them over. To adopt objects in place instead of running side by side, label each one `app.kubernetes.io/managed-by=Helm` and annotate it with `meta.helm.sh/release-name` set to the module's **Service name** and `meta.helm.sh/release-namespace` set to its **Namespace** before the first Ravion deploy.
+</Note>
+
+Apps that use Argo Rollouts for canary analysis can stay on Argo CD while the rest move.
+
+## What to expect
+
+- **Deploy history lives where the deploy happens.** Deploys Argo CD makes show up in Argo CD, not in Ravion's deploy history, and you roll them back in Argo CD. Builds, infrastructure changes, and Ravion deploys show up in Ravion.
+- **One owner per resource.** Don't let both Argo CD and Ravion manage the same Kubernetes object. If both sync it, each overwrites the other's changes.
+- **Nothing is locked to either tool.** Ravion's cluster modules are [open source Terraform](https://github.com/ravionhq/modules), and Ravion deploys are ordinary Helm releases. Argo CD can adopt them later, and the reverse works too.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Escape hatches" icon="door-open" href="/escape-hatches">
+    What to do when a Ravion default doesn't fit.
+  </Card>
+  <Card title="Connect an existing EKS cluster" icon="plug" href="/migrate/existing-eks-cluster">
+    Use Ravion with a cluster you already run.
+  </Card>
+</CardGroup>

@@ -10,47 +10,69 @@ Ravion was designed and built by the Flightcontrol team to keep all the great th
 
 ## Ravion solves these Flightcontrol problems
 
-### 1. Manual hacks and workarounds because of limited Flightcontrol configuration
+### 1. Slow builds and deploys
+
+A Flightcontrol deploy of several services could take 20 minutes or more, between builds and ECS rollouts that wait on load balancer draining and health checks. Ravion speeds up both halves:
+
+- **Builds** run in [sandboxes](/concepts/sandboxes) in your account that keep the whole disk between runs, including `node_modules`, build caches, and Docker layers. A build picks up where the last one left off instead of reinstalling everything.
+- **Deploys** can go to Kubernetes on EKS, where a rollout only waits for new pods to become ready. On ECS you control the deployment strategy, health checks, and draining time yourself.
+
+We run Ravion on Ravion, and moved our own production services from ECS to EKS in October 2026. Our production pipeline builds eight services from one monorepo and deploys them on every merge to `main`:
+
+| Ravion's own production pipeline | On ECS (Jun–Sep 2026, 553 runs) | On EKS (Oct–Nov 2026, 1,373 runs) |
+| -------------------------------- | ------------------------------- | --------------------------------- |
+| Whole pipeline, median | 9.1 min | 4.5 min |
+| Whole pipeline, 90th percentile | 13 min | 7.1 min |
+| Deploy step per service, median | 1.5–2.2 min | 30–40 s |
+| Image build per service, median | 3–4 min | About 2 min |
+
+Builds got faster from sandbox improvements over the same period, not from EKS. The deploy step is where the move to EKS shows.
+
+### 2. No Kubernetes
+
+Flightcontrol never supported Kubernetes. Ravion also runs Kubernetes on Amazon EKS: create a production-ready cluster with [`rvn-eks-cluster`](/module-definitions/catalog/rvn-eks-cluster) or [connect one you already run](/migrate/existing-eks-cluster), then deploy web services, workers, and any Helm chart. Every deploy is a Helm release with automatic rollback. If your team prefers GitOps, keep Argo CD for deploys and use Ravion for the cluster, infrastructure, and CI around it; see [Use Ravion with Argo CD](/guides/argo-cd).
+
+### 3. Manual hacks and workarounds because of limited Flightcontrol configuration
 
 In Flightcontrol, anything not supported by a service type — an extra IAM role or policy, a VPC tweak, an SQS queue — had to be added manually in the AWS console or managed in a separate Terraform repo with its own deploy process. Over time you end up with three sources of truth: Flightcontrol, Terraform, and undocumented manual changes.
 
 Ravion consolidates the world into one config-driven system. Ancillary resources like IAM roles and policies are just modules that live alongside your services, and your existing Terraform can run in Ravion with the Terraform Stack module — with plan and apply steps, optional manual approval, and full state history showing the diff of every resource over time. One tool, one source of truth.
 
-### 2. Separate projects forced per AWS account
+### 4. Separate projects forced per AWS account
 
 Flightcontrol forced separate projects for separate AWS accounts. Ravion projects and environments are lightweight containers, so you can combine everything into one project with production and staging environments, spanning multiple AWS accounts and repos.
 
-### 3. No control over public vs private subnet deployment
+### 5. No control over public vs private subnet deployment
 
 Flightcontrol decided for you which subnet your services ran in. Every Ravion module lets you choose public or private subnet placement for all services.
 
-### 4. Limited control over build and deploy order and orchestration
+### 6. Limited control over build and deploy order and orchestration
 
 Flightcontrol only gave you watch paths, pre/post deploy commands, and limited dependency config. Ravion pipelines are a full-featured CI/CD system that runs in your account, letting you orchestrate builds and deploys in any sequence or parallelization — for example, deploying a module that must go first before the rest of your services. Outputs of build steps are explicitly mapped into deploy inputs — more clear and explicit, less magic.
 
-### 5. Extremely limited logs and metrics
+### 7. Extremely limited logs and metrics
 
 Flightcontrol's logs and metrics were extremely limited. Ravion adds many more metric charts — nearly everything AWS supports — and full-featured logs and metrics viewers with search, sorting, filtering, and configurable time ranges and periods, across all tasks and log streams. If a chart you want is missing, it's just a few lines of config to add it.
 
-### 6. No ARM or Spot instance support
+### 8. No ARM or Spot instance support
 
 You can enable Fargate, Fargate Spot, and EC2 capacity providers on the ECS cluster module and choose ARM Graviton instance types for services to reduce AWS costs.
 
 New module builds use [sandboxes](/concepts/sandboxes#module-builds) by default. Use native EC2 builders only for requirements such as an ARM build environment or a custom AMI. Existing module instances keep their saved builder settings.
 
-### 7. A load balancer and cluster for every single service
+### 9. A load balancer and cluster for every single service
 
 Flightcontrol created a dedicated cluster and load balancer per service. Ravion's ECS cluster is a standalone module with shared load balancers, so multiple services can share a cluster and a load balancer — including running multiple apps on the same EC2 instances. That's a direct cost savings from not having a load balancer per service, plus less complexity.
 
-### 8. Config changes are slow because they trigger a full deploy
+### 10. Config changes are slow because they trigger a full deploy
 
 In Flightcontrol, every config change triggered a full code build and deploy. If your code deploys are very long, a one-line infrastructure change was painfully slow. In Ravion, infrastructure changes apply through their own path without a code deployment, and vice versa.
 
-### 9. "I just want to redeploy this one service"
+### 11. "I just want to redeploy this one service"
 
 When a Flightcontrol deploy touched eight services and one failed, you had to re-run the whole thing. In Ravion, every module has its own deploy button — deploy a new image ref, redeploy an existing one, or roll back, directly from the dashboard, API, or CLI.
 
-### 10. CloudFront forced in front of your API
+### 12. CloudFront forced in front of your API
 
 Flightcontrol put CloudFront in front of every ECS web service, whether you needed it or not — leaving you fighting header behavior you didn't ask for. In Ravion, CloudFront is a separate optional module you attach only where you want it.
 
@@ -62,7 +84,7 @@ Set **Origin request policy** to **AllViewerAndCloudFrontHeaders-2022-06** to fo
   Forwarding country does not add it to the cache key. For country-specific responses, use **CachingDisabled** or a custom cache policy that includes `CloudFront-Viewer-Country`. Otherwise, CloudFront can serve a cached response from one country to viewers in another.
 </Warning>
 
-### 11. Only showing logs from one instance during a deploy
+### 13. Only showing logs from one instance during a deploy
 
 Ravion shows you the full ECS task definition JSON with diffs between deploys, the entire container lifecycle and logs for every instance both at runtime and during a deploy (so you can see exactly which instance failed and why — including when Fargate Spot reclaims a container), plus container and listener details.
 
