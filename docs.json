@@ -40,6 +40,7 @@
               "start-here",
               "how-ravion-works",
               "philosophy",
+              "escape-hatches",
               "report-bugs-and-feedback",
               "contact-support"
             ]
@@ -254,6 +255,7 @@
           {
             "group": "Guides",
             "pages": [
+              "guides/argo-cd",
               "guides/custom-domains",
               "guides/aws/multi-region",
               "guides/managing-secrets",
