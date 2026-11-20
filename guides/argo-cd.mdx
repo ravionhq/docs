@@ -64,9 +64,27 @@ If you already manage this infrastructure with Terraform, run it in Ravion as is
 
 In this setup, a Ravion pipeline builds the image and commits the new tag to your GitOps repository. Argo CD sees the commit and syncs. The build runs in a sandbox in your VPC with its disk cached between runs, so dependency installs and Docker layers don't start from scratch.
 
-This example keeps the image tag for each app in its own values file, such as `apps/web/values-prod.yaml` in an `acme/gitops` repository:
+This example keeps the image tag for each app in its own values file, such as `apps/web/values-prod.yaml` in an `acme/gitops` repository. A push to `main` in the app's repository starts the pipeline and passes the pushed commit in as the required `commit` input. The build checks out exactly that commit, so the image tag and the GitOps commit always name the code that was built, even when runs queue up or you retry an older one. To run it by hand, pass `commit` yourself.
 
 ```yaml ravion-pipeline.yaml
+triggers:
+  - id: github_push
+    type: webhook:github
+    event: push
+    repo: https://github.com/acme/web
+    filter:
+      branch: main
+    run:
+      production:
+        input:
+          commit: << trigger.payload.commit >>
+inputs:
+  - id: commit
+    type: string
+    required: true
+variants:
+  - id: production
+    name: Production
 steps:
   - id: build_web
     name: Build web image
@@ -75,6 +93,7 @@ steps:
       type: git
       repo: https://github.com/acme/web
       branch: main
+      ref: << pipeline.input.commit >>
     builder:
       type: dockerfile
     destinations:
@@ -120,11 +139,17 @@ Add an [`approval`](/pipelines/step-types#approval) step before `release_web` to
 
 ## 5. Move an app to Ravion deploys, if you want to
 
-You never have to move an app off Argo CD. To move one:
+You never have to move an app off Argo CD. When you want to move one, run the Ravion version next to the Argo CD version and switch traffic, rather than handing the live objects from one tool to the other:
 
-1. Create an [`rvn-eks-web`](/module-definitions/catalog/rvn-eks-web) or [`rvn-eks-worker`](/module-definitions/catalog/rvn-eks-worker) module for it, or deploy its existing chart with [`rvn-eks-chart`](/module-definitions/catalog/rvn-eks-chart).
-2. Remove the app from Argo CD with a non-cascading delete, so Argo CD stops managing it without deleting its resources.
-3. Deploy it from Ravion. Each deploy is a Helm release with a values diff, live progress, automatic rollback if pods never become ready, and pod-level diagnosis from the Ravion agent.
+1. Create an [`rvn-eks-web`](/module-definitions/catalog/rvn-eks-web) or [`rvn-eks-worker`](/module-definitions/catalog/rvn-eks-worker) module for it, or deploy its existing chart with [`rvn-eks-chart`](/module-definitions/catalog/rvn-eks-chart). Give it a **Service name** (the Helm release name) or **Namespace** that doesn't collide with the objects Argo CD manages, and deploy it from Ravion.
+2. Once the new release is healthy, move traffic to it, for example by pointing your DNS record or ingress host at the new service.
+3. Delete the app from Argo CD with a normal, cascading delete, so Argo CD removes the old objects.
+
+From then on, each deploy is a Helm release with a values diff, live progress, automatic rollback if pods never become ready, and pod-level diagnosis from the Ravion agent.
+
+<Note>
+  A non-cascading delete in Argo CD leaves the old objects in place, but it doesn't make them part of a Helm release. If Ravion's release renders objects with the same names in the same namespace, `helm upgrade --install` refuses to take them over. To adopt objects in place instead of running side by side, label each one `app.kubernetes.io/managed-by=Helm` and annotate it with `meta.helm.sh/release-name` set to the module's **Service name** and `meta.helm.sh/release-namespace` set to its **Namespace** before the first Ravion deploy.
+</Note>
 
 Apps that use Argo Rollouts for canary analysis can stay on Argo CD while the rest move.
 

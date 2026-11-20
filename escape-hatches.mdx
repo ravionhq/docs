@@ -61,7 +61,7 @@ Every module's infrastructure changes run through a change pipeline and a destro
 
 ## 8. Use the underlying tools directly
 
-Everything Ravion creates is an ordinary resource in your AWS account. In an incident, or for a one-off task, the AWS console and CLI, `kubectl`, and `helm` all work as usual. [`ravion terraform state`](/cli/reference/terraform#ravion-terraform-state) runs the `terraform state` commands against any module's state.
+Everything Ravion creates is an ordinary resource in your AWS account. In an incident, or for a one-off task, the AWS console and CLI, `kubectl`, and `helm` all work as usual. For state in Ravion's managed backend, [`ravion terraform state --workspace <name>`](/cli/reference/terraform#ravion-terraform-state) runs the `terraform state` commands against it. For state in your own S3 backend, use Terraform with your own backend configuration, as you would without Ravion.
 
 Changes you make by hand are overwritten by the next apply or deploy of that module. To keep a change, make it in the module's config or Terraform too.
 
@@ -70,7 +70,7 @@ Changes you make by hand are overwritten by the next apply or deploy of that mod
 If you stop using Ravion, nothing you run stops with it:
 
 - Your infrastructure is plain AWS resources in your account, built from open source Terraform.
-- Your Terraform state lives in your own S3 backend, or in Ravion's managed backend, which you can pull at any time with `ravion terraform state pull`.
+- Your Terraform state lives in your own S3 backend, or in Ravion's managed backend, which you can pull at any time with `ravion terraform state pull --workspace <name> > backup.tfstate`.
 - Your Kubernetes workloads are ordinary Helm releases.
 - Your projects and pipelines are config you can [pull as YAML](/config-as-code/project-config-file#pull-and-apply-with-the-cli) at any time.
 
