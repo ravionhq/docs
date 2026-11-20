@@ -27,6 +27,12 @@
 - Bold for UI elements: Click **Settings**
 - Code formatting for file names, commands, paths, and code references
 
+## Example IDs
+
+- Never paste an ID from a real organization, project, pipeline, run or any other Ravion resource. This repository is public.
+- Write example IDs as the prefix followed by `123`: `proj_123`, `pipe_123`, `prun_123`.
+- `pnpm check:example-ids` fails on anything shaped like a real ID. It runs on every pull request.
+
 ## Content boundaries
 
 {/* Define what should and shouldn't be documented */}
