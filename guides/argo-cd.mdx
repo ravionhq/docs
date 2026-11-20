@@ -141,9 +141,9 @@ Add an [`approval`](/pipelines/step-types#approval) step before `release_web` to
 
 You never have to move an app off Argo CD. When you want to move one, run the Ravion version next to the Argo CD version and switch traffic, rather than handing the live objects from one tool to the other:
 
-1. Create an [`rvn-eks-web`](/module-definitions/catalog/rvn-eks-web) or [`rvn-eks-worker`](/module-definitions/catalog/rvn-eks-worker) module for it, or deploy its existing chart with [`rvn-eks-chart`](/module-definitions/catalog/rvn-eks-chart). Give it a **Service name** (the Helm release name) or **Namespace** that doesn't collide with the objects Argo CD manages, and deploy it from Ravion.
+1. Create an [`rvn-eks-web`](/module-definitions/catalog/rvn-eks-web) or [`rvn-eks-worker`](/module-definitions/catalog/rvn-eks-worker) module for it, or deploy its existing chart with [`rvn-eks-chart`](/module-definitions/catalog/rvn-eks-chart). Set its **Namespace** to one that Argo CD doesn't manage, so nothing in the old app can touch the new release, and deploy it from Ravion.
 2. Once the new release is healthy, move traffic to it, for example by pointing your DNS record or ingress host at the new service.
-3. Delete the app from Argo CD with a normal, cascading delete, so Argo CD removes the old objects.
+3. Delete the app from Argo CD with a normal, cascading delete, so Argo CD removes the old objects. If the old app's manifests include shared resources, such as a `Namespace` object other workloads use, remove them from the app or annotate them with `argocd.argoproj.io/sync-options: Delete=false` first, so the delete leaves them in place.
 
 From then on, each deploy is a Helm release with a values diff, live progress, automatic rollback if pods never become ready, and pod-level diagnosis from the Ravion agent.
 
