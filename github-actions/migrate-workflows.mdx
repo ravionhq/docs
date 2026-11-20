@@ -16,8 +16,9 @@ Copy this prompt into your coding agent in the repository containing your GitHub
 
 - Ask me for the dedicated CI execution environment's ID if it isn't already known. Don't invent one or use a production environment.
 - Go through every job in .github/workflows, and read the scripts each job calls before deciding.
-- Show me the diff, which jobs are interruptible and why, the jobs you left on their current runner and why, and the follow-ups you didn't make. Don't trigger workflows, deployments or other external changes without my approval.
-- Once I approve pushing the changes, watch each moved job's first run and read its logs for errors. Ravion's runner image has fewer tools preinstalled than GitHub's, so a job may fail on a missing command or library. Install it in the job, as described in "Watch the first runs", and run it again.
+- Push the changes to a new branch and open a pull request so the moved jobs run. Don't merge it, or trigger deployments, releases or other external changes, without my approval.
+- Watch each moved job's run and read its logs for errors. Ravion's runner image has fewer tools preinstalled than GitHub's, so a job may fail on a missing command or library. That's expected: install it in the job, as described in "Watch the first runs", push the fix, and repeat until every moved job passes.
+- Then show me the pull request, which jobs are interruptible and why, the jobs you left on their current runner and why, any tools you had to install, and the follow-ups you didn't make.
 - If something in the guide doesn't work or is unclear, or you hit a Ravion bug, report it with ravion bug or ravion feedback, as described in https://www.ravion.com/docs/report-bugs-and-feedback.md.
 
 </Prompt>
@@ -179,7 +180,7 @@ Add a step before the one that failed to install it, then run the job again:
 - run: sudo apt-get update && sudo apt-get install -y libvips-dev
 ```
 
-Prefer a `setup-*` action for languages such as Java or Ruby and `apt-get install` for system packages. Repeat until every moved job passes. Agents: watch the runs after the user approves pushing, and fix missing tools yourself rather than moving the job back to its old runner.
+Prefer a `setup-*` action for languages such as Java or Ruby and `apt-get install` for system packages. Repeat until every moved job passes. Agents: watch the runs yourself and fix missing tools rather than moving the job back to its old runner.
 
 <Note>
   Hit a bug, or something in this guide that didn't work or was unclear? Report it with `ravion bug` or `ravion feedback`. Include the repository, workflow, job and the run's URL. See [Report bugs and feedback](/report-bugs-and-feedback). For urgent issues, also email [support@ravion.com](mailto:support@ravion.com).
