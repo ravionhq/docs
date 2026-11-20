@@ -161,7 +161,7 @@ Don't remove explicit cache steps as part of the migration, such as `actions/cac
 
 ### Watch the first runs
 
-[Ravion's runner image](/github-actions/runners#the-runner-image) is smaller than GitHub's `ubuntu-24.04` image. It has the common build tools and libraries, but not everything GitHub preinstalls, so a job that passed on GitHub can fail on Ravion because a command or library is missing. This is the most common migration failure, and the fix is to install what's missing in the job.
+[Ravion's runner image](/github-actions/runners#the-runner-image) is smaller than GitHub's `ubuntu-24.04` image. It has the common build tools and libraries, but not everything GitHub's image includes, so a job that passed on GitHub can fail on Ravion because a command or library is missing. This is the most common migration failure, and the fix is to install what's missing in the job.
 
 Watch each moved job's first run, and read the logs of any step that fails. Look for errors such as:
 
@@ -179,7 +179,7 @@ Add a step before the one that failed to install it, then run the job again:
 - run: sudo apt-get update && sudo apt-get install -y libvips-dev
 ```
 
-Prefer a `setup-*` action for language runtimes and `apt-get install` for system packages. Repeat until every moved job passes. Agents: watch the runs after the user approves pushing, and fix missing tools yourself rather than moving the job back to its old runner.
+Prefer a `setup-*` action for languages such as Java or Ruby and `apt-get install` for system packages. Repeat until every moved job passes. Agents: watch the runs after the user approves pushing, and fix missing tools yourself rather than moving the job back to its old runner.
 
 <Note>
   Hit a bug, or something in this guide that didn't work or was unclear? Report it with `ravion bug` or `ravion feedback`. Include the repository, workflow, job and the run's URL. See [Report bugs and feedback](/report-bugs-and-feedback). For urgent issues, also email [support@ravion.com](mailto:support@ravion.com).
