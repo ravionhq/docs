@@ -77,7 +77,7 @@ Limits:
 
 - Modules that depend on other CUE modules (`deps` in `module.cue`) are refused: Ravion does not fetch from a CUE registry.
 - Two Ravion config files in the same CUE package are refused, because they would be evaluated as one document. Give each config file its own package or directory.
-- One evaluation reads at most 1,000 files and 10 MiB. The GitHub App does not read symbolic links or submodules, and the CLI never reads outside the module, even through a symbolic link.
+- One evaluation reads at most 1,000 files and 10 MiB, and no single file over 1 MiB. The GitHub App does not read symbolic links or submodules, and the CLI never reads outside the module, even through a symbolic link.
 - In a repository too large for GitHub to list its whole tree, a config file is planned only when it changes itself, not when only a file it loads changes.
 
 `ravion project config apply --file` and `ravion pipeline config apply --file` (CLI 1.47.0 and later) evaluate a CUE file the same way.
