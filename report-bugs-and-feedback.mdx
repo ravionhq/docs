@@ -14,11 +14,11 @@ Report bugs and product feedback to Ravion from the terminal. Reports go straigh
 ## Quick start
 
 ```bash
-ravion bug "Deploy mdep_2bH4gM6lTxU2iF0NpSy7oQzJdCb failed with 'module not found' after I renamed the api module instance."
+ravion bug "Deploy mdep_123 failed with 'module not found' after I renamed the api module instance."
 ```
 
 ```bash
-ravion feedback "Dry-run output for proj_2eK7jP9oWaX5lI3QsVb0rUcMgFd is hard to read when many modules change at once."
+ravion feedback "Dry-run output for proj_123 is hard to read when many modules change at once."
 ```
 
 Use `ravion bug` when something is broken and `ravion feedback` when something is confusing, harder than it should be, or missing. Both are also available as `ravion report bug` and `ravion report feedback`.
@@ -44,7 +44,7 @@ The message is a single shell argument that accepts multiline Markdown, so quote
 ```bash
 ravion bug "## What happened
 
-Pipeline run prun_2fL8kQ0pXbY6mJ4RtWc1sVdNhGe failed at the apply step with:
+Pipeline run prun_123 failed at the apply step with:
 
     Error: creating ECS service: InvalidParameterException: unable to assume role
 
@@ -54,10 +54,10 @@ The apply to succeed. The same pipeline applied cleanly yesterday.
 
 ## Resources
 
-- Project: proj_2eK7jP9oWaX5lI3QsVb0rUcMgFd
+- Project: proj_123
 - Module instance: my-app.production.api
-- Failed step execution: sexec_2dJ6iO8nVzW4kH2PrUa9qTbLfEc" \
-  --command "ravion pipeline run wait prun_2fL8kQ0pXbY6mJ4RtWc1sVdNhGe"
+- Failed step execution: sexec_123" \
+  --command "ravion pipeline run wait prun_123"
 ```
 
 <Warning>

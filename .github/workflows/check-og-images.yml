@@ -28,5 +28,8 @@ jobs:
       - name: Check docs SEO invariants
         run: node scripts/check-docs-seo-invariants.mjs
 
+      - name: Check no page shows a real Ravion ID
+        run: node scripts/check-example-ids.mjs
+
       - name: Run script tests
         run: node --test scripts/*.test.mjs
